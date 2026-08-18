@@ -9,12 +9,12 @@ export const LogLevel = {
   SILENT: 4,
 }
 
-const LEVEL_NAMES = ['DEBUG', 'INFO', 'WARN', 'ERROR']
+export const LEVEL_NAMES = ['DEBUG', 'INFO', 'WARN', 'ERROR']
 const LEVEL_COLORS = {
-  DEBUG: '\x1b[90m',   // Gray
-  INFO: '\x1b[36m',    // Cyan
-  WARN: '\x1b[33m',    // Yellow
-  ERROR: '\x1b[31m',   // Red
+  DEBUG: '\x1b[90m', // Gray
+  INFO: '\x1b[36m', // Cyan
+  WARN: '\x1b[33m', // Yellow
+  ERROR: '\x1b[31m', // Red
 }
 const RESET = '\x1b[0m'
 const DIM = '\x1b[2m'

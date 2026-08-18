@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import {
   ROOM_PATTERN,
   KEY_PATTERN,
+  LISTENER_TOKEN_PATTERN,
   validHostKey,
+  validListenerToken,
   isAllowedOrigin,
   getLanAddresses,
   setSecurityHeaders,
@@ -12,6 +14,7 @@ import {
   MAX_SIGNAL_BYTES,
   ROOM_GRACE_MS,
 } from '../server.mjs'
+import { createRateLimiter } from '../src/server/rate-limiter.mjs'
 
 test('Constants & Patterns', async (t) => {
   await t.test('Room code pattern validation', () => {
@@ -39,6 +42,19 @@ test('Constants & Patterns', async (t) => {
     assert.strictEqual(KEY_PATTERN.test('a'.repeat(44)), false, '44 chars is too long')
     assert.strictEqual(KEY_PATTERN.test('a'.repeat(42) + '!'), false, 'Special character ! rejected')
     assert.strictEqual(KEY_PATTERN.test(''), false, 'Empty key rejected')
+  })
+
+  await t.test('Listener token pattern validation', () => {
+    const validToken = 'a'.repeat(22)
+    const validTokenUrlSafe = 'A1_b2-c3d4e5f6g7h8i9j0'
+    assert.strictEqual(validTokenUrlSafe.length, 22)
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test(validToken), true)
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test(validTokenUrlSafe), true)
+
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test('a'.repeat(21)), false, '21 chars is too short')
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test('a'.repeat(23)), false, '23 chars is too long')
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test('a'.repeat(21) + '!'), false, 'Special character ! rejected')
+    assert.strictEqual(LISTENER_TOKEN_PATTERN.test(''), false, 'Empty token rejected')
   })
 
   await t.test('Default configuration constants', () => {
@@ -69,15 +85,67 @@ test('validHostKey timing-safe verification', async (t) => {
   })
 })
 
+test('validListenerToken timing-safe verification', async (t) => {
+  const tokenA = 'T'.repeat(22)
+  const tokenB = 'T'.repeat(21) + 'X'
+
+  await t.test('Correct listener token matches', () => {
+    assert.strictEqual(validListenerToken(tokenA, tokenA), true)
+  })
+
+  await t.test('Mismatched listener token fails', () => {
+    assert.strictEqual(validListenerToken(tokenB, tokenA), false)
+  })
+
+  await t.test('Invalid pattern or empty tokens fail', () => {
+    assert.strictEqual(validListenerToken('', tokenA), false)
+    assert.strictEqual(validListenerToken(null, tokenA), false)
+    assert.strictEqual(validListenerToken(undefined, tokenA), false)
+    assert.strictEqual(validListenerToken('short', 'short'), false)
+  })
+})
+
+test('createRateLimiter functionality', async (t) => {
+  await t.test('Allows requests within limit and blocks on limit reached', () => {
+    const limiter = createRateLimiter({ windowMs: 1000, maxHits: 3 })
+    const ip = '192.168.1.50'
+
+    assert.strictEqual(limiter.check(ip), true)
+    assert.strictEqual(limiter.check(ip), true)
+    assert.strictEqual(limiter.check(ip), true)
+    assert.strictEqual(limiter.check(ip), false, '4th request should be blocked')
+
+    limiter.reset(ip)
+    assert.strictEqual(limiter.check(ip), true, 'Should allow after reset')
+    limiter.close()
+  })
+
+  await t.test('Allows requests from different IPs independently', () => {
+    const limiter = createRateLimiter({ windowMs: 1000, maxHits: 2 })
+    const ip1 = '192.168.1.10'
+    const ip2 = '192.168.1.20'
+
+    assert.strictEqual(limiter.check(ip1), true)
+    assert.strictEqual(limiter.check(ip1), true)
+    assert.strictEqual(limiter.check(ip1), false)
+
+    assert.strictEqual(limiter.check(ip2), true)
+    assert.strictEqual(limiter.check(ip2), true)
+    limiter.close()
+  })
+})
+
 test('isAllowedOrigin verification', async (t) => {
   const testPort = 3975
 
-  await t.test('Localhost and 127.0.0.1 on target port are allowed', () => {
-    const reqLocalhost = { headers: { origin: `http://localhost:${testPort}` } }
-    const reqLoopback = { headers: { origin: `http://127.0.0.1:${testPort}` } }
+  await t.test('Localhost and 127.0.0.1 on target port are allowed for http and https', () => {
+    const reqHttpLocalhost = { headers: { origin: `http://localhost:${testPort}` } }
+    const reqHttpsLocalhost = { headers: { origin: `https://localhost:${testPort}` } }
+    const reqHttpLoopback = { headers: { origin: `http://127.0.0.1:${testPort}` } }
 
-    assert.strictEqual(isAllowedOrigin(reqLocalhost, testPort), true)
-    assert.strictEqual(isAllowedOrigin(reqLoopback, testPort), true)
+    assert.strictEqual(isAllowedOrigin(reqHttpLocalhost, testPort), true)
+    assert.strictEqual(isAllowedOrigin(reqHttpsLocalhost, testPort), true)
+    assert.strictEqual(isAllowedOrigin(reqHttpLoopback, testPort), true)
   })
 
   await t.test('LAN IP on target port is allowed if detected', () => {
@@ -119,7 +187,7 @@ test('setSecurityHeaders applies strict HTTP security headers', () => {
   const mockRes = {
     setHeader(name, val) {
       headers[name.toLowerCase()] = val
-    }
+    },
   }
 
   setSecurityHeaders(mockRes)

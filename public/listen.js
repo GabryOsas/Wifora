@@ -1,4 +1,4 @@
-import { initI18n, t, setLanguage } from './i18n.js'
+import { initI18n, t } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
 import { createLogger } from './logger.js'
 
@@ -32,6 +32,43 @@ const muteBtn = document.querySelector('#muteBtn')
 const levelBar = document.querySelector('#levelBar')
 const wakeLockToggle = document.querySelector('#wakeLockToggle')
 const remoteAudio = document.querySelector('#remoteAudio')
+const a11yAnnouncer = document.querySelector('#a11yAnnouncer')
+
+const listenerWebRtcStatus = document.querySelector('#listenerWebRtcStatus')
+const listenerWebRtcStatusText = document.querySelector('#listenerWebRtcStatusText')
+
+function announceA11y(text) {
+  if (a11yAnnouncer) {
+    a11yAnnouncer.textContent = ''
+    setTimeout(() => {
+      a11yAnnouncer.textContent = text
+    }, 50)
+  }
+}
+
+function updateListenerStatus(state = 'CONNECTING', extra = '') {
+  if (!listenerWebRtcStatus || !listenerWebRtcStatusText) return
+  let className = 'status-connecting'
+  let label = 'CONNECTING'
+
+  if (state === 'CONNECTED') {
+    className = 'status-connected'
+    label = 'CONNECTED'
+  } else if (state === 'DEGRADED') {
+    className = 'status-degraded'
+    label = 'DEGRADED'
+  } else if (state === 'DISCONNECTED') {
+    className = 'status-disconnected'
+    label = 'DISCONNECTED'
+  }
+
+  listenerWebRtcStatus.className = `status-pill ${className}`
+  listenerWebRtcStatusText.textContent = label
+  if (extra && liveStatusText) {
+    liveStatusText.textContent = extra
+    announceA11y(extra)
+  }
+}
 
 // --- Persistent Tab-Scoped Listener Session ID ---
 function getOrCreateSessionId() {
@@ -51,7 +88,9 @@ const listenerSessionId = getOrCreateSessionId()
 
 // --- State ---
 const roomFromUrl = new URLSearchParams(location.search).get('room')?.toUpperCase() || ''
+const tokenFromUrl = new URLSearchParams(location.search).get('token') || ''
 let roomId = roomFromUrl
+let listenerToken = tokenFromUrl
 let socket = null
 let peer = null
 let currentReceiver = null
@@ -135,7 +174,7 @@ async function checkDesktopAdvisory() {
     }
   } catch (err) {
     logger.debug('Device info check fallback:', err)
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
     desktopNotice.hidden = isMobileUA || isTouchDevice
   }
@@ -193,7 +232,10 @@ function releaseWakeLock() {
   }
 }
 
-wakeLockToggle.addEventListener('change', applyWakeLock)
+wakeLockToggle.addEventListener('change', () => {
+  wakeLockToggle.setAttribute('aria-checked', String(wakeLockToggle.checked))
+  applyWakeLock()
+})
 
 // Sleep / Wake & Standby Recovery
 function handleWakeRecovery() {
@@ -202,21 +244,29 @@ function handleWakeRecovery() {
     setupAudioSession()
     applyWakeLock()
     if (audioContext && audioContext.state === 'suspended') {
-      audioContext.resume().then(() => {
-        logger.debug('AudioContext resumed on wake recovery')
-      }).catch((err) => {
-        logger.warn('AudioContext resume failed on wake recovery:', err)
-      })
+      audioContext
+        .resume()
+        .then(() => {
+          logger.debug('AudioContext resumed on wake recovery')
+        })
+        .catch((err) => {
+          logger.warn('AudioContext resume failed on wake recovery:', err)
+        })
     }
     if (remoteAudio.paused && remoteAudio.srcObject) {
-      remoteAudio.play().then(() => {
-        resumeBox.hidden = true
-        liveStatusText.textContent = t('liveStatusConnected')
-      }).catch((err) => {
-        logger.debug('Autoplay policy requires tap on wake recovery:', err?.message || err)
-        resumeBox.hidden = false
-        liveStatusText.textContent = t('liveStatusWaitingTap')
-      })
+      remoteAudio
+        .play()
+        .then(() => {
+          resumeBox.hidden = true
+          liveStatusText.textContent = t('liveStatusConnected')
+          updateListenerStatus('CONNECTED')
+        })
+        .catch((err) => {
+          logger.debug('Autoplay policy requires tap on wake recovery:', err?.message || err)
+          resumeBox.hidden = false
+          liveStatusText.textContent = t('liveStatusWaitingTap')
+          updateListenerStatus('CONNECTING')
+        })
     }
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       logger.info('Reconnecting signaling socket on wake recovery')
@@ -243,6 +293,7 @@ window.addEventListener('offline', () => {
   logger.warn('Device went offline')
   if (shouldListen) {
     liveStatusText.textContent = t('telemetryReconnecting')
+    updateListenerStatus('DEGRADED')
   }
 })
 
@@ -286,13 +337,17 @@ function setupVisualizer(stream) {
 // --- Volume & Mute ---
 function applyVolume() {
   const val = isMuted ? 0 : currentVol
-  remoteAudio.volume = val
-  remoteAudio.muted = isMuted
+  if (remoteAudio) {
+    remoteAudio.volume = val
+    remoteAudio.muted = isMuted
+  }
 }
 
 volSlider.addEventListener('input', (e) => {
   currentVol = Number(e.target.value) / 100
   volValue.textContent = `${e.target.value}%`
+  volSlider.setAttribute('aria-valuenow', e.target.value)
+  volSlider.setAttribute('aria-valuetext', `${e.target.value}%`)
   applyVolume()
 })
 
@@ -300,6 +355,7 @@ muteBtn.addEventListener('click', () => {
   isMuted = !isMuted
   muteBtn.textContent = isMuted ? t('muteActiveBtn') : t('muteBtn')
   muteBtn.classList.toggle('btn-danger', isMuted)
+  muteBtn.setAttribute('aria-pressed', String(isMuted))
   applyVolume()
 })
 
@@ -392,9 +448,8 @@ async function pollReceiverTelemetry() {
     lastPacketsReceived = packetsReceived
     lastPacketsLost = packetsLost
 
-    const smooth = (previous, sample, weight = 0.3) => sample == null
-      ? previous
-      : previous == null ? sample : previous + (sample - previous) * weight
+    const smooth = (previous, sample, weight = 0.3) =>
+      sample == null ? previous : previous == null ? sample : previous + (sample - previous) * weight
     smoothedRtt = smooth(smoothedRtt, rtt)
     smoothedJitter = smooth(smoothedJitter, jitter)
     smoothedLoss = smooth(smoothedLoss, instantLoss, 0.4)
@@ -412,12 +467,17 @@ async function pollReceiverTelemetry() {
     if (hudLoss) hudLoss.textContent = `${(smoothedLoss ?? 0).toFixed(1)}%`
 
     const severe = (rtt != null && rtt > 220) || (instantLoss != null && instantLoss > 10)
-    const quality = severe || (smoothedRtt != null && (smoothedRtt > 120 || (smoothedLoss ?? 0) > 3.0))
+    const isDegraded = severe || (smoothedRtt != null && (smoothedRtt > 100 || (smoothedLoss ?? 0) > 3.0))
+    const quality = isDegraded
       ? 'bad'
       : smoothedRtt != null && (smoothedRtt > 70 || (smoothedLoss ?? 0) > 1.2)
         ? 'warn'
         : 'good'
     updateSignalBadge(quality, severe)
+
+    if (peer?.connectionState === 'connected') {
+      updateListenerStatus(isDegraded ? 'DEGRADED' : 'CONNECTED')
+    }
   } catch (err) {
     logger.debug('Error polling receiver stats:', err?.message || err)
   }
@@ -447,6 +507,7 @@ async function connectSignal() {
       type: 'register',
       role: 'listener',
       roomId,
+      listenerToken,
       deviceName: deviceInfo.name,
       deviceType: deviceInfo.type,
       sessionId: listenerSessionId,
@@ -635,6 +696,7 @@ async function acceptOffer(msg) {
 // --- Lifecycle Actions ---
 function startListening() {
   roomId = roomInput.value.trim().toUpperCase()
+  listenerToken = roomId === roomFromUrl ? tokenFromUrl : ''
   if (!validRoom(roomId)) {
     setStatus(t('joinSubtitle'), 'error')
     return
@@ -647,6 +709,7 @@ function startListening() {
   joinSection.hidden = true
   liveSection.hidden = false
   liveStatusText.textContent = t('liveStatusConnecting')
+  updateListenerStatus('CONNECTING', t('liveStatusConnecting'))
 
   setupAudioSession()
   applyWakeLock()
@@ -728,6 +791,7 @@ function stopListening(message = '', showForm = false) {
   resumeBox.hidden = true
 
   if (levelBar) levelBar.style.width = '0%'
+  updateListenerStatus('DISCONNECTED')
 
   if (showForm) {
     liveSection.hidden = true
@@ -755,12 +819,15 @@ listenBtn.addEventListener('click', () => {
 
 resumeBtn.addEventListener('click', () => {
   setupAudioSession()
-  remoteAudio.play().then(() => {
-    resumeBox.hidden = true
-    liveStatusText.textContent = t('liveStatusConnected')
-  }).catch((err) => {
-    logger.warn('Resume play failed on user click:', err)
-  })
+  remoteAudio
+    .play()
+    .then(() => {
+      resumeBox.hidden = true
+      liveStatusText.textContent = t('liveStatusConnected')
+    })
+    .catch((err) => {
+      logger.warn('Resume play failed on user click:', err)
+    })
 })
 
 disconnectBtn.addEventListener('click', () => {

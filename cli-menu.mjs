@@ -30,7 +30,8 @@ function clearScreen() {
 function getLanAddresses() {
   const preferred = []
   const fallback = []
-  const virtualAdapter = /(cloudflare|warp|vpn|virtual|loopback|tunnel|tap|wintun|tailscale|zerotier|docker|hyper-v|vmware|vbox)/i
+  const virtualAdapter =
+    /(cloudflare|warp|vpn|virtual|loopback|tunnel|tap|wintun|tailscale|zerotier|docker|hyper-v|vmware|vbox)/i
   for (const [name, interfaces] of Object.entries(networkInterfaces())) {
     if (virtualAdapter.test(name)) continue
     for (const item of interfaces || []) {
@@ -112,7 +113,9 @@ async function showMenu() {
       })
 
       console.log(`\n${c.dim}───────────────────────────────────────────────────${c.reset}`)
-      console.log(`${c.dim}Porta configurata: ${c.brightCyan}${currentPort}${c.dim} | Premi [Q] per uscire rapido${c.reset}`)
+      console.log(
+        `${c.dim}Porta configurata: ${c.brightCyan}${currentPort}${c.dim} | Premi [Q] per uscire rapido${c.reset}`
+      )
     }
 
     render()

@@ -1,0 +1,6 @@
+Test_Name,Iterations,Unit,Min,Mean,Median_p50,p95,p99,Max,StdDev,Jitter
+"Timing-Safe Host Key Auth",10000,µs,0.3000,0.7490,0.6000,1.3000,2.5000,448.1000,4.7179,0.3232
+"Opus SDP Munging Engine",10000,µs,2.4000,3.3068,2.7000,4.7000,12.2000,345.2000,6.7426,0.8537
+"HTTP /api/network Latency",1000,ms,2.9186,3.4881,3.4606,4.1097,4.5278,11.7373,0.4385,0.4014
+"QR Code PNG Generation",100,ms,11.4289,12.6341,12.2731,15.0942,26.9927,26.9927,1.6994,0.9326
+"WebSocket Signaling Relay",1000,ms,0.0585,0.0788,0.0677,0.1159,0.2197,0.5082,0.0351,0.0103

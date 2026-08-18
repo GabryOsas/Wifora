@@ -6,25 +6,28 @@ import { createWiforaServer } from '../server.mjs'
 function request(baseUrl, path, options = {}) {
   return new Promise((resolve, reject) => {
     const u = new URL(baseUrl)
-    const req = http.request({
-      hostname: u.hostname,
-      port: u.port,
-      path: path,
-      method: options.method || 'GET',
-      headers: options.headers || {},
-    }, (res) => {
-      const chunks = []
-      res.on('data', (c) => chunks.push(c))
-      res.on('end', () => {
-        const bodyBuffer = Buffer.concat(chunks)
-        resolve({
-          statusCode: res.statusCode,
-          headers: res.headers,
-          body: bodyBuffer.toString('utf8'),
-          rawBody: bodyBuffer,
+    const req = http.request(
+      {
+        hostname: u.hostname,
+        port: u.port,
+        path: path,
+        method: options.method || 'GET',
+        headers: options.headers || {},
+      },
+      (res) => {
+        const chunks = []
+        res.on('data', (c) => chunks.push(c))
+        res.on('end', () => {
+          const bodyBuffer = Buffer.concat(chunks)
+          resolve({
+            statusCode: res.statusCode,
+            headers: res.headers,
+            body: bodyBuffer.toString('utf8'),
+            rawBody: bodyBuffer,
+          })
         })
-      })
-    })
+      }
+    )
     req.on('error', reject)
     if (options.body) {
       req.write(options.body)
@@ -46,7 +49,7 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     const res = await request(baseUrl, '/api/network')
     assert.strictEqual(res.statusCode, 200)
     assert.match(res.headers['content-type'], /application\/json/)
-    
+
     const data = JSON.parse(res.body)
     assert.strictEqual(data.port, addr.port)
     assert.ok(Array.isArray(data.addresses))
@@ -60,7 +63,7 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     // Check PNG signature: 0x89, 0x50, 0x4E, 0x47
     assert.strictEqual(res.rawBody[0], 0x89)
     assert.strictEqual(res.rawBody[1], 0x50)
-    assert.strictEqual(res.rawBody[2], 0x4E)
+    assert.strictEqual(res.rawBody[2], 0x4e)
     assert.strictEqual(res.rawBody[3], 0x47)
   })
 
@@ -100,7 +103,9 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
 
   await t.test('GET / redirects mobile browsers to /listen.html', async () => {
     const res = await request(baseUrl, '/', {
-      headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148' },
+      headers: {
+        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
+      },
     })
     assert.strictEqual(res.statusCode, 302)
     assert.match(res.headers.location, /\/listen\.html/)

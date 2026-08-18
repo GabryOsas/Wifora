@@ -1,4 +1,4 @@
-import { initI18n, t, setLanguage } from './i18n.js'
+import { initI18n, t } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
 import { createLogger } from './logger.js'
 
@@ -28,11 +28,35 @@ const volSlider = document.querySelector('#volSlider')
 const volValue = document.querySelector('#volValue')
 const muteBtn = document.querySelector('#muteBtn')
 const levelBar = document.querySelector('#levelBar')
-
 const devicesCount = document.querySelector('#devicesCount')
 const devicesList = document.querySelector('#devicesList')
 const noDevicesMsg = document.querySelector('#noDevicesMsg')
 const toast = document.querySelector('#toast')
+const a11yAnnouncer = document.querySelector('#a11yAnnouncer')
+
+const mainWebRtcStatus = document.querySelector('#mainWebRtcStatus')
+const mainWebRtcStatusText = document.querySelector('#mainWebRtcStatusText')
+const subWebrtcCard = document.querySelector('#subWebrtcCard')
+const subWebrtcState = document.querySelector('#subWebrtcState')
+const subWebrtcMeta = document.querySelector('#subWebrtcMeta')
+const subSignalCard = document.querySelector('#subSignalCard')
+const subSignalState = document.querySelector('#subSignalState')
+const subSignalMeta = document.querySelector('#subSignalMeta')
+const subAudioCard = document.querySelector('#subAudioCard')
+const subAudioState = document.querySelector('#subAudioState')
+const subAudioMeta = document.querySelector('#subAudioMeta')
+const subNetworkCard = document.querySelector('#subNetworkCard')
+const subNetworkState = document.querySelector('#subNetworkState')
+const subNetworkMeta = document.querySelector('#subNetworkMeta')
+
+function announceA11y(text) {
+  if (a11yAnnouncer) {
+    a11yAnnouncer.textContent = ''
+    setTimeout(() => {
+      a11yAnnouncer.textContent = text
+    }, 50)
+  }
+}
 
 // --- Audio Transmission Profiles & Adaptation Tiers ---
 const profiles = {
@@ -66,11 +90,56 @@ const profiles = {
 
 // Multi-Tier Quality Levels for Real-Time ANAE Auto-Adaptation
 const AUTO_TIERS = [
-  { tier: 1, name: 'Ultra-Resilient', bitrate: 96000, maxRtt: 9999, maxLoss: 99.0, maxJitter: 999, badge: 'badge-bad', labelKey: 'tierWeak' },
-  { tier: 2, name: 'Anti-Lag Resilient', bitrate: 128000, maxRtt: 120, maxLoss: 4.0, maxJitter: 25, badge: 'badge-warn', labelKey: 'tierAntiLag' },
-  { tier: 3, name: 'Balanced Standard', bitrate: 160000, maxRtt: 85, maxLoss: 1.8, maxJitter: 15, badge: 'badge-good', labelKey: 'tierStandard' },
-  { tier: 4, name: 'Studio High', bitrate: 224000, maxRtt: 50, maxLoss: 0.8, maxJitter: 8, badge: 'badge-good', labelKey: 'tierHd' },
-  { tier: 5, name: 'Studio Master', bitrate: 256000, maxRtt: 25, maxLoss: 0.2, maxJitter: 4, badge: 'badge-good', labelKey: 'tierMaster' },
+  {
+    tier: 1,
+    name: 'Ultra-Resilient',
+    bitrate: 96000,
+    maxRtt: 9999,
+    maxLoss: 99.0,
+    maxJitter: 999,
+    badge: 'badge-bad',
+    labelKey: 'tierWeak',
+  },
+  {
+    tier: 2,
+    name: 'Anti-Lag Resilient',
+    bitrate: 128000,
+    maxRtt: 120,
+    maxLoss: 4.0,
+    maxJitter: 25,
+    badge: 'badge-warn',
+    labelKey: 'tierAntiLag',
+  },
+  {
+    tier: 3,
+    name: 'Balanced Standard',
+    bitrate: 160000,
+    maxRtt: 85,
+    maxLoss: 1.8,
+    maxJitter: 15,
+    badge: 'badge-good',
+    labelKey: 'tierStandard',
+  },
+  {
+    tier: 4,
+    name: 'Studio High',
+    bitrate: 224000,
+    maxRtt: 50,
+    maxLoss: 0.8,
+    maxJitter: 8,
+    badge: 'badge-good',
+    labelKey: 'tierHd',
+  },
+  {
+    tier: 5,
+    name: 'Studio Master',
+    bitrate: 256000,
+    maxRtt: 25,
+    maxLoss: 0.2,
+    maxJitter: 4,
+    badge: 'badge-good',
+    labelKey: 'tierMaster',
+  },
 ]
 
 // Start in the balanced tier. It prevents the first seconds of playback from
@@ -91,6 +160,7 @@ let animFrameId = null
 
 let roomId = ''
 let hostKey = ''
+let listenerToken = ''
 let listenerUrl = ''
 let telemetryTimer = null
 let stoppedByUser = false
@@ -136,7 +206,18 @@ function randomCode(length = 8) {
 
 function generateKey() {
   const bytes = crypto.getRandomValues(new Uint8Array(32))
-  return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
+}
+
+function generateListenerToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '')
 }
 
 function setHomeStatus(msg, type = '') {
@@ -292,6 +373,8 @@ function applyVolume() {
 volSlider.addEventListener('input', (e) => {
   currentVol = Number(e.target.value) / 100
   volValue.textContent = `${e.target.value}%`
+  volSlider.setAttribute('aria-valuenow', e.target.value)
+  volSlider.setAttribute('aria-valuetext', `${e.target.value}%`)
   applyVolume()
 })
 
@@ -299,8 +382,119 @@ muteBtn.addEventListener('click', () => {
   isMuted = !isMuted
   muteBtn.textContent = isMuted ? t('muteActiveBtn') : t('muteBtn')
   muteBtn.classList.toggle('btn-danger', isMuted)
+  muteBtn.setAttribute('aria-pressed', String(isMuted))
   applyVolume()
+  updateSubsystemsStatus()
 })
+
+// --- WebRTC & Subsystem Diagnostics & Status Indicators ---
+function updateSubsystemsStatus() {
+  if (!activeDashboardSection || activeDashboardSection.hidden) return
+
+  // 1. WebRTC & Overall Status
+  const totalPeers = peers.size
+  let connectedPeers = 0
+  let degradedPeers = 0
+  let maxLoss = 0
+  let maxRtt = 0
+
+  for (const session of peers.values()) {
+    if (
+      session.peer &&
+      (session.peer.connectionState === 'connected' || session.peer.iceConnectionState === 'connected')
+    ) {
+      connectedPeers++
+      const loss = session.smoothedLoss ?? 0
+      const rtt = session.smoothedRtt ?? 0
+      if (loss > maxLoss) maxLoss = loss
+      if (rtt > maxRtt) maxRtt = rtt
+      if (loss > 4.0 || rtt > 120) {
+        degradedPeers++
+      }
+    }
+  }
+
+  let overallStatus = 'CONNECTING'
+  let overallClass = 'status-connecting'
+
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    overallStatus = 'DISCONNECTED'
+    overallClass = 'status-disconnected'
+  } else if (connectedPeers > 0) {
+    if (degradedPeers > 0 || maxLoss > 4.0) {
+      overallStatus = 'DEGRADED'
+      overallClass = 'status-degraded'
+    } else {
+      overallStatus = 'CONNECTED'
+      overallClass = 'status-connected'
+    }
+  } else {
+    overallStatus = 'CONNECTING'
+    overallClass = 'status-connecting'
+  }
+
+  if (mainWebRtcStatus && mainWebRtcStatusText) {
+    mainWebRtcStatus.className = `status-pill ${overallClass}`
+    mainWebRtcStatusText.textContent = overallStatus
+  }
+
+  // WebRTC Card
+  if (subWebrtcCard && subWebrtcState && subWebrtcMeta) {
+    if (connectedPeers > 0) {
+      subWebrtcCard.className = degradedPeers > 0 ? 'subsystem-card status-degraded' : 'subsystem-card status-ok'
+      const lang = document.documentElement.getAttribute('lang') || 'it'
+      const suffix = lang === 'it' ? (connectedPeers === 1 ? 'o' : 'i') : connectedPeers > 1 ? 's' : ''
+      subWebrtcState.textContent = t('subsystemWebrtcPeers', { count: String(connectedPeers), suffix })
+      subWebrtcMeta.textContent = degradedPeers > 0 ? `Loss: ${maxLoss.toFixed(1)}%` : `RTT: ${Math.round(maxRtt)}ms`
+    } else {
+      subWebrtcCard.className = 'subsystem-card status-warn'
+      subWebrtcState.textContent = t('subsystemWebrtcIdle')
+      subWebrtcMeta.textContent = `${totalPeers} in negotiation`
+    }
+  }
+
+  // Signal Card
+  if (subSignalCard && subSignalState && subSignalMeta) {
+    if (socket?.readyState === WebSocket.OPEN) {
+      subSignalCard.className = 'subsystem-card status-ok'
+      subSignalState.textContent = t('subsystemSignalWsLive')
+      subSignalMeta.textContent = `ws://${location.host}/signal`
+    } else if (socket?.readyState === WebSocket.CONNECTING) {
+      subSignalCard.className = 'subsystem-card status-warn'
+      subSignalState.textContent = t('subsystemSignalWsReconnecting')
+      subSignalMeta.textContent = 'Retrying...'
+    } else {
+      subSignalCard.className = 'subsystem-card status-bad'
+      subSignalState.textContent = t('subsystemSignalWsOffline')
+      subSignalMeta.textContent = 'Disconnected'
+    }
+  }
+
+  // Audio Card
+  if (subAudioCard && subAudioState && subAudioMeta) {
+    if (isMuted) {
+      subAudioCard.className = 'subsystem-card status-warn'
+      subAudioState.textContent = t('subsystemAudioMuted')
+      subAudioMeta.textContent = 'Mute Active'
+    } else if (outputStream && outputStream.active) {
+      subAudioCard.className = 'subsystem-card status-ok'
+      subAudioState.textContent = t('subsystemAudioActive')
+      subAudioMeta.textContent = 'Opus 20ms'
+    } else {
+      subAudioCard.className = 'subsystem-card status-bad'
+      subAudioState.textContent = t('subsystemAudioInactive')
+      subAudioMeta.textContent = 'No stream'
+    }
+  }
+
+  // Network Card
+  if (subNetworkCard && subNetworkState && subNetworkMeta) {
+    const isLan = listenerUrl && !listenerUrl.includes('localhost') && !listenerUrl.includes('127.0.0.1')
+    subNetworkCard.className = isLan ? 'subsystem-card status-ok' : 'subsystem-card status-warn'
+    subNetworkState.textContent = isLan ? t('subsystemNetworkLan') : 'Localhost Only'
+    subNetworkMeta.textContent = isLan ? 'Wi-Fi / LAN' : '127.0.0.1'
+  }
+}
 
 // --- Devices UI (In-Place Updates without Flickering) ---
 function updateDeviceCountBadge() {
@@ -311,6 +505,7 @@ function updateDeviceCountBadge() {
   else if (lang === 'fr') suffix = count > 1 ? 's' : ''
   devicesCount.textContent = t('devicesConnectedCount', { count: String(count), suffix })
   noDevicesMsg.hidden = count > 0
+  updateSubsystemsStatus()
 }
 
 function getDeviceIconSvg(type) {
@@ -340,17 +535,18 @@ function addDeviceElement(sessionKey, deviceName, deviceType = 'phone') {
 
   item.innerHTML = `
     <div class="device-info-left">
-      <div class="device-icon-box">
+      <div class="device-icon-box" aria-hidden="true">
         ${iconSvg}
       </div>
       <div class="device-meta">
         <span class="device-name-text">${deviceName}</span>
         <div id="stat-${safeId}" class="device-telemetry-row">
+          <span class="telemetry-badge badge-pending"><span class="status-dot"></span> CONNECTING</span>
           <span class="telemetry-badge badge-pending">${t('badgePending')}</span>
         </div>
       </div>
     </div>
-    <button class="btn btn-danger btn-sm kick-btn" type="button">${t('disconnectDeviceBtn')}</button>
+    <button class="btn btn-danger btn-sm kick-btn" type="button" aria-label="${t('disconnectDeviceBtn')} ${deviceName}">${t('disconnectDeviceBtn')}</button>
   `
 
   item.querySelector('.kick-btn').addEventListener('click', () => {
@@ -359,6 +555,7 @@ function addDeviceElement(sessionKey, deviceName, deviceType = 'phone') {
 
   devicesList.appendChild(item)
   updateDeviceCountBadge()
+  announceA11y(t('srDeviceJoined', { name: deviceName }))
 }
 
 function removeDeviceElement(sessionKey) {
@@ -410,11 +607,12 @@ function signal(msg) {
 
 async function fetchLanUrl() {
   const res = await fetch('/api/network', { cache: 'no-store' })
-  if (!res.ok) throw new Error('Impossibile ottenere l\'indirizzo di rete locale')
+  if (!res.ok) throw new Error("Impossibile ottenere l'indirizzo di rete locale")
   const data = await res.json()
   const ip = data.addresses?.[0]
   if (!ip) throw new Error('Nessun indirizzo Wi-Fi o Ethernet rilevato sul PC.')
-  return `${location.protocol}//${ip}:${data.port}/listen.html?room=${roomId}`
+  const tokenParam = listenerToken ? `&token=${listenerToken}` : ''
+  return `${location.protocol}//${ip}:${data.port}/listen.html?room=${roomId}${tokenParam}`
 }
 
 function tuneOpusSdp(sdp, profileKey, maxBitrate) {
@@ -422,7 +620,7 @@ function tuneOpusSdp(sdp, profileKey, maxBitrate) {
   const opusMatch = sdp.match(/a=rtpmap:(\d+) opus\/48000\/2/i)
   if (!opusMatch) return sdp
   const payload = opusMatch[1]
-  
+
   // 20 ms packets retain low latency while halving packet-rate overhead versus
   // forced 10 ms packets. FEC is kept enabled to recover isolated Wi-Fi loss.
   const isCbr = Boolean(prof.cbr)
@@ -523,8 +721,10 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
     if (connState === 'disconnected' || iceState === 'disconnected') {
       if (!session.disconnectTimeout) {
         session.disconnectTimeout = setTimeout(() => {
-          if (['disconnected', 'closed', 'failed'].includes(peer.connectionState) ||
-              ['disconnected', 'closed', 'failed'].includes(peer.iceConnectionState)) {
+          if (
+            ['disconnected', 'closed', 'failed'].includes(peer.connectionState) ||
+            ['disconnected', 'closed', 'failed'].includes(peer.iceConnectionState)
+          ) {
             cleanupPeerSession(sessionKey, 'connection-lost')
           }
         }, 3500)
@@ -554,7 +754,7 @@ function connectSignal() {
 
   ws.addEventListener('open', () => {
     logger.info(`Host signaling connected, registering room [${roomId}]`)
-    signal({ type: 'register', role: 'host', roomId, hostKey })
+    signal({ type: 'register', role: 'host', roomId, hostKey, listenerToken })
   })
 
   ws.addEventListener('message', async ({ data }) => {
@@ -583,7 +783,10 @@ function connectSignal() {
       let session = peers.get(sessionKey)
       if (!session) {
         for (const s of peers.values()) {
-          if (s.clientId === msg.clientId) { session = s; break }
+          if (s.clientId === msg.clientId) {
+            session = s
+            break
+          }
         }
       }
       if (session) {
@@ -601,7 +804,10 @@ function connectSignal() {
       let session = peers.get(sessionKey)
       if (!session) {
         for (const s of peers.values()) {
-          if (s.clientId === msg.clientId) { session = s; break }
+          if (s.clientId === msg.clientId) {
+            session = s
+            break
+          }
         }
       }
       if (session && msg.candidate) {
@@ -727,25 +933,22 @@ async function pollTelemetryAndAdapt() {
       // If inactive for > 3.5 seconds, display signal lost warning and do not calculate fake 0% loss
       const isStale = timeSinceActive > 3500
 
-      const dSent = packetsSent != null && session.lastPacketsSent != null
-        ? Math.max(0, packetsSent - session.lastPacketsSent)
-        : null
-      const dLost = hasNewActivity && session.lastPacketsLost != null
-        ? Math.max(0, packetsLost - session.lastPacketsLost)
-        : null
+      const dSent =
+        packetsSent != null && session.lastPacketsSent != null
+          ? Math.max(0, packetsSent - session.lastPacketsSent)
+          : null
+      const dLost =
+        hasNewActivity && session.lastPacketsLost != null ? Math.max(0, packetsLost - session.lastPacketsLost) : null
 
-      const instantLossRate = hasNewActivity && dSent && dLost != null
-        ? (dLost / dSent) * 100
-        : (isStale ? 100 : null)
+      const instantLossRate = hasNewActivity && dSent && dLost != null ? (dLost / dSent) * 100 : isStale ? 100 : null
 
       session.lastPacketsSent = packetsSent
       if (hasNewActivity) {
         session.lastPacketsLost = packetsLost
       }
 
-      const smooth = (previous, sample, weight = 0.3) => sample == null
-        ? previous
-        : previous == null ? sample : previous + (sample - previous) * weight
+      const smooth = (previous, sample, weight = 0.3) =>
+        sample == null ? previous : previous == null ? sample : previous + (sample - previous) * weight
 
       if (!isStale) {
         session.smoothedRtt = smooth(session.smoothedRtt, rtt)
@@ -826,7 +1029,7 @@ async function pollTelemetryAndAdapt() {
         const fixedBitrate = profiles[liveQualitySelect.value]?.maxBitrate || 384000
         session.bitrate = fixedBitrate
         activeTierObj = {
-          badge: (rtt != null && rtt > 80) ? 'badge-bad' : 'badge-good',
+          badge: rtt != null && rtt > 80 ? 'badge-bad' : 'badge-good',
           labelKey: null,
           customLabel: `${Math.round(fixedBitrate / 1000)}k`,
         }
@@ -839,7 +1042,13 @@ async function pollTelemetryAndAdapt() {
         const bitrateDisplay = `${Math.round(session.bitrate / 1000)} kbps`
         const badgeLabel = activeTierObj.labelKey ? t(activeTierObj.labelKey) : activeTierObj.customLabel
 
+        const isDegraded =
+          (session.smoothedLoss ?? 0) > 4 || (session.smoothedRtt ?? 0) > 100 || (session.currentTier ?? 5) <= 2
+        const statusBadgeClass = isDegraded ? 'badge-warn' : 'badge-good'
+        const statusBadgeText = isDegraded ? 'DEGRADED' : 'CONNECTED'
+
         statElem.innerHTML = `
+          <span class="telemetry-badge ${statusBadgeClass}"><span class="status-dot"></span> ${statusBadgeText}</span>
           <span class="telemetry-badge ${activeTierObj.badge}">${badgeLabel}</span>
           <span class="telemetry-item">Ping: <strong>${pingDisplay}</strong></span>
           <span class="telemetry-item">Bitrate: <strong>${bitrateDisplay}</strong></span>
@@ -850,6 +1059,8 @@ async function pollTelemetryAndAdapt() {
       logger.debug('Error polling telemetry for peer:', err?.message || err)
     }
   }
+
+  updateSubsystemsStatus()
 }
 
 // --- Lifecycle Actions ---
@@ -906,9 +1117,10 @@ async function startTransmission() {
     outputStream = await initAudio(audioTrack)
     roomId = randomCode(8)
     hostKey = generateKey()
+    listenerToken = generateListenerToken()
     listenerUrl = await fetchLanUrl()
 
-    logger.info(`Broadcast initialized: Room [${roomId}], URL: ${listenerUrl}`)
+    logger.info(`Broadcast initialized: Room [${roomId}]`)
 
     roomCodeText.textContent = roomId
     lanUrlDisplay.textContent = listenerUrl
@@ -1012,7 +1224,7 @@ async function checkMobileAdvisory() {
       mobileAdvisory.hidden = true
     }
   } catch {
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
     mobileAdvisory.hidden = !(isMobileUA || isTouchDevice)
   }

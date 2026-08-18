@@ -28,22 +28,24 @@ function connectClient(port, options = {}) {
 
   return {
     ws,
-    ready: () => new Promise((resolve, reject) => {
-      ws.once('open', resolve)
-      ws.once('error', reject)
-    }),
-    waitForMessage: (predicate, timeoutMs = 3000) => new Promise((resolve, reject) => {
-      const queueIdx = queue.findIndex(predicate)
-      if (queueIdx !== -1) {
-        return resolve(queue.splice(queueIdx, 1)[0])
-      }
-      const timer = setTimeout(() => {
-        const idx = waiters.findIndex((w) => w.resolve === resolve)
-        if (idx !== -1) waiters.splice(idx, 1)
-        reject(new Error(`Timeout waiting for WS message matching predicate after ${timeoutMs}ms`))
-      }, timeoutMs)
-      waiters.push({ predicate, resolve, reject, timer })
-    }),
+    ready: () =>
+      new Promise((resolve, reject) => {
+        ws.once('open', resolve)
+        ws.once('error', reject)
+      }),
+    waitForMessage: (predicate, timeoutMs = 3000) =>
+      new Promise((resolve, reject) => {
+        const queueIdx = queue.findIndex(predicate)
+        if (queueIdx !== -1) {
+          return resolve(queue.splice(queueIdx, 1)[0])
+        }
+        const timer = setTimeout(() => {
+          const idx = waiters.findIndex((w) => w.resolve === resolve)
+          if (idx !== -1) waiters.splice(idx, 1)
+          reject(new Error(`Timeout waiting for WS message matching predicate after ${timeoutMs}ms`))
+        }, timeoutMs)
+        waiters.push({ predicate, resolve, reject, timer })
+      }),
     send: (obj) => ws.send(JSON.stringify(obj)),
     close: (code, reason) => ws.close(code, reason),
   }
@@ -264,7 +266,11 @@ test('WebSocket Signaling & Lifecycle', async (t) => {
     assert.deepStrictEqual(receivedAnswer.sdp, mockAnswerSdp)
 
     // ICE candidates exchange
-    const mockCandidate = { candidate: 'candidate:1 1 UDP 2122260223 127.0.0.1 5000 typ host', sdpMid: '0', sdpMLineIndex: 0 }
+    const mockCandidate = {
+      candidate: 'candidate:1 1 UDP 2122260223 127.0.0.1 5000 typ host',
+      sdpMid: '0',
+      sdpMLineIndex: 0,
+    }
     listener.send({ type: 'candidate', candidate: mockCandidate })
     const receivedCand = await host.waitForMessage((m) => m.type === 'candidate')
     assert.deepStrictEqual(receivedCand.candidate, mockCandidate)
@@ -306,6 +312,112 @@ test('WebSocket Signaling & Lifecycle', async (t) => {
     assert.ok([1009, 1006].includes(closeInfo.code), `Expected 1009/1006 on oversize message, got ${closeInfo.code}`)
   })
 
+  await t.test('Listener registration with listenerToken authentication', async () => {
+    const validListenerToken = 'T'.repeat(22)
+    const invalidListenerToken = 'X'.repeat(22)
+
+    const host = connectClient(port)
+    await host.ready()
+    host.send({
+      type: 'register',
+      role: 'host',
+      roomId: 'ROOM5678',
+      hostKey: validHostKeyA,
+      listenerToken: validListenerToken,
+    })
+    await host.waitForMessage((m) => m.type === 'registered')
+
+    // 1. Listener with missing token
+    const lMissing = connectClient(port)
+    await lMissing.ready()
+    lMissing.send({
+      type: 'register',
+      role: 'listener',
+      roomId: 'ROOM5678',
+      sessionId: 'sess-missing',
+    })
+    let errMsg = await lMissing.waitForMessage((m) => m.type === 'error')
+    assert.strictEqual(errMsg.message, 'Token di ascolto non valido o mancante.')
+
+    // 2. Listener with invalid token
+    const lInvalid = connectClient(port)
+    await lInvalid.ready()
+    lInvalid.send({
+      type: 'register',
+      role: 'listener',
+      roomId: 'ROOM5678',
+      sessionId: 'sess-invalid',
+      listenerToken: invalidListenerToken,
+    })
+    errMsg = await lInvalid.waitForMessage((m) => m.type === 'error')
+    assert.strictEqual(errMsg.message, 'Token di ascolto non valido o mancante.')
+
+    // 3. Listener with valid token
+    const lValid = connectClient(port)
+    await lValid.ready()
+    lValid.send({
+      type: 'register',
+      role: 'listener',
+      roomId: 'ROOM5678',
+      sessionId: 'sess-valid',
+      listenerToken: validListenerToken,
+      deviceName: 'Pixel 8',
+      deviceType: 'phone',
+    })
+    const regMsg = await lValid.waitForMessage((m) => m.type === 'registered')
+    assert.strictEqual(regMsg.sessionId, 'sess-valid')
+    assert.strictEqual(regMsg.hostAvailable, true)
+
+    host.close()
+    lMissing.close()
+    lInvalid.close()
+    lValid.close()
+  })
+
+  await t.test('Rate limiting on consecutive room misses', async () => {
+    let missCount = 0
+    const rlApp = createWiforaServer({
+      port: 0,
+      rateLimiters: {
+        roomMissLimiter: {
+          check: () => {
+            missCount++
+            return missCount <= 2
+          },
+          close: () => {},
+        },
+      },
+    })
+    const rlAddr = await rlApp.listen(0, '127.0.0.1')
+    const rlPort = rlAddr.port
+
+    const l1 = connectClient(rlPort)
+    await l1.ready()
+    l1.send({ type: 'register', role: 'listener', roomId: 'NONE0001', sessionId: 's1' })
+    const msg1 = await l1.waitForMessage((m) => m.type === 'error')
+    assert.strictEqual(msg1.message, 'Nessuna trasmissione attiva per questo codice.')
+
+    const l2 = connectClient(rlPort)
+    await l2.ready()
+    l2.send({ type: 'register', role: 'listener', roomId: 'NONE0002', sessionId: 's2' })
+    const msg2 = await l2.waitForMessage((m) => m.type === 'error')
+    assert.strictEqual(msg2.message, 'Nessuna trasmissione attiva per questo codice.')
+
+    // 3rd attempt exceeds limit -> server triggers close with 1008
+    const l3 = connectClient(rlPort)
+    await l3.ready()
+    const closePromise = new Promise((resolve) => {
+      l3.ws.once('close', (code) => resolve(code))
+    })
+    l3.send({ type: 'register', role: 'listener', roomId: 'NONE0003', sessionId: 's3' })
+    const closeCode = await closePromise
+    assert.strictEqual(closeCode, 1008)
+
+    l1.close()
+    l2.close()
+    await rlApp.close()
+  })
+
   await t.test('Unauthorized origin is rejected on WebSocket upgrade', async () => {
     const ws = new WebSocket(`ws://127.0.0.1:${port}/signal`, {
       headers: { origin: 'http://malicious-external-site.com:3975' },
@@ -313,7 +425,7 @@ test('WebSocket Signaling & Lifecycle', async (t) => {
 
     const result = await new Promise((resolve) => {
       ws.once('open', () => resolve('opened'))
-      ws.once('error', (err) => resolve('error'))
+      ws.once('error', () => resolve('error'))
       ws.once('close', () => resolve('closed'))
     })
 

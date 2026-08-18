@@ -9,7 +9,7 @@
  */
 export async function getDeviceInfo() {
   const ua = navigator.userAgent || ''
-  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+  const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
   const maxTouch = navigator.maxTouchPoints || 0
   const width = Math.min(window.screen.width, window.screen.height)
   const height = Math.max(window.screen.width, window.screen.height)
@@ -23,13 +23,13 @@ export async function getDeviceInfo() {
     else if (height >= 1194 || (width >= 834 && ratio >= 2)) ipadModel = 'Apple iPad Pro 11"'
     else if (height >= 1180 || width >= 820) ipadModel = 'Apple iPad Air'
     else if (height <= 1133 && width <= 744) ipadModel = 'Apple iPad mini'
-    
+
     const iosMatch = ua.match(/OS (\d+[_\.]\d+)/i)
     const osVer = iosMatch ? ` (iPadOS ${iosMatch[1].replace('_', '.')})` : ''
     return {
       type: 'tablet',
       name: `${ipadModel}${osVer}`,
-      platform: 'iPadOS'
+      platform: 'iPadOS',
     }
   }
 
@@ -41,7 +41,8 @@ export async function getDeviceInfo() {
     else if (height === 852 && width === 393) iphoneModel = 'Apple iPhone 15/16 Pro'
     else if (height === 926 && width === 428) iphoneModel = 'Apple iPhone 14/13 Plus/Pro Max'
     else if (height === 844 && width === 390) iphoneModel = 'Apple iPhone 14/13/12'
-    else if (height === 896 && width === 414) iphoneModel = ratio >= 3 ? 'Apple iPhone 11 Pro Max / XS Max' : 'Apple iPhone 11 / XR'
+    else if (height === 896 && width === 414)
+      iphoneModel = ratio >= 3 ? 'Apple iPhone 11 Pro Max / XS Max' : 'Apple iPhone 11 / XR'
     else if (height === 812 && width === 375) iphoneModel = 'Apple iPhone 13/12 mini / X'
     else if (height === 667 && width === 375) iphoneModel = 'Apple iPhone SE'
 
@@ -50,7 +51,7 @@ export async function getDeviceInfo() {
     return {
       type: 'phone',
       name: `${iphoneModel}${osVer}`,
-      platform: 'iOS'
+      platform: 'iOS',
     }
   }
 
@@ -65,7 +66,7 @@ export async function getDeviceInfo() {
       try {
         const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion'])
         if (hints.model) rawModel = hints.model.trim()
-      } catch (err) {
+      } catch {
         // High entropy client hints not allowed or blocked by permission policy
       }
     }
@@ -82,7 +83,7 @@ export async function getDeviceInfo() {
     return {
       type,
       name: parsedName,
-      platform: 'Android'
+      platform: 'Android',
     }
   }
 
@@ -104,7 +105,7 @@ export async function getDeviceInfo() {
   return {
     type: touch ? 'phone' : 'desktop',
     name: touch ? 'Smartphone' : 'Computer PC',
-    platform: 'Unknown'
+    platform: 'Unknown',
   }
 }
 
