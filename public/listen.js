@@ -1,5 +1,8 @@
 import { initI18n, t, setLanguage } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
+import { createLogger } from './logger.js'
+
+const logger = createLogger('Listener')
 
 // --- DOM Elements ---
 const desktopNotice = document.querySelector('#desktopNotice')
@@ -30,14 +33,19 @@ const levelBar = document.querySelector('#levelBar')
 const wakeLockToggle = document.querySelector('#wakeLockToggle')
 const remoteAudio = document.querySelector('#remoteAudio')
 
-// --- Persistent Listener Session ID ---
+// --- Persistent Tab-Scoped Listener Session ID ---
 function getOrCreateSessionId() {
-  let id = sessionStorage.getItem('wifora_listener_session_id')
-  if (!id) {
-    id = 'ls_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
-    sessionStorage.setItem('wifora_listener_session_id', id)
+  try {
+    let id = sessionStorage.getItem('wifora_listener_session_id')
+    if (!id) {
+      id = 'ls_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+      sessionStorage.setItem('wifora_listener_session_id', id)
+    }
+    return id
+  } catch (err) {
+    logger.debug('sessionStorage not available, using ephemeral session ID:', err)
+    return 'ls_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
   }
-  return id
 }
 const listenerSessionId = getOrCreateSessionId()
 
@@ -75,21 +83,33 @@ function setupAudioSession() {
   if ('audioSession' in navigator && navigator.audioSession) {
     try {
       navigator.audioSession.type = 'playback'
-    } catch {}
+      logger.debug('iOS AudioSession set to playback')
+    } catch (err) {
+      logger.debug('navigator.audioSession set error:', err?.message || err)
+    }
   }
 }
 
 // --- Theme Management ---
 function initTheme() {
-  const saved = localStorage.getItem('wifora_theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const theme = saved || (prefersDark ? 'dark' : 'light')
-  setTheme(theme)
+  try {
+    const saved = localStorage.getItem('wifora_theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const theme = saved || (prefersDark ? 'dark' : 'light')
+    setTheme(theme)
+  } catch (err) {
+    logger.debug('Error accessing localStorage for theme:', err)
+    setTheme('dark')
+  }
 }
 
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme)
-  localStorage.setItem('wifora_theme', theme)
+  try {
+    localStorage.setItem('wifora_theme', theme)
+  } catch (err) {
+    logger.debug('Error setting theme in localStorage:', err)
+  }
   if (theme === 'dark') {
     sunIcon.hidden = false
     moonIcon.hidden = true
@@ -113,7 +133,8 @@ async function checkDesktopAdvisory() {
     } else {
       desktopNotice.hidden = true
     }
-  } catch {
+  } catch (err) {
+    logger.debug('Device info check fallback:', err)
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
     desktopNotice.hidden = isMobileUA || isTouchDevice
@@ -149,16 +170,25 @@ async function applyWakeLock() {
   if ('wakeLock' in navigator && shouldListen && !wakeLockSentinel) {
     try {
       wakeLockSentinel = await navigator.wakeLock.request('screen')
+      logger.debug('Screen WakeLock acquired')
       wakeLockSentinel.addEventListener('release', () => {
+        logger.debug('Screen WakeLock released by OS')
         wakeLockSentinel = null
       })
-    } catch {}
+    } catch (err) {
+      logger.debug('WakeLock request failed or disallowed:', err?.message || err)
+    }
   }
 }
 
 function releaseWakeLock() {
   if (wakeLockSentinel) {
-    try { wakeLockSentinel.release() } catch {}
+    try {
+      wakeLockSentinel.release()
+      logger.debug('Screen WakeLock released explicitly')
+    } catch (err) {
+      logger.debug('Error releasing wake lock:', err)
+    }
     wakeLockSentinel = null
   }
 }
@@ -168,12 +198,28 @@ wakeLockToggle.addEventListener('change', applyWakeLock)
 // Sleep / Wake & Standby Recovery
 function handleWakeRecovery() {
   if (shouldListen) {
+    logger.info('Wake / visibility recovery triggered')
     setupAudioSession()
     applyWakeLock()
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume().then(() => {
+        logger.debug('AudioContext resumed on wake recovery')
+      }).catch((err) => {
+        logger.warn('AudioContext resume failed on wake recovery:', err)
+      })
+    }
     if (remoteAudio.paused && remoteAudio.srcObject) {
-      remoteAudio.play().catch(() => {})
+      remoteAudio.play().then(() => {
+        resumeBox.hidden = true
+        liveStatusText.textContent = t('liveStatusConnected')
+      }).catch((err) => {
+        logger.debug('Autoplay policy requires tap on wake recovery:', err?.message || err)
+        resumeBox.hidden = false
+        liveStatusText.textContent = t('liveStatusWaitingTap')
+      })
     }
     if (!socket || socket.readyState !== WebSocket.OPEN) {
+      logger.info('Reconnecting signaling socket on wake recovery')
       connectSignal()
     }
   }
@@ -185,8 +231,20 @@ document.addEventListener('visibilitychange', () => {
   }
 })
 window.addEventListener('focus', handleWakeRecovery)
-window.addEventListener('pageshow', handleWakeRecovery)
-window.addEventListener('online', handleWakeRecovery)
+window.addEventListener('pageshow', (event) => {
+  logger.debug('pageshow event, persisted:', event.persisted)
+  handleWakeRecovery()
+})
+window.addEventListener('online', () => {
+  logger.info('Network back online, restoring stream...')
+  handleWakeRecovery()
+})
+window.addEventListener('offline', () => {
+  logger.warn('Device went offline')
+  if (shouldListen) {
+    liveStatusText.textContent = t('telemetryReconnecting')
+  }
+})
 
 // --- Parallel Level Meter Visualization ---
 function setupVisualizer(stream) {
@@ -197,14 +255,15 @@ function setupVisualizer(stream) {
       audioContext = new AudioCtx({ latencyHint: 0 })
     }
     if (audioContext.state === 'suspended') {
-      audioContext.resume().catch(() => {})
+      audioContext.resume().catch((err) => {
+        logger.debug('Visualizer audioContext resume deferred:', err?.message || err)
+      })
     }
     const source = audioContext.createMediaStreamSource(stream)
     analyserNode = audioContext.createAnalyser()
     analyserNode.fftSize = 64
     analyserNode.smoothingTimeConstant = 0.5
     source.connect(analyserNode)
-    // Note: Never connect to audioContext.destination to avoid double audio playback!
 
     const data = new Uint8Array(analyserNode.frequencyBinCount)
     function update() {
@@ -219,7 +278,9 @@ function setupVisualizer(stream) {
       animFrameId = requestAnimationFrame(update)
     }
     update()
-  } catch (e) {}
+  } catch (err) {
+    logger.debug('Visualizer setup not supported or disabled:', err)
+  }
 }
 
 // --- Volume & Mute ---
@@ -259,11 +320,12 @@ function setJitterBufferTarget(target) {
   if (!currentReceiver || !('jitterBufferTarget' in currentReceiver)) return
   if (currentJitterBufferTarget === target) return
   try {
-    // The WebRTC API expresses this target in milliseconds. Keep a small,
-    // stable safety margin instead of changing it on every telemetry sample.
     currentReceiver.jitterBufferTarget = target
     currentJitterBufferTarget = target
-  } catch {}
+    logger.debug(`Dynamic JitterBuffer target adjusted to ${target}ms`)
+  } catch (err) {
+    logger.debug('jitterBufferTarget property not writable:', err?.message || err)
+  }
 }
 
 function updateSignalBadge(targetQuality, severe = false) {
@@ -278,8 +340,6 @@ function updateSignalBadge(targetQuality, severe = false) {
       pendingQualitySamples = 1
     }
 
-    // Two consecutive samples avoid the distracting Good/Weak flicker caused
-    // by a single Wi-Fi scheduling spike.
     if (pendingQualitySamples >= 2) {
       displayedQuality = targetQuality
       pendingQuality = null
@@ -324,7 +384,6 @@ async function pollReceiverTelemetry() {
       }
     })
 
-    // Do not treat the first cumulative stats sample as one second of loss.
     const dReceived = lastPacketsReceived != null ? Math.max(0, packetsReceived - lastPacketsReceived) : null
     const dLost = lastPacketsLost != null ? Math.max(0, packetsLost - lastPacketsLost) : null
     const dTotal = dReceived + dLost
@@ -333,8 +392,6 @@ async function pollReceiverTelemetry() {
     lastPacketsReceived = packetsReceived
     lastPacketsLost = packetsLost
 
-    // Smooth short-lived RF scheduling variation. The raw counters are still
-    // used for fast protection when loss is genuinely severe.
     const smooth = (previous, sample, weight = 0.3) => sample == null
       ? previous
       : previous == null ? sample : previous + (sample - previous) * weight
@@ -361,7 +418,9 @@ async function pollReceiverTelemetry() {
         ? 'warn'
         : 'good'
     updateSignalBadge(quality, severe)
-  } catch {}
+  } catch (err) {
+    logger.debug('Error polling receiver stats:', err?.message || err)
+  }
 }
 
 // --- Signaling & WebRTC ---
@@ -375,9 +434,15 @@ async function connectSignal() {
   const ws = new WebSocket(`${protocol}//${location.host}/signal`)
   socket = ws
 
-  const deviceInfo = await getDeviceInfo()
+  let deviceInfo = { name: 'Smartphone', type: 'phone' }
+  try {
+    deviceInfo = await getDeviceInfo()
+  } catch (err) {
+    logger.debug('Device info lookup fallback:', err)
+  }
 
   ws.addEventListener('open', () => {
+    logger.info(`Signaling opened, registering listener in room [${roomId}] (session: ${listenerSessionId})`)
     signal({
       type: 'register',
       role: 'listener',
@@ -395,50 +460,66 @@ async function connectSignal() {
 
   ws.addEventListener('message', async ({ data }) => {
     let msg
-    try { msg = JSON.parse(data) } catch { return }
+    try {
+      msg = JSON.parse(data)
+    } catch (err) {
+      logger.warn('Malformed JSON received from signaling server:', err)
+      return
+    }
 
     if (msg.type === 'pong') return
 
     if (msg.type === 'registered') {
+      logger.info(`Registered successfully: clientId=${msg.clientId}, hostAvailable=${msg.hostAvailable}`)
       liveStatusText.textContent = msg.hostAvailable ? t('liveStatusConnected') : t('liveStatusWaitingHost')
     }
 
     if (msg.type === 'kicked') {
+      logger.warn('Kicked by host')
       stopListening(t('toastKickedByHost'), true)
       return
     }
 
     if (msg.type === 'room-ended' || msg.type === 'host-left') {
+      logger.info('Room broadcast ended by host')
       stopListening(t('toastRoomEnded'), true)
       return
     }
 
     if (msg.type === 'offer') {
+      logger.info('WebRTC offer received from host')
       await acceptOffer(msg)
     }
 
     if (msg.type === 'candidate') {
       if (peer?.remoteDescription) {
-        await peer.addIceCandidate(msg.candidate).catch(() => {})
+        try {
+          await peer.addIceCandidate(msg.candidate)
+        } catch (err) {
+          logger.debug('Ignored ICE candidate addition error:', err?.message || err)
+        }
       } else {
         pendingCandidates.push(msg.candidate)
       }
     }
 
     if (msg.type === 'error') {
+      logger.error('Signaling error received:', msg.message)
       stopListening(msg.message, true)
     }
   })
 
   ws.addEventListener('close', (event) => {
     clearInterval(pingTimer)
+    logger.info(`Signaling closed (code: ${event.code}, reason: ${event.reason})`)
     if (event.code === 4000 || event.reason === 'Kicked by host') {
       stopListening(t('toastKickedByHost'), true)
       return
     }
-    // If WebRTC is still connected (e.g. phone in background), auto-reconnect signaling in background
+    // If WebRTC is still active and connected, attempt graceful signaling reconnection in background
     if (shouldListen) {
       if (peer && peer.connectionState === 'connected') {
+        logger.info('WebRTC media peer is still live, reconnecting signaling in 2s...')
         setTimeout(connectSignal, 2000)
       } else {
         stopListening(t('toastRoomEnded'), true)
@@ -449,12 +530,16 @@ async function connectSignal() {
 
 async function acceptOffer(msg) {
   if (peer && peer.connectionState === 'connected') {
-    // If already connected, reuse existing connection unless renegotiation needed
+    logger.debug('Reusing connected WebRTC peer for renegotiation')
   } else if (peer) {
     peer.onconnectionstatechange = null
     peer.oniceconnectionstatechange = null
     peer.ontrack = null
-    try { peer.close() } catch {}
+    try {
+      peer.close()
+    } catch (err) {
+      logger.debug('Error closing previous peer:', err)
+    }
     peer = null
   }
   pendingCandidates = []
@@ -462,6 +547,7 @@ async function acceptOffer(msg) {
   setupAudioSession()
 
   if (!peer) {
+    logger.info('Creating new RTCPeerConnection for listener')
     peer = new RTCPeerConnection({ iceServers: [], bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' })
 
     peer.onicecandidate = ({ candidate }) => {
@@ -469,6 +555,7 @@ async function acceptOffer(msg) {
     }
 
     peer.ontrack = (event) => {
+      logger.info('WebRTC media track received')
       const stream = event.streams[0] || new MediaStream([event.track])
       remoteAudio.srcObject = stream
       remoteAudio.volume = isMuted ? 0 : currentVol
@@ -478,6 +565,7 @@ async function acceptOffer(msg) {
       setJitterBufferTarget(22)
 
       event.track.onended = () => {
+        logger.info('Remote audio track ended')
         stopListening(t('toastRoomEnded'), true)
       }
 
@@ -487,10 +575,12 @@ async function acceptOffer(msg) {
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
+            logger.info('Audio playback started smoothly')
             resumeBox.hidden = true
             liveStatusText.textContent = t('liveStatusConnected')
           })
-          .catch(() => {
+          .catch((err) => {
+            logger.info('Autoplay requires user touch interaction:', err?.message || err)
             resumeBox.hidden = false
             liveStatusText.textContent = t('liveStatusWaitingTap')
           })
@@ -500,7 +590,9 @@ async function acceptOffer(msg) {
     const handlePeerDisconnect = () => {
       const connState = peer?.connectionState
       const iceState = peer?.iceConnectionState
+      logger.debug(`Peer connection state: ${connState}, ICE: ${iceState}`)
       if (['failed', 'closed'].includes(connState) || ['failed', 'closed'].includes(iceState)) {
+        logger.warn('WebRTC peer connection failed or closed')
         stopListening(t('toastRoomEnded'), true)
       } else if (connState === 'connected' && (iceState === 'connected' || iceState === 'completed')) {
         liveStatusText.textContent = t('liveStatusConnected')
@@ -511,15 +603,33 @@ async function acceptOffer(msg) {
     peer.oniceconnectionstatechange = handlePeerDisconnect
   }
 
-  await peer.setRemoteDescription(msg.sdp)
+  try {
+    await peer.setRemoteDescription(msg.sdp)
+    logger.debug('Remote SDP description set')
+  } catch (err) {
+    logger.error('Failed to setRemoteDescription:', err)
+    stopListening(t('toastRoomEnded'), true)
+    return
+  }
+
   for (const c of pendingCandidates) {
-    await peer.addIceCandidate(c).catch(() => {})
+    try {
+      await peer.addIceCandidate(c)
+    } catch (err) {
+      logger.debug('Error adding pending candidate:', err?.message || err)
+    }
   }
   pendingCandidates = []
 
-  const answer = await peer.createAnswer()
-  await peer.setLocalDescription(answer)
-  signal({ type: 'answer', target: msg.clientId, sdp: peer.localDescription })
+  try {
+    const answer = await peer.createAnswer()
+    await peer.setLocalDescription(answer)
+    signal({ type: 'answer', target: msg.clientId, sdp: peer.localDescription })
+    logger.debug('Local SDP answer sent to host')
+  } catch (err) {
+    logger.error('Failed to create or send SDP answer:', err)
+    stopListening(t('toastRoomEnded'), true)
+  }
 }
 
 // --- Lifecycle Actions ---
@@ -530,6 +640,7 @@ function startListening() {
     return
   }
 
+  logger.info(`Starting listener for room [${roomId}]`)
   shouldListen = true
   listenBtn.disabled = true
 
@@ -548,13 +659,20 @@ function startListening() {
 }
 
 function stopListening(message = '', showForm = false) {
+  logger.info('Stopping listener...', { message, showForm })
   if (shouldListen) {
     try {
       if (socket?.readyState === WebSocket.OPEN) {
         signal({ type: 'leave', roomId, sessionId: listenerSessionId })
       }
+    } catch (err) {
+      logger.debug('Error sending leave signal:', err)
+    }
+    try {
       navigator.sendBeacon?.('/api/leave', JSON.stringify({ roomId, sessionId: listenerSessionId }))
-    } catch {}
+    } catch (err) {
+      logger.debug('Error sending leave beacon:', err)
+    }
   }
 
   shouldListen = false
@@ -568,7 +686,11 @@ function stopListening(message = '', showForm = false) {
   resetReceiverTelemetry()
 
   if (audioContext) {
-    try { audioContext.close() } catch {}
+    try {
+      audioContext.close()
+    } catch (err) {
+      logger.debug('Error closing audioContext:', err)
+    }
     audioContext = null
   }
   analyserNode = null
@@ -578,21 +700,31 @@ function stopListening(message = '', showForm = false) {
     peer.oniceconnectionstatechange = null
     peer.onicecandidate = null
     peer.ontrack = null
-    try { peer.close() } catch {}
+    try {
+      peer.close()
+    } catch (err) {
+      logger.debug('Error closing peer:', err)
+    }
     peer = null
   }
   if (socket) {
     socket.onclose = null
     socket.onerror = null
     socket.onmessage = null
-    try { socket.close() } catch {}
+    try {
+      socket.close()
+    } catch (err) {
+      logger.debug('Error closing socket:', err)
+    }
     socket = null
   }
 
   try {
     remoteAudio.pause()
     remoteAudio.srcObject = null
-  } catch {}
+  } catch (err) {
+    logger.debug('Error pausing remote audio:', err)
+  }
   resumeBox.hidden = true
 
   if (levelBar) levelBar.style.width = '0%'
@@ -626,7 +758,9 @@ resumeBtn.addEventListener('click', () => {
   remoteAudio.play().then(() => {
     resumeBox.hidden = true
     liveStatusText.textContent = t('liveStatusConnected')
-  }).catch(() => {})
+  }).catch((err) => {
+    logger.warn('Resume play failed on user click:', err)
+  })
 })
 
 disconnectBtn.addEventListener('click', () => {
@@ -639,10 +773,14 @@ function handlePageExit() {
       if (socket?.readyState === WebSocket.OPEN) {
         signal({ type: 'leave', roomId, sessionId: listenerSessionId })
       }
-    } catch {}
+    } catch (err) {
+      logger.debug('PageExit signal error:', err)
+    }
     try {
       navigator.sendBeacon?.('/api/leave', JSON.stringify({ roomId, sessionId: listenerSessionId }))
-    } catch {}
+    } catch (err) {
+      logger.debug('PageExit beacon error:', err)
+    }
   }
 }
 

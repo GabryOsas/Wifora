@@ -1,5 +1,8 @@
 import { initI18n, t, setLanguage } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
+import { createLogger } from './logger.js'
+
+const logger = createLogger('Host')
 
 // --- DOM Elements ---
 const homeSection = document.querySelector('#homeSection')
@@ -209,7 +212,7 @@ function applyDspSettings() {
   const t = audioContext.currentTime
 
   if (mode === 'pure') {
-    // 0ms delay Direct Bit-Perfect Bypass (Zero coloration, 100% natural bit-for-bit stream)
+    // 0ms delay Direct / DSP Bypass (Bypasses Web Audio filters & compression, pristine raw Web Audio output to Opus encoder)
     highPassFilter.frequency.setTargetAtTime(1, t, 0.02)
     clarityFilter.gain.setTargetAtTime(0, t, 0.02)
     limiterNode.threshold.setTargetAtTime(0, t, 0.02)
@@ -368,13 +371,18 @@ function removeDeviceElement(sessionKey) {
 function cleanupPeerSession(sessionKey, reason = '') {
   const session = peers.get(sessionKey)
   if (!session) return
+  logger.info(`Cleaning up peer session [${sessionKey}]`, { reason })
   clearTimeout(session.disconnectTimeout)
   session.disconnectTimeout = null
   if (session.peer) {
     session.peer.onconnectionstatechange = null
     session.peer.oniceconnectionstatechange = null
     session.peer.onicecandidate = null
-    try { session.peer.close() } catch {}
+    try {
+      session.peer.close()
+    } catch (err) {
+      logger.debug('Error closing peer connection:', err)
+    }
   }
   peers.delete(sessionKey)
   removeDeviceElement(sessionKey)
@@ -389,12 +397,13 @@ function cleanupPeerSession(sessionKey, reason = '') {
 function kickDevice(sessionKey) {
   const session = peers.get(sessionKey)
   if (!session) return
+  logger.warn(`Kicking listener [${sessionKey}]`)
   signal({ type: 'kick-listener', target: session.clientId || sessionKey })
   cleanupPeerSession(sessionKey, 'kicked-by-host')
   showToast(t('toastKicked'))
 }
 
-// --- WebRTC & Advanced Opus 10ms / FEC Tuning ---
+// --- WebRTC & Advanced Opus 20ms / FEC Tuning ---
 function signal(msg) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(msg))
 }
@@ -439,12 +448,12 @@ async function configureSender(sender, maxBitrate) {
     }
     const encoding = params.encodings[0]
     encoding.maxBitrate = maxBitrate
-    // Optional browser-specific fields must not make the essential bitrate
-    // update fail on a browser that does not expose them.
     if ('priority' in encoding) encoding.priority = 'high'
     if ('networkPriority' in encoding) encoding.networkPriority = 'high'
     await sender.setParameters(params)
-  } catch {}
+  } catch (err) {
+    logger.debug('Sender setParameters not fully supported by browser:', err?.message || err)
+  }
 }
 
 async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', deviceType = 'phone') {
@@ -544,20 +553,28 @@ function connectSignal() {
   socket = ws
 
   ws.addEventListener('open', () => {
+    logger.info(`Host signaling connected, registering room [${roomId}]`)
     signal({ type: 'register', role: 'host', roomId, hostKey })
   })
 
   ws.addEventListener('message', async ({ data }) => {
     let msg
-    try { msg = JSON.parse(data) } catch { return }
+    try {
+      msg = JSON.parse(data)
+    } catch (err) {
+      logger.warn('Malformed JSON received from signaling server:', err)
+      return
+    }
 
     if (msg.type === 'error') {
+      logger.error(`Signaling error received: ${msg.message}`)
       showToast(msg.message)
       return
     }
 
     if (msg.type === 'listener-joined') {
       const sessionKey = msg.sessionId || msg.clientId
+      logger.info(`Listener joined signal received [session:${sessionKey}, client:${msg.clientId}]`)
       await makeOffer(sessionKey, msg.clientId, msg.deviceName, msg.deviceType)
     }
 
@@ -569,7 +586,14 @@ function connectSignal() {
           if (s.clientId === msg.clientId) { session = s; break }
         }
       }
-      if (session) await session.peer.setRemoteDescription(msg.sdp)
+      if (session) {
+        try {
+          await session.peer.setRemoteDescription(msg.sdp)
+          logger.debug(`Remote description set for peer [${sessionKey}]`)
+        } catch (err) {
+          logger.error(`Failed to set remote description for [${sessionKey}]:`, err)
+        }
+      }
     }
 
     if (msg.type === 'candidate') {
@@ -581,7 +605,11 @@ function connectSignal() {
         }
       }
       if (session && msg.candidate) {
-        await session.peer.addIceCandidate(msg.candidate).catch(() => {})
+        try {
+          await session.peer.addIceCandidate(msg.candidate)
+        } catch (err) {
+          logger.debug(`Ignored candidate error for [${sessionKey}]:`, err?.message || err)
+        }
       }
     }
 
@@ -599,13 +627,18 @@ function connectSignal() {
         }
       }
       if (session) {
+        logger.info(`Listener left signal received for [${foundKey}]`)
         clearTimeout(session.disconnectTimeout)
         session.disconnectTimeout = null
         if (session.peer) {
           session.peer.onconnectionstatechange = null
           session.peer.oniceconnectionstatechange = null
           session.peer.onicecandidate = null
-          try { session.peer.close() } catch {}
+          try {
+            session.peer.close()
+          } catch (err) {
+            logger.debug('Error closing peer on listener-left:', err)
+          }
         }
         peers.delete(foundKey)
         peers.delete(sessionKey)
@@ -813,13 +846,16 @@ async function pollTelemetryAndAdapt() {
           <span class="telemetry-item">Loss: <strong>${lossDisplay}</strong></span>
         `
       }
-    } catch {}
+    } catch (err) {
+      logger.debug('Error polling telemetry for peer:', err?.message || err)
+    }
   }
 }
 
 // --- Lifecycle Actions ---
 async function startTransmission() {
   if (!navigator.mediaDevices?.getDisplayMedia) {
+    logger.error('getDisplayMedia not supported in this browser')
     setHomeStatus(t('statusBrowserUnsupported'), 'error')
     return
   }
@@ -852,12 +888,16 @@ async function startTransmission() {
     const audioTrack = capture.getAudioTracks()[0]
     if (!audioTrack) {
       capture.getTracks().forEach((t) => t.stop())
+      logger.warn('User did not check "Share system audio"')
       setHomeStatus(t('statusNoAudio'), 'error')
       return
     }
 
     captureStream = capture
-    audioTrack.addEventListener('ended', () => stopTransmission())
+    audioTrack.addEventListener('ended', () => {
+      logger.info('System audio track ended by OS/user')
+      stopTransmission()
+    })
     capture.getVideoTracks().forEach((t) => {
       t.addEventListener('ended', () => stopTransmission())
       t.stop() // Immediately stop video to conserve 100% bandwidth and CPU for pure audio
@@ -867,6 +907,8 @@ async function startTransmission() {
     roomId = randomCode(8)
     hostKey = generateKey()
     listenerUrl = await fetchLanUrl()
+
+    logger.info(`Broadcast initialized: Room [${roomId}], URL: ${listenerUrl}`)
 
     roomCodeText.textContent = roomId
     lanUrlDisplay.textContent = listenerUrl
@@ -882,14 +924,17 @@ async function startTransmission() {
     updateDeviceCountBadge()
   } catch (err) {
     if (err.name === 'NotAllowedError') {
+      logger.info('Screen capture permission cancelled by user')
       setHomeStatus(t('statusPermissionDenied'))
     } else {
+      logger.error('startTransmission error:', err)
       setHomeStatus(t('statusError', { msg: err.message }), 'error')
     }
   }
 }
 
 function stopTransmission() {
+  logger.info('Stopping broadcast...')
   stoppedByUser = true
   clearInterval(telemetryTimer)
   cancelAnimationFrame(animFrameId)
@@ -900,7 +945,11 @@ function stopTransmission() {
 
   for (const session of peers.values()) {
     clearTimeout(session.disconnectTimeout)
-    session.peer.close()
+    try {
+      session.peer.close()
+    } catch (err) {
+      logger.debug('Error closing peer during stopTransmission:', err)
+    }
   }
   peers.clear()
 
@@ -908,7 +957,13 @@ function stopTransmission() {
 
   captureStream?.getTracks().forEach((t) => t.stop())
   outputStream?.getTracks().forEach((t) => t.stop())
-  audioContext?.close()
+  if (audioContext) {
+    try {
+      audioContext.close()
+    } catch (err) {
+      logger.debug('Error closing audioContext during stopTransmission:', err)
+    }
+  }
 
   captureStream = null
   outputStream = null
@@ -919,7 +974,13 @@ function stopTransmission() {
   gainNode = null
   analyserNode = null
 
-  socket?.close()
+  if (socket) {
+    try {
+      socket.close()
+    } catch (err) {
+      logger.debug('Error closing socket during stopTransmission:', err)
+    }
+  }
   socket = null
 
   homeSection.hidden = false

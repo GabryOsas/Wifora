@@ -249,6 +249,10 @@ async function startServerLive() {
 
   activeServerProcess = child
 
+  child.stdout.on('data', (d) => {
+    process.stdout.write(d.toString())
+  })
+
   child.stderr.on('data', (d) => {
     const err = d.toString()
     if (!err.includes('EADDRINUSE')) {

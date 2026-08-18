@@ -65,7 +65,9 @@ export async function getDeviceInfo() {
       try {
         const hints = await navigator.userAgentData.getHighEntropyValues(['model', 'platformVersion'])
         if (hints.model) rawModel = hints.model.trim()
-      } catch {}
+      } catch (err) {
+        // High entropy client hints not allowed or blocked by permission policy
+      }
     }
 
     // Fallback: extract model from User-Agent string

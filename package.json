@@ -26,7 +26,9 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "menu": "node cli-menu.mjs"
+    "menu": "node cli-menu.mjs",
+    "test": "node --test test/**/*.test.mjs",
+    "lint": "node --check server.mjs cli-menu.mjs public/host.js public/listen.js public/i18n.js public/device-detector.js test/*.test.mjs"
   },
   "dependencies": {
     "qrcode": "^1.5.4",
