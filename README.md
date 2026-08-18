@@ -1,21 +1,21 @@
 <div align="center">
 
-<img src="public/wifora-logo.png" alt="Wifora Logo" width="130" style="border-radius: 24px; margin-bottom: 12px;" />
+<img src="public/wifora-logo.png" alt="Wifora Logo" width="120" style="border-radius: 20px; margin-bottom: 14px;" />
 
-# WIFORA
+# Wifora
 ### Ultra-Low Latency Wi-Fi Audio Streaming • Zero App Required
 
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-[![WebRTC](https://img.shields.io/badge/WebRTC-Opus%2048kHz%20Stereo-333333?style=for-the-badge&logo=webrtc&logoColor=white)](https://webrtc.org)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20iOS%20%7C%20Android-0078D4?style=for-the-badge&logo=windows&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Zero App](https://img.shields.io/badge/Zero%20App-Pure%20Web%20Browser-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](#)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![WebRTC](https://img.shields.io/badge/WebRTC-Opus%2048kHz%20Stereo-007ACC?style=flat-square&logo=webrtc&logoColor=white)](https://webrtc.org)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20iOS%20%7C%20Android-0078D4?style=flat-square&logo=windows&logoColor=white)](#)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Zero App](https://img.shields.io/badge/Client-Pure%20Web%20Browser-555555?style=flat-square)](#)
 
 <p align="center">
-  <b>🇮🇹 <a href="#-italiano">Italiano</a></b> •
-  <b>🇬🇧 <a href="#-english">English</a></b> •
-  <b>🇫🇷 <a href="#-français">Français</a></b> •
-  <b>🇩🇪 <a href="#-deutsch">Deutsch</a></b>
+  <a href="#english">English</a> •
+  <a href="#italiano">Italiano</a> •
+  <a href="#francais">Français</a> •
+  <a href="#deutsch">Deutsch</a>
 </p>
 
 ---
@@ -24,310 +24,310 @@
 
 <br/>
 
-<div id="-italiano"></div>
+<div id="english"></div>
 
-## 🇮🇹 Italiano
+## English
 
-**Wifora** è una soluzione open-source ad altissime prestazioni che trasmette l'audio di sistema del tuo PC Windows su qualsiasi smartphone, tablet o dispositivo portatile (iPhone, iPad, Android) collegato alla stessa rete Wi-Fi locale.
+**Wifora** is a high-performance, open-source audio streaming server that broadcasts your Windows PC system audio directly to any smartphone, tablet, or secondary computer (iPhone, iPad, Android, Mac, Linux) over your local Wi-Fi network with ultra-low latency (10–20 ms) and studio-grade quality.
 
-Non richiede l'installazione di **alcuna app** sui dispositivi riceventi: sfrutta nativamente WebRTC e le Web Audio API moderne direttamente da Safari iOS, Google Chrome o qualsiasi altro browser.
-
----
-
-### ✨ Funzionalità Principali
-
-- 🚀 **Zero App & Zero Configurazione**: Inquadra il QR Code o digita il codice a 8 caratteri nel browser dello smartphone per iniziare l'ascolto istantaneo.
-- ⚡ **Latenza Ultra-Bassa (10-20 ms)**: Streaming real-time ideale per film, video YouTube, podcast, serie TV e gaming.
-- 🎧 **Audio Stereo Fullband 48 kHz**: Codifica Opus ad alta fedeltà con bitrate dinamico da 96 fino a 384 kbps.
-- 🧠 **Motore ANAE (Adaptive Network & Audio Engine)**: Auto-regolazione continua del bitrate e della resilienza in base alla qualità del segnale Wi-Fi con isteresi anti-flapping.
-- 🎛️ **Pipeline DSP da Studio Integrata**:
-  - *Studio Clarity & Anti-Clipping*: Limiter trasparente a 1 ms e filtro sub-bass a 20 Hz per eliminare rimbombi impercettibili.
-  - *Booster Voci & Dialoghi*: Equalizzazione mirata con boost a 3.2 kHz per la massima intelligibilità del parlato.
-  - *Diretto Bit-Perfect*: Bypass totale del DSP per un flusso bit-a-bit puro e inalterato.
-- 🛡️ **Privacy Totale in Rete Locale (LAN)**: Flusso confinato esclusivamente alla rete Wi-Fi domestica con crittografia end-to-end DTLS-SRTP.
-- 📱 **Supporto Schermo Attivo & iOS AudioSession**: Mantiene attivo lo schermo e instrada correttamente l'audio come canale multimediale su iPhone e iPad evitando l'altoparlante delle chiamate.
+It requires **zero application installs** on receiving devices. Wifora leverages native WebRTC data streams and modern Web Audio APIs directly through standard web browsers such as Apple Safari iOS, Google Chrome, Microsoft Edge, and Mozilla Firefox.
 
 ---
 
-### 📥 Download & Installazione
+### Core Features
 
-#### Prerequisiti
-- **Computer Windows** (Windows 10 / 11)
-- **[Node.js](https://nodejs.org)** (versione 18.0 o superiore consigliata)
-- PC e smartphone connessi alla **stessa rete Wi-Fi o Ethernet locale**
-
-#### 1. Download del Progetto
-Puoi clonare il repository con Git oppure scaricare il pacchetto ZIP:
-```bash
-git clone https://github.com/GabryOsas/Wifora.git
-cd Wifora
-```
-
-#### 2. Installazione delle Dipendenze
-Apri un terminale nella cartella del progetto ed esegui:
-```bash
-npm install
-```
+- **Zero App & Instant Setup**: Scan the generated QR code or enter the 8-character room code on any mobile browser to start playback immediately.
+- **Ultra-Low Latency (10–20 ms)**: Real-time synchronization suitable for watching movies, streaming video, gaming, podcasts, and remote monitoring.
+- **Fullband 48 kHz Stereo Sound**: High-fidelity Opus compression with dynamic bitrates spanning 96 kbps to 384 kbps.
+- **ANAE Engine (Adaptive Network & Audio Engine)**: Real-time, continuous quality auto-tuning based on packet loss and round-trip time (RTT) telemetry with anti-flapping hysteresis.
+- **Studio DSP Processing Chain**:
+  - *Studio Clarity & Anti-Clipping*: 20 Hz sub-rumble high-pass filter paired with a transparent lookahead peak limiter (-1.0 dBFS threshold, 1 ms attack).
+  - *Voice & Dialogue Booster*: 80 Hz low-cut combined with a 3.2 kHz presence boost for enhanced vocal intelligibility.
+  - *Direct Bit-Perfect*: 100% bit-exact bypass mode for pristine, unaltered audio output.
+- **Complete Local Network Privacy**: All audio packets remain strictly inside your local area network (LAN), encrypted end-to-end via DTLS-SRTP.
+- **Screen Wake Lock & iOS AudioSession Integration**: Automatically holds screen wake locks and routes playback through iOS multimedia audio channels rather than call speakers.
 
 ---
 
-### 🚀 Utilizzo
+### Download & Quick Start
 
-#### Avvio Rapido (Windows)
-1. Fai doppio clic sul file **`Avvia-Wifora.bat`** (oppure esegui `npm start` / `npm run menu` nel terminale).
-2. Si aprirà il browser sulla dashboard di Wifora (`http://localhost:3975/host.html`).
-3. Clicca su **"Avvia Trasmissione Audio"**.
-4. Nella finestra di condivisione di Windows/Browser:
-   - Seleziona la scheda **"Schermo intero"** (Entire Screen).
-   - Spunta la casella **"Condividi audio di sistema"** (Share system audio).
-5. Sul tuo smartphone o tablet:
-   - Inquadra il **QR Code** visualizzato sullo schermo del PC (oppure apri l'indirizzo LAN indicato, es. `http://192.168.1.X:3975/listen.html?room=...`).
-   - L'audio inizierà a riprodursi istantaneamente in cuffia o dagli altoparlanti!
+#### System Requirements
+- **Host Machine**: Windows 10 or Windows 11
+- **Runtime**: [Node.js](https://nodejs.org) (v18.0.0 or higher recommended)
+- **Network**: Host PC and client devices must be connected to the **same Wi-Fi or Ethernet local network**
 
-#### Arresto della Trasmissione
-- Dalla dashboard web: clicca su **"Termina Trasmissione"**.
-- Dal computer: fai doppio clic su **`Termina-Wifora.bat`** oppure premi `[S]` o `[Q]` nel menu CLI.
-
----
-
-### 🔬 Come Funziona Tecnicamente
-
-```
-+-------------------------------------------------------------------------------+
-|                                  PC HOST                                      |
-|                                                                               |
-|  [System Audio]                                                               |
-|         |                                                                     |
-|  [Web Audio API Graph] -> [20Hz High-Pass] -> [3.2kHz EQ] -> [Peak Limiter]   |
-|         |                                                                     |
-|  [WebRTC PeerConnection] <== (DTLS-SRTP Opus 48kHz Stereo 20ms Frames) ==>    |
-|         ^                                                                     |
-|         | WebSocket Signals (/signal) & Keep-Alive Heartbeat                  |
-+---------|---------------------------------------------------------------------+
-          |                                  LAN Wi-Fi
-          v
-+-------------------------------------------------------------------------------+
-|                            SMARTPHONE (RICEVITORE)                            |
-|                                                                               |
-|  [Safari iOS / Chrome Mobile]                                                 |
-|         |                                                                     |
-|  [WebRTC PeerConnection] -> [Adaptive Jitter Buffer 22-50ms]                 |
-|         |                                                                     |
-|  [AudioSession: media playback] -> [Cuffie / Altoparlanti Stereo]             |
-+-------------------------------------------------------------------------------+
-```
-
-1. **Cattura e DSP Graph (Web Audio API)**:
-   L'audio di sistema viene catturato tramite `getDisplayMedia({ systemAudio: 'include' })` a 48.000 campioni/s. La traccia video viene arrestata istantaneamente per riservare il 100% della CPU e della banda all'audio. Il flusso passa attraverso un grafo audio comprendente un filtro passa-alto Butterworth a 20 Hz, un filtro parametrico di chiarezza a 3.2 kHz e un limiter dinamico trasparente.
-
-2. **Ottimizzazione SDP Opus per LAN Wi-Fi**:
-   Il descrittore SDP viene modificato dinamicamente con i parametri:
-   `minptime=10;ptime=20;maxptime=20;useinbandfec=1;usedtx=0;stereo=1;sprop-stereo=1;maxaveragebitrate=...`
-   - *Frame a 20 ms*: dimezza l'overhead dei pacchetti IP/UDP rispetto ai 10 ms, riducendo le collisioni radio Wi-Fi.
-   - *In-band FEC (Forward Error Correction)*: corregge pacchetti persi senza richiedere ritrasmissioni NACK.
-   - *DTX Disattivato (`usedtx=0`)*: impedisce latenze all'attacco dei transienti sonori.
-
-3. **Motore ANAE (Adaptive Network & Audio Engine)**:
-   L'host interroga ogni secondo le statistiche WebRTC (`getStats()`). Attraverso un filtro EWMA sui valori differenziali di pacchetti inviati e persi (`remote-inbound-rtp`), adatta dinamicamente il bitrate tra 5 livelli (96, 128, 160, 224, 256 kbps). L'isteresi integrata applica un *Fast-Down* immediato su congestione severa e uno *Smooth-Up* (5 cicli stabili consecutivi) prima di salire di livello.
-
-4. **Gestione del Ciclo di Vita e Disconnessione Istantanea**:
-   Utilizza `navigator.sendBeacon('/api/leave')` e gli eventi `pagehide`/`visibilitychange` sul client mobile, oltre al rilevamento dello stallo dei report RTCP/STUN sull'host (>3.5s segnale perso, >7.5s pulizia automatica), liberando immediatamente gli slot della stanza sul server.
-
----
-
-<br/>
-
-<div id="-english"></div>
-
-## 🇬🇧 English
-
-**Wifora** is a high-performance, open-source solution that streams your Windows PC system audio to any smartphone, tablet, or mobile device (iPhone, iPad, Android) on the same local Wi-Fi network.
-
-It requires **zero app installs** on receiving devices: it leverages native WebRTC and modern Web Audio APIs directly in Safari iOS, Google Chrome, or any standard web browser.
-
----
-
-### ✨ Key Features
-
-- 🚀 **Zero App & Zero Setup**: Simply scan the QR Code or type the 8-character code in your phone's browser to start listening instantly.
-- ⚡ **Ultra-Low Latency (10-20 ms)**: Real-time playback ideal for movies, YouTube, podcasts, gaming, and TV shows.
-- 🎧 **Studio-Grade 48 kHz Stereo Audio**: Fullband Opus encoding with dynamic bitrates from 96 up to 384 kbps.
-- 🧠 **ANAE Engine (Adaptive Network & Audio Engine)**: Continuous real-time bitrate auto-tuning based on Wi-Fi link quality with anti-flapping hysteresis.
-- 🎛️ **Built-in Studio DSP Pipeline**:
-  - *Studio Clarity & Anti-Clipping*: 1 ms transparent peak limiter and 20 Hz sub-rumble high-pass filter.
-  - *Voice & Dialogue Booster*: 3.2 kHz peaking filter for crystal-clear spoken words.
-  - *Direct Bit-Perfect*: 100% bit-exact bypass mode for pristine, unprocessed PCM audio.
-- 🛡️ **Total Local Network Privacy**: All audio traffic is confined strictly inside your home LAN with DTLS-SRTP end-to-end encryption.
-- 📱 **Screen Wake Lock & iOS AudioSession**: Prevents screen sleep and routes audio to dedicated media channels on iPhone and iPad.
-
----
-
-### 📥 Download & Installation
-
-#### Prerequisites
-- **Windows PC** (Windows 10 / 11)
-- **[Node.js](https://nodejs.org)** (v18.0 or later recommended)
-- PC and phone connected to the **same local Wi-Fi / Ethernet network**
-
-#### 1. Download Repository
-Clone the repository using Git or download the ZIP archive:
+#### 1. Clone or Download
 ```bash
 git clone https://github.com/GabryOsas/Wifora.git
 cd Wifora
 ```
 
 #### 2. Install Dependencies
-Open a command prompt or terminal in the project directory and run:
 ```bash
 npm install
 ```
 
----
-
-### 🚀 Usage
-
-#### Quick Start (Windows)
-1. Double-click **`Avvia-Wifora.bat`** (or execute `npm start` in your terminal).
-2. The Wifora dashboard will open automatically in your browser (`http://localhost:3975/host.html`).
-3. Click **"Start Audio Broadcast"**.
-4. In the browser screen-sharing dialog:
-   - Select the **"Entire Screen"** tab.
-   - Check the **"Share system audio"** box.
-5. On your smartphone or tablet:
-   - Scan the **QR Code** shown on the PC screen (or navigate to the displayed local LAN URL).
-   - Audio starts playing in real time through your headphones or phone speakers!
-
-#### Stopping the Broadcast
-- From the web dashboard: click **"Stop Broadcast"**.
-- From your PC terminal: double-click **`Termina-Wifora.bat`** or press `[S]` / `[Q]` in the CLI menu.
+#### 3. Run Wifora
+- **One-Click Launch**: Double-click `Avvia-Wifora.bat` on Windows.
+- **Terminal Launch**: Run `npm start` (direct server) or `npm run menu` (interactive CLI menu).
 
 ---
 
-### 🔬 Technical Architecture
+### Usage Guide
 
-1. **System Audio Capture & DSP Graph**:
-   Audio is captured via `getDisplayMedia({ systemAudio: 'include' })` at 48,000 samples/s. The video track is terminated immediately upon capture to allocate 100% CPU and network bandwidth solely to audio. Audio passes through a non-blocking Web Audio graph (20 Hz Butterworth high-pass, 3.2 kHz dialogue presence boost, and transparent peak limiter).
+1. **Start Broadcast on Host (PC)**:
+   - Launch Wifora. The host dashboard opens at `http://localhost:3975/host.html`.
+   - Click **Start Audio Broadcast**.
+   - In the system sharing dialog, select **Entire Screen** (or a specific window) and make sure **Share system audio** is checked.
+2. **Connect Receiver (Phone / Tablet)**:
+   - Point your phone camera at the QR code on the PC screen (or navigate to the displayed LAN URL, e.g. `http://192.168.1.X:3975/listen.html?room=...`).
+   - Audio begins streaming in real time through your headphones or speakers.
+3. **Live Controls & Monitoring**:
+   - Change volume and mute state independently from the host dashboard or listener UI.
+   - Adjust DSP profiles on the fly without stopping playback.
+   - Monitor live telemetry (Round-Trip Time, Packet Loss, Bitrate, and Signal Quality) for each connected listener.
+   - Kick or disconnect specific devices directly from the connected devices list.
+4. **Stopping the Broadcast**:
+   - Click **Stop Broadcast** in the web dashboard, or double-click `Termina-Wifora.bat` on your PC.
 
-2. **Opus SDP Packet-Rate & FEC Tuning**:
-   Custom Opus SDP parameters are injected:
-   `minptime=10;ptime=20;maxptime=20;useinbandfec=1;usedtx=0;stereo=1;sprop-stereo=1;maxaveragebitrate=...`
-   - *20 ms frame packetization*: cuts packet transmission overhead by 50% compared to 10 ms, avoiding 802.11 Wi-Fi packet collisions.
-   - *In-band FEC*: recovers isolated packet losses without retransmission roundtrips.
-   - *Disabled DTX (`usedtx=0`)*: eliminates transient attack latency between silence and audio bursts.
+---
 
-3. **ANAE Dynamic Adaptive Engine**:
-   The host continuously samples WebRTC inbound/outbound differential telemetry (`getStats()`). An EWMA filter prevents quality oscillations while adjusting between 5 dynamic tiers (96, 128, 160, 224, 256 kbps).
+### Technical Architecture & How It Works
 
-4. **Reliable Lifecycle & Zero-Drop Disconnection**:
-   Utilizes `navigator.sendBeacon('/api/leave')` combined with `pagehide` events on mobile browsers and real-time RTCP/STUN staleness detection on the host (>3.5s signal lost warning, >7.5s automatic cleanup).
+```
+                                  HOST SYSTEM (PC)
+  +-------------------------------------------------------------------------------+
+  |  System Audio Source (48,000 Hz, 2 Channels)                                  |
+  |         |                                                                     |
+  |  [ Web Audio API Graph ]                                                      |
+  |    -> 20 Hz High-Pass Sub Filter (Butterworth, Q = 0.707)                     |
+  |    -> 3.2 kHz Dialogue Peaking Filter (Gain = 0 to +3.5 dB)                   |
+  |    -> Studio Peak Limiter (Threshold -1.0 dBFS, Ratio 12:1, Attack 1 ms)      |
+  |    -> Master Gain & Real-time FFT Analyser (Non-blocking Tap)                 |
+  |         |                                                                     |
+  |  [ WebRTC RTCPeerConnection ]                                                 |
+  |    -> SDP Opus Custom Tuning (20 ms packetization, in-band FEC, DTX disabled)  |
+  |    -> ANAE Dynamic Bitrate Controller (96 - 256 kbps auto-adaptation)         |
+  +---------|---------------------------------------------------------------------+
+            |                                         ^
+            | UDP / DTLS-SRTP Audio Packets           | WebSocket Signaling (/signal)
+            |                                         | & Real-Time Telemetry
+            v                                         |
+  +-------------------------------------------------------------------------------+
+  |  [ Mobile WebRTC Receiver (Safari iOS / Chrome / Edge) ]                      |
+  |    -> Adaptive Jitter Buffer Target (22 ms base, 35 - 50 ms adaptive expansion)|
+  |    -> iOS AudioSession Playback Routing (Media Channel)                       |
+  |    -> Screen Wake Lock Sentinel API                                           |
+  |    -> Fast-Teardown Beacon (POST /api/leave on pagehide/unload)               |
+  |         |                                                                     |
+  |  Headphones / Stereo Speakers Output                                          |
+  +-------------------------------------------------------------------------------+
+                                RECEIVER (MOBILE)
+```
+
+#### 1. Audio Ingestion & Digital Signal Processing (DSP)
+Audio is captured through `navigator.mediaDevices.getDisplayMedia({ systemAudio: 'include' })` at native 48,000 samples/second stereo. The video track is terminated immediately upon stream acquisition, freeing 100% of CPU time and network bandwidth for audio processing.
+
+The stream is piped through a zero-latency Web Audio API graph:
+- **Sub-Bass High-Pass Filter**: 20 Hz cut with a 0.707 Q-factor eliminates inaudible subsonic rumble, preventing amplifier saturation and conserving RF packet headroom.
+- **Parametric Vocal Presence Filter**: 3.2 kHz peaking filter with adjustable gain for speech clarity.
+- **Lookahead Peak Limiter**: Dynamics compressor configured with a fast 1 ms attack and 40 ms release, catching digital peaks above -1.0 dBFS without audible pumping.
+- **Parallel FFT Tap**: Level metering is tapped in parallel so audio buffer scheduling is never blocked by UI rendering.
+
+#### 2. Opus Codec & SDP Negotiation
+Standard WebRTC SDP offers are dynamically rewritten before signaling:
+```text
+a=fmtp:111 minptime=10;ptime=20;maxptime=20;useinbandfec=1;usedtx=0;stereo=1;sprop-stereo=1;maxaveragebitrate=256000;maxplaybackrate=48000
+```
+- **20 ms Frame Packetization**: Halves packet overhead compared to 10 ms framing, substantially reducing 802.11 Wi-Fi MAC contention and packet collisions when multiple devices stream concurrently.
+- **In-Band Forward Error Correction (FEC)**: Embeds lower-bitrate recovery data for the previous packet into the current packet, allowing packet losses to be corrected without waiting for NACK roundtrips.
+- **Disabled Discontinuous Transmission (`usedtx=0`)**: Eliminates the 20–40 ms attack delay that occurs when voice/music transitions from silence.
+
+#### 3. ANAE (Adaptive Network & Audio Engine)
+ANAE continuously evaluates the connection health of each connected client every 1,000 ms using WebRTC `getStats()` reports:
+- **Differential Packet Sampling**: Evaluates $\Delta\text{PacketsLost} / \Delta\text{PacketsSent}$ over a sliding window rather than cumulative lifetime totals.
+- **Exponentially Weighted Moving Averages (EWMA)**: Telemetry values are smoothed ($\alpha = 0.3$) to avoid bitrate oscillations caused by momentary RF fading.
+- **5 Dynamic Quality Tiers**:
+
+| Tier | Profile Name | Target Bitrate | Max Target RTT | Max Loss Rate |
+| :--- | :--- | :--- | :--- | :--- |
+| **5** | Studio Master | 256 kbps | < 25 ms | < 0.2 % |
+| **4** | Studio High | 224 kbps | < 50 ms | < 0.8 % |
+| **3** | Balanced Standard | 160 kbps | < 85 ms | < 1.8 % |
+| **2** | Anti-Lag Resilient | 128 kbps | < 120 ms | < 4.0 % |
+| **1** | Ultra-Resilient | 96 kbps | Elevated | Severe |
+
+- **Anti-Flapping Hysteresis**: Degraded conditions trigger an immediate step-down (*Fast-Down*), whereas bandwidth recovery requires 5 consecutive stable cycles (*Smooth-Up*) before stepping up.
+
+#### 4. Dynamic Receiver Jitter Buffer & Lifecycle Watchdog
+- **Adaptive Jitter Buffer Target**: On browsers supporting the standard WebRTC Jitter Buffer Target API, the buffer is held at a tight 22 ms during clean reception, dynamically expanding to 35 ms or 50 ms only when sustained network jitter exceeds thresholds.
+- **Zero-Drop Teardown Protocol**: Client termination triggers both a WebSocket leave event and an asynchronous `navigator.sendBeacon('/api/leave')` payload via `pagehide`. The host additionally monitors RTCP/STUN report timestamps: if incoming reports stall for > 3.5 seconds, a warning state is displayed; after 7.5 seconds of silence, the connection is automatically cleaned up and the room slot is released.
 
 ---
 
 <br/>
 
-<div id="-français"></div>
+<div id="italiano"></div>
+
+## 🇮🇹 Italiano
+
+**Wifora** è una soluzione open-source ad altissime prestazioni che trasmette l'audio di sistema del PC Windows su qualsiasi smartphone, tablet o computer secondario (iPhone, iPad, Android, Mac, Linux) collegato alla stessa rete Wi-Fi locale con latenza ultra-bassa (10–20 ms) e qualità da studio.
+
+Non richiede l'installazione di **nessuna applicazione** sui dispositivi riceventi: sfrutta nativamente WebRTC e le Web Audio API moderne direttamente dai browser standard (Apple Safari iOS, Google Chrome, Microsoft Edge, Mozilla Firefox).
+
+---
+
+### Caratteristiche Principali
+
+- **Zero App e Configurazione Istantanea**: Inquadra il QR code generato o inserisci il codice stanza a 8 caratteri per avviare la riproduzione.
+- **Latenza Ultra-Bassa (10–20 ms)**: Sincronizzazione in tempo reale per film, video, serie TV, podcast e sessioni di gaming.
+- **Audio Stereo Fullband 48 kHz**: Codifica Opus ad alta fedeltà con bitrate dinamico adattivo da 96 kbps fino a 384 kbps.
+- **Motore ANAE (Adaptive Network & Audio Engine)**: Auto-regolazione continua di bitrate e resilienza basata su RTT e packet loss con isteresi anti-flapping.
+- **Pipeline DSP da Studio Integrata**:
+  - *Studio Clarity & Anti-Clipping*: Filtro passa-alto a 20 Hz per rimuovere rimbombi subsonici unito a un peak limiter trasparente a 1 ms.
+  - *Booster Voci & Dialoghi*: Taglio a 80 Hz ed esaltazione a 3.2 kHz per la massima intelligibilità vocale.
+  - *Diretto Bit-Perfect*: Bypass completo di qualsiasi elaborazione per un flusso audio bit-a-bit inalterato.
+- **Privacy Totale in Rete Locale (LAN)**: Flusso audio confinato all'interno della rete Wi-Fi locale, con crittografia end-to-end DTLS-SRTP.
+- **Supporto Screen Wake Lock & iOS AudioSession**: Mantiene attivo lo schermo ed instrada l'audio sul canale multimediale di iPhone/iPad evitando l'altoparlante delle chiamate.
+
+---
+
+### Download & Guida Rapida
+
+#### Requisiti di Sistema
+- **PC Host**: Windows 10 o Windows 11
+- **Ambiente**: [Node.js](https://nodejs.org) (v18.0.0 o successiva)
+- **Rete**: Computer e smartphone connessi alla **stessa rete Wi-Fi o Ethernet locale**
+
+#### 1. Download del Progetto
+```bash
+git clone https://github.com/GabryOsas/Wifora.git
+cd Wifora
+```
+
+#### 2. Installazione Dipendenze
+```bash
+npm install
+```
+
+#### 3. Avvio
+- **Avvio Rapido**: Fai doppio clic su `Avvia-Wifora.bat`.
+- **Da Terminale**: Esegui `npm start` (server diretto) oppure `npm run menu` (menu interattivo da console).
+
+---
+
+### Istruzioni d'Uso
+
+1. **Avvio Trasmissione dal PC**:
+   - Apri Wifora. La dashboard si aprirà all'indirizzo `http://localhost:3975/host.html`.
+   - Clicca su **Avvia Trasmissione Audio**.
+   - Nella finestra di condivisione dello schermo, seleziona **Schermo intero** e spunta **Condividi audio di sistema**.
+2. **Connessione Ricevitore (Telefono / Tablet)**:
+   - Inquadra il **QR Code** mostrato sullo schermo del PC o naviga sull'indirizzo LAN indicato.
+   - L'audio inizierà ad essere riprodotto istantaneamente in cuffia o dagli altoparlanti.
+3. **Controlli in Tempo Reale**:
+   - Regola volume e muto indipendentemente dalla dashboard host o dallo smartphone.
+   - Modifica il profilo DSP al volo durante la trasmissione.
+   - Monitora la telemetria di ogni dispositivo (Ping RTT, Perdita Pacchetti, Bitrate e Qualità segnale).
+   - Disconnetti o espelli singoli dispositivi dalla lista connessioni.
+4. **Arresto**:
+   - Clicca su **Termina Trasmissione** nella dashboard web, oppure fai doppio clic su `Termina-Wifora.bat`.
+
+---
+
+<br/>
+
+<div id="francais"></div>
 
 ## 🇫🇷 Français
 
-**Wifora** est une solution open-source haute performance permettant de diffuser l'audio système de votre PC Windows vers n'importe quel smartphone ou tablette (iPhone, iPad, Android) sur le même réseau Wi-Fi local.
+**Wifora** est une solution open-source haute performance permettant de diffuser l'audio système de votre PC Windows vers n'importe quel smartphone, tablette ou ordinateur (iPhone, iPad, Android, Mac, Linux) sur le même réseau Wi-Fi local avec une latence ultra-faible (10–20 ms).
 
-Aucune application n'est requise : Wifora utilise nativement WebRTC et l'API Web Audio directement dans Safari iOS, Chrome Mobile ou tout navigateur moderne.
-
----
-
-### ✨ Points Forts
-
-- 🚀 **Sans Application & Sans Configuration** : Scannez le QR Code ou saisissez le code de la pièce pour écouter instantanément.
-- ⚡ **Latence Ultra-Faible (10-20 ms)** : Idéal pour les films, YouTube, les jeux vidéo et les podcasts.
-- 🎧 **Qualité Studio Stéréo 48 kHz** : Encodage Opus Fullband de 96 à 384 kbps.
-- 🧠 **Moteur ANAE** : Ajustement automatique du débit et de la latence en temps réel selon la qualité Wi-Fi.
-- 🎛️ **Traitement Audio DSP Studio** : Limiteur anti-écrêtage, filtre sub-bass à 20 Hz et booster de voix à 3.2 kHz.
-- 🛡️ **Confidentialité Totale en Réseau Local (LAN)** : Chiffrement DTLS-SRTP de bout en bout.
+Aucune application n'est requise : Wifora utilise nativement WebRTC et les API Web Audio directement dans Safari iOS, Google Chrome ou tout navigateur standard.
 
 ---
 
-### 📥 Installation & Utilisation
+### Points Forts
+- **Sans Application** : Scannez le QR Code ou saisissez le code à 8 caractères pour écouter immédiatement.
+- **Ultra-Faible Latence (10–20 ms)** : Idéal pour les films, YouTube, les jeux vidéo et le streaming.
+- **Audio Stéréo 48 kHz Haute Fidélité** : Codec Opus adaptatif de 96 à 384 kbps.
+- **Moteur ANAE** : Ajustement dynamique du débit selon les conditions Wi-Fi en temps réel.
+- **Traitement DSP Studio** : Limiteur anti-écrêtage à 1 ms, filtre sub-bass à 20 Hz et booster vocal à 3.2 kHz.
+- **Confidentialité Totale en LAN** : Flux entièrement chiffré via DTLS-SRTP dans votre réseau local.
 
-1. **Cloner ou télécharger** :
-   ```bash
-   git clone https://github.com/GabryOsas/Wifora.git
-   cd Wifora
-   npm install
-   ```
-2. **Lancer Wifora** :
-   - Double-cliquez sur `Avvia-Wifora.bat` ou lancez `npm start`.
-   - Cliquez sur **"Démarrer la Diffusion Audio"** et cochez **"Partager l'audio du système"**.
-   - Scannez le QR Code avec votre téléphone pour écouter !
+---
+
+### Installation & Utilisation
+```bash
+git clone https://github.com/GabryOsas/Wifora.git
+cd Wifora
+npm install
+```
+Double-cliquez sur `Avvia-Wifora.bat` ou lancez `npm start`, cliquez sur **Démarrer la Diffusion Audio**, cochez **Partager l'audio du système** et scannez le QR code avec votre téléphone.
 
 ---
 
 <br/>
 
-<div id="-deutsch"></div>
+<div id="deutsch"></div>
 
 ## 🇩🇪 Deutsch
 
-**Wifora** ist eine hochperformante Open-Source-Lösung für das latenzfreie Streaming von PC-Systemaudio auf Smartphones und Tablets (iPhone, iPad, Android) im selben lokalen WLAN-Netzwerk.
+**Wifora** ist eine hochperformante Open-Source-Lösung für das latenzfreie Streaming von PC-Systemaudio auf Smartphones, Tablets und andere Endgeräte (iPhone, iPad, Android, Mac, Linux) im selben lokalen WLAN-Netzwerk mit 10–20 ms Latenz.
 
-Keine App-Installation erforderlich: Funktioniert direkt über Standard-Webbrowser wie iOS Safari oder Google Chrome via WebRTC.
-
----
-
-### ✨ Hauptmerkmale
-
-- 🚀 **Keine App Erforderlich**: Einfach QR-Code scannen oder Raumcode eingeben und direkt anhören.
-- ⚡ **Ultra-Niedrige Latenz (10-20 ms)**: Perfekt für Filme, Serien, YouTube und Gaming.
-- 🎧 **48 kHz Stereo Hi-Fi-Klang**: Fullband Opus-Codec mit adaptivem Bitratenstufen von 96 bis 384 kbps.
-- 🧠 **ANAE-Echtzeit-Motor**: Dynamische Anpassung an die WLAN-Signalstärke mit Schutz vor Verbindungsabbrüchen.
-- 🎛️ **Studio DSP-Effekte**: Anti-Clipping-Limiter, 20-Hz-Subbass-Filter und Sprachverstärkung bei 3.2 kHz.
-- 🛡️ **Volle Privatsphäre im LAN**: Vollständig verschlüsselt (DTLS-SRTP) im Heimnetzwerk ohne Cloud.
+Keine App-Installation erforderlich: Funktioniert direkt über Standard-Webbrowser wie Apple Safari iOS oder Google Chrome via WebRTC.
 
 ---
 
-### 📥 Installation & Verwendung
+### Hauptmerkmale
+- **Keine App Erforderlich**: Einfach QR-Code scannen oder Raumcode eingeben und direkt anhören.
+- **Ultra-Niedrige Latenz (10–20 ms)**: Perfekt für Filme, Serien, YouTube und Gaming.
+- **48 kHz Stereo Hi-Fi-Klang**: Fullband Opus-Codec mit adaptivem Bitratenbereich von 96 bis 384 kbps.
+- **ANAE-Echtzeit-Motor**: Automatische Anpassung an die WLAN-Verbindungsqualität.
+- **Studio DSP-Effekte**: Anti-Clipping-Limiter, 20-Hz-Subbass-Filter und Sprachoptimierung bei 3.2 kHz.
+- **Volle Privatsphäre im LAN**: Vollständig verschlüsselt (DTLS-SRTP) im Heimnetzwerk ohne Cloud.
 
-1. **Herunterladen & Installieren**:
-   ```bash
-   git clone https://github.com/GabryOsas/Wifora.git
-   cd Wifora
-   npm install
-   ```
-2. **Starten**:
-   - `Avvia-Wifora.bat` doppelklicken oder `npm start` im Terminal ausführen.
-   - Auf **"Audio-Übertragung Starten"** klicken und **"Systemaudio teilen"** auswählen.
-   - QR-Code mit dem Smartphone scannen und sofort in bester Qualität hören!
+---
+
+### Installation & Verwendung
+```bash
+git clone https://github.com/GabryOsas/Wifora.git
+cd Wifora
+npm install
+```
+`Avvia-Wifora.bat` doppelklicken oder `npm start` ausführen, auf **Audio-Übertragung Starten** klicken, **Systemaudio teilen** auswählen und den QR-Code mit dem Smartphone scannen.
 
 ---
 
 <br/>
 
-## 📁 Struttura del Progetto / Project Structure
+## Project Structure
 
 ```
 Wifora/
 ├── public/
-│   ├── host.html           # Dashboard Host (PC)
-│   ├── host.js             # Logica WebRTC Host, DSP Audio Graph & ANAE Engine
-│   ├── listen.html         # Interfaccia Ricevitore Mobile
-│   ├── listen.js           # Client WebRTC Ricevitore, WakeLock & Telemetria
-│   ├── device-detector.js  # Rilevamento automatico modello e tipo dispositivo
-│   ├── i18n.js             # Sistema di localizzazione multilingue (IT, EN, FR, DE)
-│   ├── styles.css          # Design moderno UI Dark/Light responsive
-│   └── wifora-logo.png     # Logo e asset grafici
-├── server.mjs              # Server HTTP & WebSocket Signaling (Node.js)
-├── cli-menu.mjs            # Menu terminale interattivo con diagnostica IP/LAN
-├── Avvia-Wifora.bat        # Script di avvio rapido in un clic per Windows
-├── Termina-Wifora.bat      # Script di arresto rapido per Windows
-├── package.json            # Configurazione e dipendenze
-├── .gitignore              # Esclusioni Git
-└── README.md               # Documentazione multilingue
+│   ├── host.html           # Host control dashboard interface (PC)
+│   ├── host.js             # WebRTC host controller, DSP audio graph & ANAE engine
+│   ├── listen.html         # Receiver player interface (Mobile)
+│   ├── listen.js           # Receiver WebRTC client, wake lock & telemetry handler
+│   ├── device-detector.js  # Client hardware and browser platform detection
+│   ├── i18n.js             # Multilingual localization system (EN, IT, FR, DE)
+│   ├── styles.css          # Modern responsive dark/light theme stylesheet
+│   └── wifora-logo.png     # Logo and visual branding assets
+├── server.mjs              # Node.js HTTP & WebSocket signaling server
+├── cli-menu.mjs            # Interactive CLI terminal menu with network interface analysis
+├── Avvia-Wifora.bat        # Windows one-click launcher
+├── Termina-Wifora.bat      # Windows one-click process termination script
+├── package.json            # Project configuration and dependencies
+├── .gitignore              # Git repository exclusion rules
+└── README.md               # Multilingual documentation
 ```
 
 ---
 
-## 📜 Licenza / License
+## License
 
-Distribuito sotto licenza **MIT**. Consulta il file `LICENSE` per ulteriori dettagli.
+Distributed under the **MIT License**. See the `LICENSE` file for details.
 
 Copyright (c) 2026 **[GabryOsas](https://github.com/GabryOsas)**
 
