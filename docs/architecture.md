@@ -103,11 +103,23 @@ $$\Delta\text{PacketsReceived} = \text{PacketsReceived}_t - \text{PacketsReceive
 
 $$\Delta\text{PacketsLost} = \text{PacketsLost}_t - \text{PacketsLost}_{t-1}$$
 
-$$\text{InstantLoss}_{host} = \begin{cases} \dfrac{\Delta\text{PacketsLost}}{\Delta\text{PacketsSent}} \times 100\% & \text{if } \Delta\text{PacketsSent} > 0 \\ \text{stale / unavailable} & \text{otherwise} \end{cases}$$
+$$
+\text{InstantLoss}_{host} =
+\begin{cases}
+\dfrac{\Delta\text{PacketsLost}}{\Delta\text{PacketsSent}} \times 100\% & \text{if } \Delta\text{PacketsSent} > 0 \\
+\text{stale / unavailable} & \text{otherwise}
+\end{cases}
+$$
 
 The listener has both received and lost counters, so it uses the more conventional received-plus-lost denominator:
 
-$$\text{InstantLoss}_{listener} = \begin{cases} \dfrac{\Delta\text{PacketsLost}}{\Delta\text{PacketsReceived} + \Delta\text{PacketsLost}} \times 100\% & \text{if the denominator} > 0 \\ \text{unavailable} & \text{otherwise} \end{cases}$$
+$$
+\text{InstantLoss}_{listener} =
+\begin{cases}
+\dfrac{\Delta\text{PacketsLost}}{\Delta\text{PacketsReceived} + \Delta\text{PacketsLost}} \times 100\% & \text{if } \Delta\text{PacketsReceived} + \Delta\text{PacketsLost} > 0 \\
+\text{unavailable} & \text{otherwise}
+\end{cases}
+$$
 
 ### EWMA Telemetry Smoothing
 
