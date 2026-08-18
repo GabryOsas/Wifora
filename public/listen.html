@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Wifora | Mobile Audio Receiver</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="topbar">
+        <a href="/" class="brand">
+          <img src="/wifora-logo.png" width="30" height="30" alt="Logo Wifora" />
+          <span>Wifora</span>
+        </a>
+        <div class="topbar-actions">
+          <!-- Language Selector -->
+          <div class="lang-selector-box">
+            <select id="langSelect" class="lang-select" aria-label="Language Selector">
+              <option value="it">🇮🇹 IT</option>
+              <option value="en">🇬🇧 EN</option>
+              <option value="fr">🇫🇷 FR</option>
+              <option value="de">🇩🇪 DE</option>
+            </select>
+          </div>
+
+          <button id="themeToggleBtn" class="theme-btn" type="button" aria-label="Toggle theme" title="Toggle dark/light theme" data-i18n-title="themeToggle">
+            <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden>
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- DESKTOP PC ADVISORY (Non-blocking) -->
+      <section id="desktopNotice" class="status-banner" style="background: var(--bg-card); border: 1px solid var(--border-subtle);" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        <span style="flex: 1; font-size: 13px;"><span data-i18n="desktopNoticeText">Stai usando un PC. Per trasmettere l'audio dal computer, usa</span> <a href="/host.html" style="color: var(--accent-primary); font-weight: 600; text-decoration: underline;" data-i18n="desktopNoticeLink">Trasmetti dal PC</a>.</span>
+      </section>
+
+      <!-- MOBILE HOMEPAGE (JOIN & INFO SECTION) -->
+      <main id="joinSection" style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Status Notification Banner (e.g. When kicked or disconnected) -->
+        <div id="joinStatus" class="status-banner" hidden>
+          <span id="joinStatusText"></span>
+        </div>
+
+        <!-- Connection Card -->
+        <section class="card">
+          <div class="card-title-row">
+            <div>
+              <h1 class="card-title" data-i18n="joinTitle">Ricevi Audio dal PC</h1>
+              <p class="card-subtitle" data-i18n="joinSubtitle">Inserisci il codice di 8 caratteri mostrato sul computer per iniziare.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <input 
+              id="roomInput" 
+              class="code-input-large" 
+              type="text" 
+              inputmode="text" 
+              autocomplete="off" 
+              autocapitalize="characters" 
+              maxlength="8" 
+              placeholder="ABCD1234"
+              data-i18n-placeholder="joinInputPlaceholder" 
+              spellcheck="false"
+            />
+          </div>
+
+          <button id="listenBtn" class="btn btn-primary btn-full" type="button" disabled data-i18n="listenBtn">
+            Ascolta Ora
+          </button>
+        </section>
+
+        <!-- Mobile Info Card 1: Come Collegarsi -->
+        <section class="card">
+          <h2 class="card-title" data-i18n="howItWorksTitle">Come Funziona</h2>
+          <div class="steps-grid">
+            <div class="step-card">
+              <span class="step-num" data-i18n="mobileStep1Num">1. Sul PC</span>
+              <p class="step-desc" data-i18n="mobileStep1Desc">Apri Wifora sul computer e clicca su <strong>Avvia Trasmissione</strong>.</p>
+            </div>
+            <div class="step-card">
+              <span class="step-num" data-i18n="mobileStep2Num">2. Sul Telefono</span>
+              <p class="step-desc" data-i18n="mobileStep2Desc">Inquadra il QR Code oppure digita il codice a 8 caratteri qui sopra.</p>
+            </div>
+            <div class="step-card">
+              <span class="step-num" data-i18n="mobileStep3Num">3. Rete Wi-Fi</span>
+              <p class="step-desc" data-i18n="mobileStep3Desc">Assicurati che PC e telefono siano connessi alla <strong>stessa rete Wi-Fi</strong>.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mobile Info Card 2: Consigli per l'ascolto -->
+        <section class="card">
+          <h2 class="card-title" data-i18n="tipsTitle">Consigli per l'Ascolto</h2>
+          <div class="features-grid">
+            <div class="feature-tile">
+              <h3 class="feature-title" data-i18n="tip1Title">Schermo Attivo</h3>
+              <p class="feature-desc" data-i18n="tip1Desc">Durante la riproduzione, lascia attivo il toggle per evitare lo standby dello schermo.</p>
+            </div>
+            <div class="feature-tile">
+              <h3 class="feature-title" data-i18n="tip2Title">Cuffie & Auricolari</h3>
+              <p class="feature-desc" data-i18n="tip2Desc">Collega le cuffie per un audio stereo pulito ad alta fedeltà a 48 kHz.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- LIVE RECEIVER SECTION (Shown when connected and listening) -->
+      <section id="liveSection" class="card" hidden>
+        <div class="card-title-row">
+          <div>
+            <h2 class="card-title" data-i18n="liveTitle">Audio in Diretta</h2>
+            <p id="liveStatusText" class="card-subtitle" data-i18n="liveStatusConnecting">Connessione in corso...</p>
+          </div>
+          <button id="disconnectBtn" class="btn btn-secondary btn-sm" type="button" data-i18n="disconnectBtn">
+            Disconnetti
+          </button>
+        </div>
+
+        <!-- Autoplay Unlock banner (if iOS blocks autoplay) -->
+        <div id="resumeBox" class="status-banner" data-type="error" hidden>
+          <span style="flex: 1;" data-i18n="liveResumePrompt">Tocca per abilitare l'audio:</span>
+          <button id="resumeBtn" class="btn btn-primary btn-sm" type="button" data-i18n="liveResumeBtn">Avvia Audio</button>
+        </div>
+
+        <!-- Audio Volume Control & Visual VU Indicator -->
+        <div class="audio-control-box">
+          <div class="volume-row">
+            <span class="field-label" style="min-width: 60px;"><span data-i18n="volumeLabel">Volume:</span> <strong id="volValue">100%</strong></span>
+            <input id="volSlider" class="volume-slider" type="range" min="0" max="100" value="100" />
+            <button id="muteBtn" class="btn btn-secondary btn-sm" type="button" data-i18n="muteBtn">Muto</button>
+          </div>
+          <div class="level-meter-row">
+            <span class="level-label">VU</span>
+            <div class="level-track">
+              <div id="levelBar" class="level-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wake Lock Toggle -->
+        <label class="switch-row" for="wakeLockToggle">
+          <div class="switch-text">
+            <span class="switch-title" data-i18n="wakeLockTitle">Mantieni Schermo Attivo</span>
+            <span class="switch-desc" data-i18n="wakeLockDesc">Evita lo standby dello schermo durante l'ascolto.</span>
+          </div>
+          <div class="switch-toggle">
+            <input id="wakeLockToggle" type="checkbox" checked />
+            <span class="switch-slider"></span>
+          </div>
+        </label>
+
+        <!-- Optional Diagnostic Connection Details (For experts) -->
+        <details class="advanced-accordion" style="margin-top: 6px;">
+          <summary class="advanced-summary" style="padding: 10px 12px;">
+            <span class="advanced-summary-title" style="font-size: 13px;" data-i18n="telemetryTitle">⚙️ Dettagli Connessione & Rete</span>
+            <span class="advanced-badge" data-i18n="liveBadge">Live</span>
+          </summary>
+          <div class="advanced-body" style="padding-top: 10px;">
+            <div class="telemetry-hud">
+              <div class="hud-item">
+                <span class="hud-label" data-i18n="telemetrySignal">Segnale</span>
+                <span id="hudSignal" class="telemetry-badge badge-good" data-i18n="wifiExcellent">Wi-Fi Ottimo</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label" data-i18n="telemetryLatency">Latenza</span>
+                <strong id="hudPing" class="hud-value">-- ms</strong>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label" data-i18n="telemetryLoss">Perdita</span>
+                <strong id="hudLoss" class="hud-value">0.0%</strong>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- Hidden Audio Element for Mobile WebRTC Playback -->
+      <audio id="remoteAudio" autoplay playsinline webkit-playsinline></audio>
+    </div>
+
+    <script type="module" src="/listen.js"></script>
+  </body>
+</html>

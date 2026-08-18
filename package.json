@@ -1,0 +1,31 @@
+{
+  "name": "wifora",
+  "version": "1.0.0",
+  "description": "Ultra-low latency Wi-Fi audio streaming from PC to any mobile device (iOS, iPadOS, Android) with zero app installs.",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GabryOsas/Wifora.git"
+  },
+  "keywords": [
+    "audio-streaming",
+    "webrtc",
+    "opus",
+    "wifi-audio",
+    "zero-app",
+    "lan-streaming",
+    "dsp",
+    "low-latency",
+    "audio-sharing"
+  ],
+  "author": "GabryOsas",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.mjs",
+    "menu": "node cli-menu.mjs"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.3"
+  }
+}
