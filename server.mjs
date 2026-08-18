@@ -163,10 +163,10 @@ if (isDirectExecution) {
   instance.listen().then((addr) => {
     const port = addr.port
     const scheme = instance.isHttps ? 'https' : 'http'
-    logger.info(`Wifora pronto su ${scheme}://localhost:${port}/host.html`)
+    logger.info(`Wifora ready at ${scheme}://localhost:${port}/host.html`)
     const addresses = getLanAddresses()
-    if (addresses.length) logger.info(`Apri sullo smartphone: ${scheme}://${addresses[0]}:${port}/listen.html`)
-    else logger.warn('Nessun indirizzo Wi-Fi o Ethernet rilevato.')
+    if (addresses.length) logger.info(`Open on your smartphone: ${scheme}://${addresses[0]}:${port}/listen.html`)
+    else logger.warn('No Wi-Fi or Ethernet address detected.')
   })
 
   function gracefulShutdown() {

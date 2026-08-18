@@ -23,6 +23,22 @@ const c = {
   bgCyan: '\x1b[46m',
 }
 
+function gradientText(text, start = [34, 211, 238], end = [37, 99, 235]) {
+  const chars = Array.from(text)
+  const lastIndex = Math.max(chars.length - 1, 1)
+
+  return (
+    chars
+      .map((char, index) => {
+        if (char === ' ') return char
+        const ratio = index / lastIndex
+        const color = start.map((value, channel) => Math.round(value + (end[channel] - value) * ratio))
+        return `\x1b[38;2;${color.join(';')}m${char}`
+      })
+      .join('') + c.reset
+  )
+}
+
 function clearScreen() {
   process.stdout.write('\x1b[2J\x1b[3J\x1b[H')
 }
@@ -75,24 +91,28 @@ function openBrowser(url) {
 }
 
 function printBanner() {
-  console.log(`${c.brightCyan}${c.bold}`)
-  console.log('   ██╗    ██╗██╗███████╗ ██████╗ ██████╗  █████╗ ')
-  console.log('   ██║    ██║██║██╔════╝██╔═══██╗██╔══██╗██╔══██╗')
-  console.log('   ██║ █╗ ██║██║█████╗  ██║   ██║██████╔╝███████║')
-  console.log('   ██║███╗██║██║██╔══╝  ██║   ██║██╔══██╗██╔══██║')
-  console.log('   ╚███╔███╔╝██║██║     ╚██████╔╝██║  ██║██║  ██║')
-  console.log('    ╚══╝╚══╝ ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝')
+  const banner = [
+    '   ██╗    ██╗██╗███████╗ ██████╗ ██████╗  █████╗ ',
+    '   ██║    ██║██║██╔════╝██╔═══██╗██╔══██╗██╔══██╗',
+    '   ██║ █╗ ██║██║█████╗  ██║   ██║██████╔╝███████║',
+    '   ██║███╗██║██║██╔══╝  ██║   ██║██╔══██╗██╔══██║',
+    '   ╚███╔███╔╝██║██║     ╚██████╔╝██║  ██║██║  ██║',
+    '    ╚══╝╚══╝ ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝',
+  ]
+
+  console.log(c.bold)
+  banner.forEach((line) => console.log(gradientText(line)))
   console.log(`${c.reset}${c.dim}      PC Audio Streamer for iPhone & Mobile${c.reset}\n`)
 }
 
 // Interactive Arrow-Key Menu
 async function showMenu() {
   const menuItems = [
-    { id: 'start', label: 'Avvia Wifora Server', icon: '▶' },
-    { id: 'port', label: `Cambia Porta (Attuale: ${currentPort})`, icon: '⚙' },
-    { id: 'net', label: 'Visualizza Schede di Rete & Indirizzi IP', icon: '📶' },
-    { id: 'kill', label: 'Libera Porta & Arresta Processi Residui', icon: '🛑' },
-    { id: 'exit', label: 'Esci dal Programma', icon: '✖' },
+    { id: 'start', label: 'Start Wifora Server', icon: '▶' },
+    { id: 'port', label: `Change Port (Current: ${currentPort})`, icon: '⚙' },
+    { id: 'net', label: 'View Network Adapters & IP Addresses', icon: '📶' },
+    { id: 'kill', label: 'Free Port & Stop Leftover Processes', icon: '🛑' },
+    { id: 'exit', label: 'Exit Program', icon: '✖' },
   ]
 
   let selectedIndex = 0
@@ -101,7 +121,7 @@ async function showMenu() {
     function render() {
       clearScreen()
       printBanner()
-      console.log(`${c.bold}Seleziona un'opzione usando le frecce [↑ / ↓] e premi [Invio]:${c.reset}\n`)
+      console.log(`${c.bold}Select an option with the arrow keys [↑ / ↓] and press [Enter]:${c.reset}\n`)
 
       menuItems.forEach((item, index) => {
         const isSelected = index === selectedIndex
@@ -114,7 +134,7 @@ async function showMenu() {
 
       console.log(`\n${c.dim}───────────────────────────────────────────────────${c.reset}`)
       console.log(
-        `${c.dim}Porta configurata: ${c.brightCyan}${currentPort}${c.dim} | Premi [Q] per uscire rapido${c.reset}`
+        `${c.dim}Configured port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`
       )
     }
 
@@ -154,20 +174,20 @@ async function showMenu() {
 async function promptChangePort() {
   clearScreen()
   printBanner()
-  console.log(`${c.bold}${c.brightCyan}CONFIGURAZIONE PORTA SERVER${c.reset}\n`)
-  console.log(`Porta corrente: ${c.bold}${currentPort}${c.reset}`)
-  console.log(`Inserisci il nuovo numero di porta (es. 3975, 8080, 5000):`)
+  console.log(`${c.bold}${c.brightCyan}SERVER PORT CONFIGURATION${c.reset}\n`)
+  console.log(`Current port: ${c.bold}${currentPort}${c.reset}`)
+  console.log(`Enter the new port number (e.g. 3975, 8080, 5000):`)
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise((resolve) => {
-    rl.question(`\nNuova porta [${currentPort}]: `, (input) => {
+    rl.question(`\nNew port [${currentPort}]: `, (input) => {
       rl.close()
       const parsed = parseInt(input.trim(), 10)
       if (!isNaN(parsed) && parsed >= 1024 && parsed <= 65535) {
         currentPort = parsed
-        console.log(`\n${c.brightGreen}✔ Porta aggiornata a ${currentPort}!${c.reset}`)
+        console.log(`\n${c.brightGreen}✔ Port updated to ${currentPort}!${c.reset}`)
       } else if (input.trim() !== '') {
-        console.log(`\n${c.red}✖ Valore non valido. Mantengo ${currentPort}.${c.reset}`)
+        console.log(`\n${c.red}✖ Invalid value. Keeping ${currentPort}.${c.reset}`)
       }
       setTimeout(resolve, 1200)
     })
@@ -178,21 +198,21 @@ async function promptChangePort() {
 async function showNetworkInfo() {
   clearScreen()
   printBanner()
-  console.log(`${c.bold}${c.brightCyan}SCHEDE DI RETE & INDIRIZZI IP RILEVATI${c.reset}\n`)
+  console.log(`${c.bold}${c.brightCyan}DETECTED NETWORK ADAPTERS & IP ADDRESSES${c.reset}\n`)
 
   const addrs = getLanAddresses()
   if (addrs.length === 0) {
-    console.log(`${c.yellow}⚠ Nessun indirizzo IPv4 locale rilevato. Connetti il PC al Wi-Fi o Ethernet.${c.reset}`)
+    console.log(`${c.yellow}⚠ No local IPv4 address detected. Connect the PC to Wi-Fi or Ethernet.${c.reset}`)
   } else {
-    console.log(`Trovate ${c.bold}${addrs.length}${c.reset} interfaccia/e di rete:\n`)
+    console.log(`Found ${c.bold}${addrs.length}${c.reset} network interface(s):\n`)
     addrs.forEach((item, idx) => {
-      const isPrimary = idx === 0 ? ` ${c.brightGreen}[Consigliata per iPhone]${c.reset}` : ''
+      const isPrimary = idx === 0 ? ` ${c.brightGreen}[Recommended for iPhone]${c.reset}` : ''
       console.log(`  ${c.brightCyan}● ${item.name}${c.reset}: ${c.bold}${item.ip}${c.reset}${isPrimary}`)
-      console.log(`    ${c.dim}Link smartphone: http://${item.ip}:${currentPort}/listen.html${c.reset}\n`)
+      console.log(`    ${c.dim}Mobile link: http://${item.ip}:${currentPort}/listen.html${c.reset}\n`)
     })
   }
 
-  console.log(`\n${c.dim}Premi un tasto qualsiasi per tornare al menu principale...${c.reset}`)
+  console.log(`\n${c.dim}Press any key to return to the main menu...${c.reset}`)
   return new Promise((resolve) => {
     if (process.stdin.isTTY) process.stdin.setRawMode(true)
     process.stdin.once('data', () => {
@@ -206,10 +226,10 @@ async function showNetworkInfo() {
 async function handleKillPort() {
   clearScreen()
   printBanner()
-  console.log(`${c.bold}${c.yellow}LIBERAZIONE PORTA ${currentPort}${c.reset}\n`)
-  console.log(`Controllo e chiusura processi attivi in corso...`)
+  console.log(`${c.bold}${c.yellow}FREEING PORT ${currentPort}${c.reset}\n`)
+  console.log(`Checking for and stopping active processes...`)
   await killPortProcess(currentPort)
-  console.log(`\n${c.brightGreen}✔ Porta ${currentPort} liberata con successo!${c.reset}`)
+  console.log(`\n${c.brightGreen}✔ Port ${currentPort} freed successfully!${c.reset}`)
   await new Promise((r) => setTimeout(r, 1500))
 }
 
@@ -221,8 +241,8 @@ async function startServerLive() {
   // 1. Check if port is free
   const isFree = await checkPortFree(currentPort)
   if (!isFree) {
-    console.log(`${c.yellow}⚠ La porta ${currentPort} è già occupata da un altro processo.${c.reset}`)
-    console.log(`Chiusura forzata del processo precedente in corso...`)
+    console.log(`${c.yellow}⚠ Port ${currentPort} is already in use by another process.${c.reset}`)
+    console.log(`Stopping the previous process...`)
     await killPortProcess(currentPort)
     await new Promise((r) => setTimeout(r, 800))
   }
@@ -233,15 +253,15 @@ async function startServerLive() {
   const hostUrl = `http://localhost:${currentPort}/host.html`
   const listenUrl = `http://${lanIp}:${currentPort}/listen.html`
 
-  console.log(`${c.brightGreen}${c.bold}✔ Wifora Server avviato con successo!${c.reset}\n`)
+  console.log(`${c.brightGreen}${c.bold}✔ Wifora Server started successfully!${c.reset}\n`)
   console.log(`┌─────────────────────────────────────────────────────────────┐`)
-  console.log(`│ ${c.bold}INDIRIZZI DI COLLEGAMENTO${c.reset}                                   │`)
+  console.log(`│ ${c.bold}CONNECTION ADDRESSES${c.reset}                                   │`)
   console.log(`├─────────────────────────────────────────────────────────────┤`)
   console.log(`│ 🖥️  ${c.bold}Browser PC (Host):${c.reset}     ${c.brightCyan}${hostUrl.padEnd(31)}${c.reset}│`)
   console.log(`│ 📱 ${c.bold}iPhone / Mobile:${c.reset}       ${c.brightGreen}${listenUrl.padEnd(31)}${c.reset}│`)
   console.log(`└─────────────────────────────────────────────────────────────┘\n`)
 
-  console.log(`${c.dim}Apertura automatica del browser sul PC in corso...${c.reset}`)
+  console.log(`${c.dim}Opening the browser on the PC...${c.reset}`)
   openBrowser(hostUrl)
 
   // Spawn node server
@@ -263,27 +283,29 @@ async function startServerLive() {
     }
   })
 
-  console.log(`\n${c.bold}Comandi rapidi da tastiera:${c.reset}`)
-  console.log(`  ${c.brightCyan}[B]${c.reset} Riapri browser sul PC`)
-  console.log(`  ${c.yellow}[S]${c.reset} Ferma server e torna al menu`)
-  console.log(`  ${c.red}[Q]${c.reset} Chiudi tutto ed esci\n`)
+  console.log(`\n${c.bold}Keyboard shortcuts:${c.reset}`)
+  console.log(`  ${c.brightCyan}[B]${c.reset} Reopen browser on the PC`)
+  console.log(`  ${c.yellow}[S]${c.reset} Stop server and return to menu`)
+  console.log(`  ${c.red}[Q]${c.reset} Stop everything and exit\n`)
 
   return new Promise((resolve) => {
     readline.emitKeypressEvents(process.stdin)
     if (process.stdin.isTTY) process.stdin.setRawMode(true)
 
-    function onKey(str, key) {
+    async function onKey(str, key) {
       if (!key) return
       if (key.name === 'b') {
         openBrowser(hostUrl)
-        console.log(`${c.dim}Browser riaperto.${c.reset}`)
+        console.log(`${c.dim}Browser reopened.${c.reset}`)
       } else if (key.name === 's') {
         cleanup()
-        stopServer()
+        console.log(`\n${c.yellow}Stopping the server...${c.reset}`)
+        await stopServer()
         resolve('menu')
       } else if (key.name === 'q' || (key.ctrl && key.name === 'c')) {
         cleanup()
-        stopServer()
+        console.log(`\n${c.red}Shutting down the server...${c.reset}`)
+        await stopServer()
         resolve('exit')
       }
     }
@@ -335,9 +357,10 @@ async function main() {
     }
   }
 
+  await stopServer()
   clearScreen()
   printBanner()
-  console.log(`${c.brightCyan}Grazie per aver usato Wifora. A presto! 👋${c.reset}\n`)
+  console.log(`${c.brightCyan}Thanks for using Wifora. See you soon! 👋${c.reset}\n`)
   process.exit(0)
 }
 

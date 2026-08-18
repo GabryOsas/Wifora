@@ -500,9 +500,7 @@ function updateSubsystemsStatus() {
 function updateDeviceCountBadge() {
   const count = peers.size
   const lang = document.documentElement.getAttribute('lang') || 'it'
-  let suffix = 'i'
-  if (lang === 'it') suffix = count === 1 ? 'o' : 'i'
-  else if (lang === 'fr') suffix = count > 1 ? 's' : ''
+  const suffix = lang === 'it' ? (count === 1 ? 'o' : 'i') : ''
   devicesCount.textContent = t('devicesConnectedCount', { count: String(count), suffix })
   noDevicesMsg.hidden = count > 0
   updateSubsystemsStatus()

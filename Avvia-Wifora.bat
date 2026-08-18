@@ -6,8 +6,8 @@ cd /d "%~dp0"
 where node >nul 2>&1
 if errorlevel 1 (
     echo.
-    echo  [ERRORE] Node.js non e installato o non e presente nel PATH di sistema.
-    echo  Scarica e installa Node.js da: https://nodejs.org
+    echo  [ERROR] Node.js is not installed or is not available in the system PATH.
+    echo  Download and install Node.js from: https://nodejs.org
     echo.
     pause
     exit /b 1
@@ -15,12 +15,12 @@ if errorlevel 1 (
 
 if not exist node_modules (
     echo.
-    echo  [WIFORA] Installazione dipendenze iniziale in corso...
+    echo  [WIFORA] Installing initial dependencies...
     echo.
     call npm install
     if errorlevel 1 (
         echo.
-        echo  [ERRORE] Installazione npm non riuscita. Verifica la connessione Internet.
+        echo  [ERROR] npm installation failed. Check your Internet connection.
         echo.
         pause
         exit /b 1
