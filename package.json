@@ -20,6 +20,10 @@
   ],
   "author": "GabryOsas",
   "license": "MIT",
+  "funding": {
+    "type": "buy-me-a-coffee",
+    "url": "https://buymeacoffee.com/gabryosas"
+  },
   "scripts": {
     "start": "node server.mjs",
     "menu": "node cli-menu.mjs"

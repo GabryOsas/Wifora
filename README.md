@@ -10,6 +10,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20iOS%20%7C%20Android-0078D4?style=flat-square&logo=windows&logoColor=white)](#)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Zero App](https://img.shields.io/badge/Client-Pure%20Web%20Browser-555555?style=flat-square)](#)
+[![Buy Me A Coffee](https://img.shields.io/badge/Support-Buy%20Me%20A%20Coffee-FFDD00?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/gabryosas)
 
 <p align="center">
   <a href="#english">English</a> •
@@ -322,6 +323,18 @@ Wifora/
 ├── .gitignore              # Git repository exclusion rules
 └── README.md               # Multilingual documentation
 ```
+
+---
+
+## Support & Donations
+
+If you enjoy using Wifora or find it helpful for your setup, consider buying me a coffee to support continued development:
+
+<p align="left">
+  <a href="https://buymeacoffee.com/gabryosas" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="42" style="border-radius: 8px;" />
+  </a>
+</p>
 
 ---
 
