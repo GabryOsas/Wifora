@@ -29,3 +29,5 @@ yarn-error.log*
 scratch/
 tmp/
 *.tmp
+*.docx
+
