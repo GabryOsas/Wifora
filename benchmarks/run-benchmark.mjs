@@ -128,7 +128,7 @@ async function runBenchmark() {
   results.push({ name: 'QR Code PNG Generation', unit: 'ms', count: 100, ...qrStats })
 
   // 5. Benchmark WebSocket Signaling Round-Trip
-  console.log('[5/5] Benchmarking WebSocket Signaling Relay Latency (1,000 messages)...')
+  console.log('[5/8] Benchmarking WebSocket Signaling Relay Latency (1,000 messages)...')
   const wsHost = new WebSocket(`ws://127.0.0.1:${addr.port}/signal`, {
     headers: { origin: `http://localhost:${addr.port}` },
   })
@@ -178,6 +178,62 @@ async function runBenchmark() {
   wsHost.close()
   wsListener.close()
   await app.close()
+
+  // 6. Benchmark AudioEngine Ingest & Read Throughput
+  console.log('[6/8] Benchmarking AudioEngine Ingest/Read Throughput (10,000 iterations)...')
+  const { AudioEngine } = await import('../src/audio/engine.mjs')
+  const audioEngine = new AudioEngine({ bufferCapacity: 100 })
+  const testFrameSamples = new Float32Array(960 * 2)
+  const engineSamples = []
+  for (let i = 0; i < 10000; i++) {
+    const t0 = performance.now()
+    audioEngine.ingest({ samples: testFrameSamples })
+    audioEngine.read(960)
+    const t1 = performance.now()
+    engineSamples.push((t1 - t0) * 1000) // in microseconds
+  }
+  const engineStats = calculateStats(engineSamples)
+  results.push({ name: 'AudioEngine Ingest/Read', unit: 'µs', count: 10000, ...engineStats })
+
+  // 7. Benchmark DriftController Observation & Smoothing
+  console.log('[7/8] Benchmarking DriftController Observation (10,000 iterations)...')
+  const { DriftController } = await import('../src/audio/clock/drift-controller.mjs')
+  const driftCtrl = new DriftController()
+  driftCtrl.observe({ remoteTimestamp: 0, localTimestamp: 0 })
+  const driftSamples = []
+  let remoteTs = 0
+  let localTs = 0
+  for (let i = 1; i <= 10000; i++) {
+    remoteTs += 960
+    localTs += 960
+    const t0 = performance.now()
+    driftCtrl.observe({ remoteTimestamp: remoteTs + (i % 3), localTimestamp: localTs })
+    const t1 = performance.now()
+    driftSamples.push((t1 - t0) * 1000) // in microseconds
+  }
+  const driftStats = calculateStats(driftSamples)
+  results.push({ name: 'DriftController Observation', unit: 'µs', count: 10000, ...driftStats })
+
+  // 8. Benchmark Control Protocol Message Envelope Validation
+  console.log('[8/8] Benchmarking Control Protocol Envelope Validation (10,000 iterations)...')
+  const { validateControlMessage } = await import('../src/shared/protocol.mjs')
+  const sampleCtrlMsg = {
+    type: 'telemetry.report',
+    version: 1,
+    sessionId: 'session-bench-123',
+    deviceId: 'device-bench-456',
+    timestamp: Date.now(),
+    payload: { rttMs: 25, jitterMs: 3, lossPercent: 0.1 },
+  }
+  const protoSamples = []
+  for (let i = 0; i < 10000; i++) {
+    const t0 = performance.now()
+    validateControlMessage(sampleCtrlMsg)
+    const t1 = performance.now()
+    protoSamples.push((t1 - t0) * 1000) // in microseconds
+  }
+  const protoStats = calculateStats(protoSamples)
+  results.push({ name: 'Control Protocol Validation', unit: 'µs', count: 10000, ...protoStats })
 
   // Print Formatted Results Table
   console.log('\n' + '='.repeat(88))

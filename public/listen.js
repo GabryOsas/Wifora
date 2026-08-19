@@ -1,8 +1,12 @@
 import { initI18n, t } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
 import { createLogger } from './logger.js'
+import { ClockSyncController } from './clock-sync.js'
+import { AdaptiveJitterController } from './jitter-controller.js'
 
 const logger = createLogger('Listener')
+const jitterController = new AdaptiveJitterController()
+const clockSyncController = new ClockSyncController()
 
 // --- DOM Elements ---
 const desktopNotice = document.querySelector('#desktopNotice')
@@ -49,21 +53,21 @@ function announceA11y(text) {
 function updateListenerStatus(state = 'CONNECTING', extra = '') {
   if (!listenerWebRtcStatus || !listenerWebRtcStatusText) return
   let className = 'status-connecting'
-  let label = 'CONNECTING'
+  let labelKey = 'statusConnecting'
 
   if (state === 'CONNECTED') {
     className = 'status-connected'
-    label = 'CONNECTED'
+    labelKey = 'statusConnected'
   } else if (state === 'DEGRADED') {
     className = 'status-degraded'
-    label = 'DEGRADED'
+    labelKey = 'statusDegraded'
   } else if (state === 'DISCONNECTED') {
     className = 'status-disconnected'
-    label = 'DISCONNECTED'
+    labelKey = 'statusDisconnected'
   }
 
   listenerWebRtcStatus.className = `status-pill ${className}`
-  listenerWebRtcStatusText.textContent = label
+  listenerWebRtcStatusText.textContent = t(labelKey)
   if (extra && liveStatusText) {
     liveStatusText.textContent = extra
     announceA11y(extra)
@@ -97,7 +101,9 @@ let currentReceiver = null
 let pendingCandidates = []
 let shouldListen = false
 let reconnectTimer = null
+let peerRecoveryTimer = null
 let telemetryTimer = null
+let clockSyncTimer = null
 let pingTimer = null
 let wakeLockSentinel = null
 let isMuted = false
@@ -275,6 +281,19 @@ function handleWakeRecovery() {
   }
 }
 
+function schedulePeerRecovery() {
+  if (!shouldListen || peerRecoveryTimer) return
+  peerRecoveryTimer = setTimeout(() => {
+    peerRecoveryTimer = null
+    const state = peer?.connectionState
+    if (shouldListen && ['disconnected', 'failed'].includes(state)) {
+      logger.warn('WebRTC recovery timed out; reconnecting signaling')
+      if (!socket || socket.readyState !== WebSocket.OPEN) connectSignal()
+      else stopListening(t('toastRoomEnded'), true)
+    }
+  }, 8_000)
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     handleWakeRecovery()
@@ -361,6 +380,7 @@ muteBtn.addEventListener('click', () => {
 
 // --- Diagnostic Telemetry & Dynamic Jitter Buffer Management ---
 function resetReceiverTelemetry() {
+  jitterController.reset()
   lastPacketsReceived = null
   lastPacketsLost = null
   smoothedRtt = null
@@ -425,6 +445,7 @@ async function pollReceiverTelemetry() {
     const stats = await peer.getStats()
     let rtt = null
     let jitter = null
+    let playoutDelayMs = null
     let packetsLost = 0
     let packetsReceived = 0
 
@@ -437,6 +458,9 @@ async function pollReceiverTelemetry() {
         if (report.packetsReceived != null) packetsReceived = report.packetsReceived
         if (report.jitter != null) jitter = Math.round(report.jitter * 1000)
         if (report.roundTripTime != null && rtt == null) rtt = Math.round(report.roundTripTime * 1000)
+        if (report.jitterBufferDelay != null && report.jitterBufferEmittedCount > 0) {
+          playoutDelayMs = Math.round((report.jitterBufferDelay / report.jitterBufferEmittedCount) * 1000)
+        }
       }
     })
 
@@ -454,17 +478,32 @@ async function pollReceiverTelemetry() {
     smoothedJitter = smooth(smoothedJitter, jitter)
     smoothedLoss = smooth(smoothedLoss, instantLoss, 0.4)
 
-    // Dynamic Receiver Jitter Buffer Target Adjustment
-    if (smoothedJitter != null && (smoothedJitter > 15 || (smoothedLoss ?? 0) > 2.0)) {
-      setJitterBufferTarget(50)
-    } else if (smoothedJitter != null && (smoothedJitter > 8 || (smoothedLoss ?? 0) > 0.7)) {
-      setJitterBufferTarget(35)
-    } else {
-      setJitterBufferTarget(22)
-    }
+    const jitterPolicy = jitterController.update({
+      jitterMs: smoothedJitter,
+      lossPercent: smoothedLoss,
+      rttMs: smoothedRtt,
+    })
+    setJitterBufferTarget(jitterPolicy.targetMs)
 
     if (hudPing) hudPing.textContent = smoothedRtt != null ? `${Math.round(smoothedRtt)} ms` : t('liveBadge')
     if (hudLoss) hudLoss.textContent = `${(smoothedLoss ?? 0).toFixed(1)}%`
+
+    signal({
+      type: 'telemetry.report',
+      version: 1,
+      sessionId: listenerSessionId,
+      deviceId: listenerSessionId,
+      timestamp: Date.now(),
+      payload: {
+        rttMs: smoothedRtt == null ? null : Math.round(smoothedRtt),
+        jitterMs: smoothedJitter == null ? null : Math.round(smoothedJitter),
+        lossPercent: smoothedLoss == null ? null : Number(smoothedLoss.toFixed(2)),
+        playoutDelayMs,
+        audioState: remoteAudio.paused ? 'paused' : 'playing',
+        visibility: document.visibilityState,
+        jitterTargetMs: jitterPolicy.targetMs,
+      },
+    })
 
     const severe = (rtt != null && rtt > 220) || (instantLoss != null && instantLoss > 10)
     const isDegraded = severe || (smoothedRtt != null && (smoothedRtt > 100 || (smoothedLoss ?? 0) > 3.0))
@@ -486,6 +525,43 @@ async function pollReceiverTelemetry() {
 // --- Signaling & WebRTC ---
 function signal(msg) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(msg))
+}
+
+function reportClockSync(snapshot) {
+  signal({
+    type: 'clock.sync',
+    version: 1,
+    sessionId: listenerSessionId,
+    deviceId: listenerSessionId,
+    timestamp: Date.now(),
+    payload: {
+      mode: 'report',
+      rttMs: snapshot.rttMs,
+      offsetMs: snapshot.offsetMs,
+      driftPpm: snapshot.driftPpm,
+      correctionPpm: snapshot.correctionPpm,
+      playbackRate: snapshot.playbackRate,
+      observations: snapshot.observations,
+    },
+  })
+}
+
+function requestClockSync() {
+  const clientSentAt = Date.now()
+  signal({
+    type: 'clock.sync',
+    version: 1,
+    sessionId: listenerSessionId,
+    deviceId: listenerSessionId,
+    timestamp: clientSentAt,
+    payload: { mode: 'probe', clientSentAt },
+  })
+}
+
+function startClockSync() {
+  clearInterval(clockSyncTimer)
+  requestClockSync()
+  clockSyncTimer = setInterval(requestClockSync, 5_000)
 }
 
 async function connectSignal() {
@@ -533,6 +609,40 @@ async function connectSignal() {
     if (msg.type === 'registered') {
       logger.info(`Registered successfully: clientId=${msg.clientId}, hostAvailable=${msg.hostAvailable}`)
       liveStatusText.textContent = msg.hostAvailable ? t('liveStatusConnected') : t('liveStatusWaitingHost')
+      startClockSync()
+    }
+
+    if (msg.type === 'clock.sync' && msg.payload.mode === 'reply') {
+      if (msg.sessionId !== listenerSessionId) return
+      const snapshot = clockSyncController.observeReply({
+        clientSentAt: msg.payload.clientSentAt,
+        hostReceivedAt: msg.payload.hostReceivedAt,
+        hostSentAt: msg.payload.hostSentAt,
+        clientReceivedAt: Date.now(),
+      })
+      if (snapshot.observations > 0) {
+        try {
+          remoteAudio.playbackRate = snapshot.playbackRate
+        } catch (err) {
+          logger.debug('Browser does not expose remote audio playback-rate tuning:', err?.message || err)
+        }
+        remoteAudio.dataset.clockOffsetMs = snapshot.offsetMs.toFixed(2)
+        reportClockSync(snapshot)
+      }
+      return
+    }
+
+    if (msg.type === 'audio.policy') {
+      if (msg.sessionId !== listenerSessionId) {
+        logger.warn('Ignoring a transport policy addressed to a different listener session')
+        return
+      }
+      const bitrateKbps = Math.round(msg.payload.bitrate / 1000)
+      remoteAudio.dataset.transportPolicy = `${msg.payload.profileKey}:${bitrateKbps}`
+      logger.info(
+        `Host applied ${msg.payload.profileKey} transport policy (${bitrateKbps} kbps, tier ${msg.payload.currentTier})`
+      )
+      return
     }
 
     if (msg.type === 'kicked') {
@@ -590,8 +700,8 @@ async function connectSignal() {
 }
 
 async function acceptOffer(msg) {
-  if (peer && peer.connectionState === 'connected') {
-    logger.debug('Reusing connected WebRTC peer for renegotiation')
+  if (peer && peer.connectionState !== 'closed') {
+    logger.debug('Reusing WebRTC peer for renegotiation / ICE recovery')
   } else if (peer) {
     peer.onconnectionstatechange = null
     peer.oniceconnectionstatechange = null
@@ -652,11 +762,19 @@ async function acceptOffer(msg) {
       const connState = peer?.connectionState
       const iceState = peer?.iceConnectionState
       logger.debug(`Peer connection state: ${connState}, ICE: ${iceState}`)
-      if (['failed', 'closed'].includes(connState) || ['failed', 'closed'].includes(iceState)) {
-        logger.warn('WebRTC peer connection failed or closed')
+      if (connState === 'closed' || iceState === 'closed') {
+        logger.warn('WebRTC peer connection closed')
         stopListening(t('toastRoomEnded'), true)
+      } else if (['failed', 'disconnected'].includes(connState) || ['failed', 'disconnected'].includes(iceState)) {
+        logger.warn('WebRTC path degraded; waiting for ICE recovery')
+        liveStatusText.textContent = t('telemetryReconnecting')
+        updateListenerStatus('DEGRADED')
+        schedulePeerRecovery()
       } else if (connState === 'connected' && (iceState === 'connected' || iceState === 'completed')) {
+        clearTimeout(peerRecoveryTimer)
+        peerRecoveryTimer = null
         liveStatusText.textContent = t('liveStatusConnected')
+        updateListenerStatus('CONNECTED')
       }
     }
 
@@ -740,7 +858,10 @@ function stopListening(message = '', showForm = false) {
 
   shouldListen = false
   clearTimeout(reconnectTimer)
+  clearTimeout(peerRecoveryTimer)
+  peerRecoveryTimer = null
   clearInterval(telemetryTimer)
+  clearInterval(clockSyncTimer)
   clearInterval(pingTimer)
   cancelAnimationFrame(animFrameId)
   releaseWakeLock()

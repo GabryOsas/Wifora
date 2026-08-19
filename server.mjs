@@ -21,6 +21,7 @@ import { validHostKey, validListenerToken, setSecurityHeaders, isAllowedOrigin }
 import { createRoomManager } from './src/server/rooms.mjs'
 import { createHttpHandler } from './src/server/http.mjs'
 import { createSignalingServer } from './src/server/websocket.mjs'
+import { createDiscoveryPublisher } from './src/server/discovery.mjs'
 
 // Backward-compatible re-exports
 export const root = ROOT_DIR
@@ -84,6 +85,8 @@ function resolveTlsConfig(tlsOptions = {}) {
  * @param {Object} [options.tls] - Optional TLS options { cert, key, certPath, keyPath }
  * @param {Object} [options.rateLimiters] - Optional custom rate limiters
  * @param {Object} [options.logger]
+ * @param {boolean} [options.enableDiscovery] - Publish _wifora._tcp via mDNS/Bonjour
+ * @param {Object} [options.discoveryPublisher] - Optional mDNS publisher, primarily for embedding/testing
  * @returns {Object} Server instance controller
  */
 export function createWiforaServer(options = {}) {
@@ -97,6 +100,9 @@ export function createWiforaServer(options = {}) {
   const maxSignalBytes = options.maxSignalBytes ?? MAX_SIGNAL_BYTES
   const roomGraceMs = options.roomGraceMs ?? ROOM_GRACE_MS
   const pingIntervalMs = options.pingIntervalMs || 10_000
+  const isTestRuntime = process.argv.includes('--test') || process.execArgv.includes('--test')
+  const enableDiscovery = options.enableDiscovery ?? !isTestRuntime
+  const discovery = options.discoveryPublisher || createDiscoveryPublisher({ logger: log })
 
   // 1. Initialize Room State Manager
   const roomManager = createRoomManager({
@@ -109,6 +115,7 @@ export function createWiforaServer(options = {}) {
     roomManager,
     publicDir: serverPublicDir,
     port: serverPort,
+    discovery,
     logger: log,
   })
 
@@ -129,6 +136,7 @@ export function createWiforaServer(options = {}) {
   })
 
   async function close() {
+    await discovery.close()
     await signaling.close()
     return new Promise((res) => {
       server.close(() => res())
@@ -143,12 +151,20 @@ export function createWiforaServer(options = {}) {
     removeClient: roomManager.removeClient,
     scheduleRoomCleanup: roomManager.scheduleRoomCleanup,
     isHttps,
+    discovery,
     close,
     listen: (customPort, host = '0.0.0.0') =>
       new Promise((res) => {
         server.listen(customPort ?? serverPort, host, () => {
           const addr = server.address()
           const scheme = isHttps ? 'https' : 'http'
+          if (enableDiscovery) {
+            try {
+              discovery.publish({ port: addr.port, secure: isHttps })
+            } catch (error) {
+              log.warn(`mDNS discovery unavailable: ${error?.message || error}`)
+            }
+          }
           log.info(`Wifora (${scheme.toUpperCase()} mode) listening on ${addr.address}:${addr.port}`)
           res(addr)
         })

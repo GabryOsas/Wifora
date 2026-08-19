@@ -1,5 +1,11 @@
 import { WebSocketServer } from 'ws'
 import { ROOM_PATTERN, KEY_PATTERN, LISTENER_TOKEN_PATTERN, MAX_SIGNAL_BYTES } from '../shared/constants.mjs'
+import {
+  canSendControlMessage,
+  CONTROL_MESSAGE_TYPES,
+  CONTROL_PROTOCOL_VERSION,
+  validateControlMessage,
+} from '../shared/protocol.mjs'
 import { isAllowedOrigin, validHostKey, validListenerToken } from './security.mjs'
 import { createRateLimiter } from './rate-limiter.mjs'
 
@@ -87,6 +93,57 @@ export function createSignalingServer(options = {}) {
       if (message.type === 'ping') {
         socket.isAlive = true
         send(socket, { type: 'pong' })
+        return
+      }
+
+      if (CONTROL_MESSAGE_TYPES.has(message.type)) {
+        const validation = validateControlMessage(message)
+        if (!validation.valid) {
+          send(socket, { type: 'error', message: `Messaggio di controllo non valido: ${validation.reason}.` })
+          return
+        }
+        if (!socket.roomId || !socket.role) {
+          send(socket, { type: 'error', message: 'Registrazione richiesta prima dei messaggi di controllo.' })
+          return
+        }
+        if (!canSendControlMessage(socket.role, message.type)) {
+          send(socket, { type: 'error', message: 'Questo ruolo non può inviare il messaggio di controllo richiesto.' })
+          return
+        }
+        if (socket.role === 'listener' && message.sessionId !== socket.sessionId) {
+          send(socket, { type: 'error', message: 'Sessione di controllo non autorizzata.' })
+          return
+        }
+        const room = rooms.get(socket.roomId)
+        if (!room) return
+        if (message.type === 'server.capabilities') {
+          send(socket, {
+            type: 'server.capabilities',
+            version: CONTROL_PROTOCOL_VERSION,
+            sessionId: socket.sessionId || socket.clientId,
+            deviceId: socket.clientId,
+            timestamp: Date.now(),
+            payload: { webrtc: true, controlProtocol: CONTROL_PROTOCOL_VERSION, perClientPolicy: true },
+          })
+          return
+        }
+        if (message.type === 'audio.policy' || (message.type === 'clock.sync' && socket.role === 'host')) {
+          const listener = room.listeners.get(message.sessionId)
+          if (!listener) {
+            send(socket, { type: 'error', message: 'Destinatario della policy audio non disponibile.' })
+            return
+          }
+          send(listener, { ...message, clientId: socket.clientId })
+          return
+        }
+        if (message.type === 'telemetry.report' && socket.role === 'listener') {
+          socket.telemetry = message.payload
+          send(room.host, { ...message, clientId: socket.clientId })
+          return
+        }
+        const isHostBroadcast = socket.role === 'host'
+        const recipients = isHostBroadcast ? room.listeners.values() : [room.host]
+        for (const recipient of recipients) send(recipient, { ...message, clientId: socket.clientId })
         return
       }
 

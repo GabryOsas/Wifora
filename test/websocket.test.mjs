@@ -279,6 +279,146 @@ test('WebSocket Signaling & Lifecycle', async (t) => {
     listener.close()
   })
 
+  await t.test('Versioned listener telemetry is validated and relayed only to its room host', async () => {
+    const host = connectClient(port)
+    await host.ready()
+    host.send({ type: 'register', role: 'host', roomId: 'ROOM1234', hostKey: validHostKeyA })
+    await host.waitForMessage((m) => m.type === 'registered')
+    const listener = connectClient(port)
+    await listener.ready()
+    listener.send({ type: 'register', role: 'listener', roomId: 'ROOM1234', sessionId: 'telemetry-session' })
+    await listener.waitForMessage((m) => m.type === 'registered')
+    await host.waitForMessage((m) => m.type === 'listener-joined')
+
+    listener.send({
+      type: 'telemetry.report',
+      version: 1,
+      sessionId: 'telemetry-session',
+      deviceId: 'iphone-1',
+      timestamp: 123,
+      payload: { rttMs: 12, lossPercent: 0.2 },
+    })
+    const telemetry = await host.waitForMessage((m) => m.type === 'telemetry.report')
+    assert.equal(telemetry.sessionId, 'telemetry-session')
+    assert.deepEqual(telemetry.payload, { rttMs: 12, lossPercent: 0.2 })
+
+    listener.send({
+      type: 'telemetry.report',
+      version: 2,
+      sessionId: 'telemetry-session',
+      deviceId: 'iphone-1',
+      timestamp: 1,
+      payload: {},
+    })
+    const error = await listener.waitForMessage((m) => m.type === 'error')
+    assert.match(error.message, /unsupported-version/)
+    host.close()
+    listener.close()
+  })
+
+  await t.test('Host transport policies are validated and delivered only to their target listener', async () => {
+    const host = connectClient(port)
+    await host.ready()
+    host.send({ type: 'register', role: 'host', roomId: 'ROOM1234', hostKey: validHostKeyA })
+    await host.waitForMessage((m) => m.type === 'registered')
+
+    const listener = connectClient(port)
+    await listener.ready()
+    listener.send({ type: 'register', role: 'listener', roomId: 'ROOM1234', sessionId: 'policy-session' })
+    await listener.waitForMessage((m) => m.type === 'registered')
+
+    const policy = {
+      profileKey: 'adaptive',
+      currentTier: 3,
+      bitrate: 160_000,
+      fec: true,
+      stereo: true,
+      ptime: 20,
+      dtx: false,
+      cbr: false,
+      maxPlaybackRate: 48_000,
+    }
+    host.send({
+      type: 'audio.policy',
+      version: 1,
+      sessionId: 'policy-session',
+      deviceId: 'host-ROOM1234',
+      timestamp: 123,
+      payload: policy,
+    })
+    const delivered = await listener.waitForMessage((m) => m.type === 'audio.policy')
+    assert.equal(delivered.sessionId, 'policy-session')
+    assert.deepEqual(delivered.payload, policy)
+
+    listener.send({
+      type: 'audio.policy',
+      version: 1,
+      sessionId: 'policy-session',
+      deviceId: 'listener-1',
+      timestamp: 123,
+      payload: policy,
+    })
+    const error = await listener.waitForMessage((m) => m.type === 'error')
+    assert.match(error.message, /non può inviare/)
+    host.close()
+    listener.close()
+  })
+
+  await t.test('Clock-sync probes, replies and reports stay scoped to one listener session', async () => {
+    const host = connectClient(port)
+    await host.ready()
+    host.send({ type: 'register', role: 'host', roomId: 'ROOM1234', hostKey: validHostKeyA })
+    await host.waitForMessage((m) => m.type === 'registered')
+
+    const listener = connectClient(port)
+    await listener.ready()
+    listener.send({ type: 'register', role: 'listener', roomId: 'ROOM1234', sessionId: 'clock-session' })
+    await listener.waitForMessage((m) => m.type === 'registered')
+
+    listener.send({
+      type: 'clock.sync',
+      version: 1,
+      sessionId: 'clock-session',
+      deviceId: 'clock-listener',
+      timestamp: 1_000,
+      payload: { mode: 'probe', clientSentAt: 1_000 },
+    })
+    const probe = await host.waitForMessage((m) => m.type === 'clock.sync' && m.payload.mode === 'probe')
+    assert.equal(probe.sessionId, 'clock-session')
+
+    host.send({
+      type: 'clock.sync',
+      version: 1,
+      sessionId: 'clock-session',
+      deviceId: 'clock-host',
+      timestamp: 1_020,
+      payload: { mode: 'reply', clientSentAt: 1_000, hostReceivedAt: 1_010, hostSentAt: 1_012 },
+    })
+    const reply = await listener.waitForMessage((m) => m.type === 'clock.sync' && m.payload.mode === 'reply')
+    assert.equal(reply.payload.hostSentAt, 1_012)
+
+    listener.send({
+      type: 'clock.sync',
+      version: 1,
+      sessionId: 'clock-session',
+      deviceId: 'clock-listener',
+      timestamp: 1_030,
+      payload: {
+        mode: 'report',
+        rttMs: 20,
+        offsetMs: -1,
+        driftPpm: 5,
+        correctionPpm: 5,
+        playbackRate: 1.000005,
+        observations: 1,
+      },
+    })
+    const report = await host.waitForMessage((m) => m.type === 'clock.sync' && m.payload.mode === 'report')
+    assert.equal(report.payload.offsetMs, -1)
+    host.close()
+    listener.close()
+  })
+
   await t.test('WebSocket ping / pong heartbeat and malformed messages handling', async () => {
     const client = connectClient(port)
     await client.ready()

@@ -16,7 +16,7 @@ import { setSecurityHeaders } from './security.mjs'
  * @returns {import('node:http').RequestListener} HTTP request handler
  */
 export function createHttpHandler(options = {}) {
-  const { roomManager, publicDir = PUBLIC_DIR, port = DEFAULT_PORT, logger: _logger = console } = options
+  const { roomManager, publicDir = PUBLIC_DIR, port = DEFAULT_PORT, discovery, logger: _logger = console } = options
   const rooms = roomManager?.rooms || new Map()
 
   return async function requestListener(request, response) {
@@ -31,6 +31,24 @@ export function createHttpHandler(options = {}) {
         'cache-control': 'no-store, no-cache, must-revalidate',
       })
       response.end(JSON.stringify({ port: activePort, addresses: getLanAddresses() }))
+      return
+    }
+
+    if (url.pathname === '/api/capabilities') {
+      response.writeHead(200, {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store, no-cache, must-revalidate',
+      })
+      response.end(
+        JSON.stringify({
+          protocolVersion: 1,
+          transports: ['webrtc'],
+          discovery: discovery?.snapshot?.() || { enabled: false, published: false },
+          browserDiscovery: false,
+          browserDiscoveryNote:
+            'Safari and other browsers cannot browse LAN mDNS services directly; use QR or the LAN URL.',
+        })
+      )
       return
     }
 

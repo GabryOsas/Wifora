@@ -303,7 +303,6 @@ export const translations = {
     wifiLost: 'Signal Lost',
     telemetryReconnecting: 'Reconnecting...',
   },
-
 }
 
 export const SUPPORTED_LANGS = ['it', 'en']

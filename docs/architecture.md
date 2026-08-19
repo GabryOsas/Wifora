@@ -133,13 +133,13 @@ RTT and jitter use the same smoothing helper with weight `0.3`; packet loss uses
 
 ### Dynamic Quality Tiers
 
-| Tier  | Profile Name       | Bitrate  | Max Target RTT | Max Loss Rate | Max Jitter  |
-| :---: | :----------------- | :------: | :------------: | :-----------: | :---------: |
-| **5** | Studio Master      | 256 kbps |    < 25 ms     |    < 0.2%     |   < 4 ms    |
-| **4** | Studio High        | 224 kbps |    < 50 ms     |    < 0.8%     |   < 8 ms    |
-| **3** | Balanced Standard  | 160 kbps |    < 85 ms     |    < 1.8%     |   < 15 ms   |
-| **2** | Anti-Lag Resilient | 128 kbps |    < 120 ms    |    < 4.0%     |   < 25 ms   |
-| **1** | Ultra-Resilient    | 96 kbps  | Fallback        | Fallback       | Fallback    |
+| Tier  | Profile Name       | Bitrate  | Max Target RTT | Max Loss Rate | Max Jitter |
+| :---: | :----------------- | :------: | :------------: | :-----------: | :--------: |
+| **5** | Studio Master      | 256 kbps |    < 25 ms     |    < 0.2%     |   < 4 ms   |
+| **4** | Studio High        | 224 kbps |    < 50 ms     |    < 0.8%     |   < 8 ms   |
+| **3** | Balanced Standard  | 160 kbps |    < 85 ms     |    < 1.8%     |  < 15 ms   |
+| **2** | Anti-Lag Resilient | 128 kbps |    < 120 ms    |    < 4.0%     |  < 25 ms   |
+| **1** | Ultra-Resilient    | 96 kbps  |    Fallback    |   Fallback    |  Fallback  |
 
 ### Anti-Flapping Hysteresis State Machine
 
@@ -147,11 +147,66 @@ RTT and jitter use the same smoothing helper with weight `0.3`; packet loss uses
 - **Smooth-Up (Recovery)**: Step-up to higher bitrates requires **5 consecutive stable cycles** (5 seconds) to ensure the Wi-Fi link has genuinely recovered.
 - **Initial state**: Adaptive mode starts at Tier 3 (160 kbps) and can move one tier upward after each 5-cycle recovery step.
 
+### Per-client Transport Policy
+
+Every sender owns an independent `TransportPolicy`: a degraded listener therefore lowers only its own encoder bitrate, rather than penalising the other peers. Runtime bitrate changes use `RTCRtpSender.setParameters`; profile and negotiated codec settings are generated into the initial SDP and any subsequent ICE-restart offer. The policy keeps FEC enabled for explicit user profiles and for adaptive resilience tiers, uses 10 ms packetisation for the low-latency profile (20 ms otherwise), disables DTX to preserve a continuous music timeline, and switches to mono only in the most degraded adaptive tier.
+
 ---
 
 ## 5. Receiver Jitter Buffer & Lifecycle Watchdog
 
-1. **Dynamic Jitter Buffer Target**: On browsers supporting `RTCRtpReceiver.jitterBufferTarget`, the listener targets **22 ms** by default, **35 ms** when smoothed jitter exceeds `8 ms` or loss exceeds `0.7%`, and **50 ms** when jitter exceeds `15 ms` or loss exceeds `2%`. Unsupported browsers leave the browser default unchanged.
+1. **Adaptive Jitter Buffer Target**: On browsers supporting `RTCRtpReceiver.jitterBufferTarget`, the listener uses an explicit controller with **Ultra Low (22 ms)**, **Balanced (35 ms)**, **Stable (50 ms)**, and **Recovery (65 ms)** modes. It considers smoothed RTT, jitter, loss, optional buffer occupancy, late frames, underruns, and clock drift. Degradation is fast (immediate for underflow/burst conditions); reductions require multiple stable samples to avoid flapping. Unsupported browsers leave the browser default unchanged.
 2. **Tab Visibility & Standby Recovery**: `visibilitychange`, `pageshow` (bfcache), `online`, and `focus` events wake up the WebRTC track, resume suspended `AudioContext` instances, and verify WebSocket heartbeat liveliness.
 3. **iOS Audio Routing**: Sets `navigator.audioSession.type = 'playback'` to prevent iOS from routing playback through the telephony earpiece.
 4. **Screen Wake Lock**: Activates the Screen Wake Lock API to prevent mobile displays from sleeping while streaming.
+
+---
+
+## 6. Clock Drift Estimation
+
+The transport-independent audio core now includes a `DriftController`. A transport reports pairs of remote and local monotonic sample timestamps; the controller derives their rate difference in parts per million (ppm), smooths valid observations, and exposes a deliberately bounded `playbackRate` correction.
+
+This avoids using buffer growth as a clock-drift workaround. Discontinuous, reversed, or implausibly large observations are rejected, leaving the prior correction intact.
+
+### Multi-device clock exchange
+
+Each listener now runs a five-second NTP-style `clock.sync` exchange with the host. The four timestamps (`clientSentAt`, `hostReceivedAt`, `hostSentAt`, `clientReceivedAt`) estimate host-minus-listener offset and round-trip time. The listener smooths successive offset samples into a drift estimate, caps the correction to ±100 ppm, and applies the resulting `HTMLMediaElement.playbackRate` only as a browser best effort. Safari and other browsers may keep their native WebRTC playout rate; the estimator and diagnostics still remain available.
+
+The server validates the clock message schema and routes probes/reports only to the room host and replies only to the target listener. The host dashboard exposes each listener's measured sync offset. Two or more real devices are still required to establish the roadmap's final measured-sync completion criterion.
+
+---
+
+## 7. Versioned Control Protocol
+
+Control messages are independent of WebRTC media and use the bounded envelope `{ type, version, sessionId, deviceId, timestamp, payload }`. Version `1` supports session/device notifications, audio policy changes, listener telemetry, network state and ICE-restart coordination. The server validates the version, identities, timestamp and payload size before routing a message within its authenticated room. Listener telemetry is relayed only to its room host; browser media remains peer-to-peer.
+
+The listener reports its smoothed RTT, jitter, loss, average browser playout delay, audio state, visibility and selected jitter target once per second. While this telemetry is fresh (four seconds), the host feeds the worst of its local WebRTC measurement and the listener's measurement to that listener's `TransportPolicy`, so a degraded device does not affect the other peers. `audio.policy` is host-only, has a strict bitrate/FEC/stereo/ptime schema, and is routed solely to the listener whose `sessionId` it names.
+
+---
+
+## 8. Multi-Device Synchronization & Alignment
+
+Wifora coordinates multi-device playback synchronization via `MultiDeviceSyncController`:
+
+- **NTP-Style 4-Timestamp Exchange**: Computes accurate clock offsets and round-trip times without requiring global GPS or specialized local clock hardware.
+- **Group Sync Spread Metric (`syncSpreadMs`)**: Measures the difference between the most leading and most lagging listener.
+- **Micro-Rate Playout Guidance**: Recommends rate offsets within ±100 ppm to bring lagging or leading receivers into alignment with the group mean without audible pitch artifacts.
+
+---
+
+## 9. Modular Audio Transport & AirPlay Backend
+
+The `AudioEngine` is fully decoupled from specific network transports via the abstract `AudioTransport` interface (`src/transport/base.mjs`):
+
+- **`WebRtcAudioTransport`**: Standard peer-to-peer browser transmission.
+- **`AirPlayAudioTransport`**: RAOP/RTSP state machine (`ANNOUNCE`, `SETUP`, `RECORD`, `FLUSH`, `TEARDOWN`), RTP audio packaging (44.1/48 kHz PCM/ALAC), and Bonjour/mDNS service publication for AirPlay-compatible receivers.
+
+---
+
+## 10. Native iOS Receiver Architecture
+
+For environments requiring background playback beyond Safari's browser limits, the `WiforaReceiverKit` Swift package (`native/ios/`) provides:
+
+- **`WiforaAudioSession`**: Native `AVAudioSession` category `.playback` with background audio preservation, route change listener (AirPods disconnect pauses/resumes), and 10 ms IO buffer duration.
+- **`WiforaSignalingClient`**: Direct URLSession WebSocket client communicating via Wifora Control Protocol v1.
+- **`WiforaClockSync`**: Native Swift 4-timestamp NTP clock sync engine.

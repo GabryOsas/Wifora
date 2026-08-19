@@ -62,11 +62,14 @@ Wifora includes an automated reproducible benchmarking script located in [`bench
 
 | Component / Subsystem           | Samples |     Mean     | Median (p50) | 95th Percentile (p95) | 99th Percentile (p99) |
 | :------------------------------ | :-----: | :----------: | :----------: | :-------------------: | :-------------------: |
-| **Timing-Safe Host Key Auth**   | 10,000  | **~0.7 µs**  |  **0.6 µs**  |        1.2 µs         |        2.9 µs         |
-| **Opus SDP Munging Engine**     | 10,000  | **~3.3 µs**  |  **2.7 µs**  |        4.4 µs         |        14.3 µs        |
-| **WebSocket Signaling Relay**   |  1,000  | **~0.08 ms** | **0.07 ms**  |        0.12 ms        |        0.17 ms        |
-| **HTTP `/api/network` Latency** |  1,000  | **~3.6 ms**  |  **3.5 ms**  |        4.3 ms         |        5.4 ms         |
-| **QR Code PNG Generation**      |   100   | **~12.8 ms** | **12.3 ms**  |        15.5 ms        |        30.5 ms        |
+| **Timing-Safe Host Key Auth**   | 10,000  | **~0.8 µs**  |  **0.6 µs**  |        1.4 µs         |        4.4 µs         |
+| **Opus SDP Munging Engine**     | 10,000  | **~3.5 µs**  |  **2.8 µs**  |        5.2 µs         |        14.6 µs        |
+| **WebSocket Signaling Relay**   |  1,000  | **~0.08 ms** | **0.07 ms**  |        0.13 ms        |        0.24 ms        |
+| **HTTP `/api/network` Latency** |  1,000  | **~3.5 ms**  |  **3.4 ms**  |        4.4 ms         |        5.3 ms         |
+| **QR Code PNG Generation**      |   100   | **~12.6 ms** | **12.0 ms**  |        14.5 ms        |        27.5 ms        |
+| **AudioEngine Ingest/Read**     | 10,000  | **~0.28 µs** | **0.10 µs**  |        0.60 µs        |        0.70 µs        |
+| **DriftController Observation** | 10,000  | **~0.18 µs** | **0.10 µs**  |        0.30 µs        |        0.40 µs        |
+| **Control Protocol Validation** | 10,000  | **~0.33 µs** | **0.20 µs**  |        0.60 µs        |        1.10 µs        |
 
 👉 _Raw empirical datasets and hardware test rig details are preserved in [`benchmarks/results.csv`](../benchmarks/results.csv) and [`benchmarks/README.md`](../benchmarks/README.md)._
 

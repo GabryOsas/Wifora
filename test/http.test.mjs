@@ -55,6 +55,15 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     assert.ok(Array.isArray(data.addresses))
   })
 
+  await t.test('GET /api/capabilities reports discovery and browser fallback accurately', async () => {
+    const res = await request(baseUrl, '/api/capabilities')
+    assert.strictEqual(res.statusCode, 200)
+    const data = JSON.parse(res.body)
+    assert.deepEqual(data.transports, ['webrtc'])
+    assert.equal(data.browserDiscovery, false)
+    assert.equal(data.discovery.published, true)
+  })
+
   await t.test('GET /qr generates PNG QR code for valid text', async () => {
     const res = await request(baseUrl, '/qr?text=http%3A%2F%2Flocalhost%3A3975%2Flisten.html')
     assert.strictEqual(res.statusCode, 200)
@@ -121,6 +130,11 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     const resCss = await request(baseUrl, '/styles.css')
     assert.strictEqual(resCss.statusCode, 200)
     assert.match(resCss.headers['content-type'], /text\/css/)
+
+    const resTransportPolicy = await request(baseUrl, '/transport-policy.js')
+    assert.strictEqual(resTransportPolicy.statusCode, 200)
+    assert.match(resTransportPolicy.headers['content-type'], /text\/javascript/)
+    assert.match(resTransportPolicy.body, /export class TransportPolicy/)
 
     const resNotFound = await request(baseUrl, '/nonexistent.file')
     assert.strictEqual(resNotFound.statusCode, 404)

@@ -1,6 +1,7 @@
 import { initI18n, t } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
 import { createLogger } from './logger.js'
+import { AUDIO_PROFILES as profiles, TransportPolicy, tuneOpusSdp } from './transport-policy.js'
 
 const logger = createLogger('Host')
 
@@ -36,18 +37,6 @@ const a11yAnnouncer = document.querySelector('#a11yAnnouncer')
 
 const mainWebRtcStatus = document.querySelector('#mainWebRtcStatus')
 const mainWebRtcStatusText = document.querySelector('#mainWebRtcStatusText')
-const subWebrtcCard = document.querySelector('#subWebrtcCard')
-const subWebrtcState = document.querySelector('#subWebrtcState')
-const subWebrtcMeta = document.querySelector('#subWebrtcMeta')
-const subSignalCard = document.querySelector('#subSignalCard')
-const subSignalState = document.querySelector('#subSignalState')
-const subSignalMeta = document.querySelector('#subSignalMeta')
-const subAudioCard = document.querySelector('#subAudioCard')
-const subAudioState = document.querySelector('#subAudioState')
-const subAudioMeta = document.querySelector('#subAudioMeta')
-const subNetworkCard = document.querySelector('#subNetworkCard')
-const subNetworkState = document.querySelector('#subNetworkState')
-const subNetworkMeta = document.querySelector('#subNetworkMeta')
 
 function announceA11y(text) {
   if (a11yAnnouncer) {
@@ -57,94 +46,6 @@ function announceA11y(text) {
     }, 50)
   }
 }
-
-// --- Audio Transmission Profiles & Adaptation Tiers ---
-const profiles = {
-  adaptive: {
-    // Opus reaches transparent stereo quality well below 384 kbps. Leaving some
-    // headroom is important on Wi-Fi, especially when several listeners join.
-    maxBitrate: 256000,
-    isAdaptive: true,
-    cbr: false,
-    labelKey: 'profileAdaptive',
-  },
-  lowlatency: {
-    maxBitrate: 160000,
-    isAdaptive: false,
-    cbr: true,
-    labelKey: 'profileLowLatency',
-  },
-  hifi: {
-    maxBitrate: 384000,
-    isAdaptive: false,
-    cbr: false,
-    labelKey: 'profileHifi',
-  },
-  eco: {
-    maxBitrate: 96000,
-    isAdaptive: false,
-    cbr: false,
-    labelKey: 'profileEco',
-  },
-}
-
-// Multi-Tier Quality Levels for Real-Time ANAE Auto-Adaptation
-const AUTO_TIERS = [
-  {
-    tier: 1,
-    name: 'Ultra-Resilient',
-    bitrate: 96000,
-    maxRtt: 9999,
-    maxLoss: 99.0,
-    maxJitter: 999,
-    badge: 'badge-bad',
-    labelKey: 'tierWeak',
-  },
-  {
-    tier: 2,
-    name: 'Anti-Lag Resilient',
-    bitrate: 128000,
-    maxRtt: 120,
-    maxLoss: 4.0,
-    maxJitter: 25,
-    badge: 'badge-warn',
-    labelKey: 'tierAntiLag',
-  },
-  {
-    tier: 3,
-    name: 'Balanced Standard',
-    bitrate: 160000,
-    maxRtt: 85,
-    maxLoss: 1.8,
-    maxJitter: 15,
-    badge: 'badge-good',
-    labelKey: 'tierStandard',
-  },
-  {
-    tier: 4,
-    name: 'Studio High',
-    bitrate: 224000,
-    maxRtt: 50,
-    maxLoss: 0.8,
-    maxJitter: 8,
-    badge: 'badge-good',
-    labelKey: 'tierHd',
-  },
-  {
-    tier: 5,
-    name: 'Studio Master',
-    bitrate: 256000,
-    maxRtt: 25,
-    maxLoss: 0.2,
-    maxJitter: 4,
-    badge: 'badge-good',
-    labelKey: 'tierMaster',
-  },
-]
-
-// Start in the balanced tier. It prevents the first seconds of playback from
-// saturating a Wi-Fi uplink, then quality rises only after the link is proven good.
-const ADAPTIVE_START_TIER = 3
 
 const peers = new Map()
 let socket = null
@@ -345,13 +246,11 @@ liveQualitySelect.addEventListener('change', async () => {
   if (!prof) return
 
   for (const session of peers.values()) {
-    session.currentTier = prof.isAdaptive ? ADAPTIVE_START_TIER : 5
-    session.consecutiveGood = 0
-    session.pendingDowngradeTier = null
-    session.pendingDowngradeSamples = 0
-    session.bitrate = prof.isAdaptive ? AUTO_TIERS[ADAPTIVE_START_TIER - 1].bitrate : prof.maxBitrate
+    const policy = session.transportPolicy.setProfile(profKey)
+    session.bitrate = policy.bitrate
     const sender = session.peer.getSenders().find((s) => s.track?.kind === 'audio')
-    if (sender) await configureSender(sender, prof.maxBitrate)
+    if (sender) await configureSender(sender, policy.bitrate)
+    sendPeerPolicy(session)
   }
   showToast(t(prof.labelKey))
 })
@@ -392,7 +291,6 @@ function updateSubsystemsStatus() {
   if (!activeDashboardSection || activeDashboardSection.hidden) return
 
   // 1. WebRTC & Overall Status
-  const totalPeers = peers.size
   let connectedPeers = 0
   let degradedPeers = 0
   let maxLoss = 0
@@ -414,85 +312,28 @@ function updateSubsystemsStatus() {
     }
   }
 
-  let overallStatus = 'CONNECTING'
+  let overallStatusKey = 'statusConnecting'
   let overallClass = 'status-connecting'
 
   if (!socket || socket.readyState !== WebSocket.OPEN) {
-    overallStatus = 'DISCONNECTED'
+    overallStatusKey = 'statusDisconnected'
     overallClass = 'status-disconnected'
   } else if (connectedPeers > 0) {
     if (degradedPeers > 0 || maxLoss > 4.0) {
-      overallStatus = 'DEGRADED'
+      overallStatusKey = 'statusDegraded'
       overallClass = 'status-degraded'
     } else {
-      overallStatus = 'CONNECTED'
+      overallStatusKey = 'statusConnected'
       overallClass = 'status-connected'
     }
   } else {
-    overallStatus = 'CONNECTING'
+    overallStatusKey = 'statusConnecting'
     overallClass = 'status-connecting'
   }
 
   if (mainWebRtcStatus && mainWebRtcStatusText) {
     mainWebRtcStatus.className = `status-pill ${overallClass}`
-    mainWebRtcStatusText.textContent = overallStatus
-  }
-
-  // WebRTC Card
-  if (subWebrtcCard && subWebrtcState && subWebrtcMeta) {
-    if (connectedPeers > 0) {
-      subWebrtcCard.className = degradedPeers > 0 ? 'subsystem-card status-degraded' : 'subsystem-card status-ok'
-      const lang = document.documentElement.getAttribute('lang') || 'it'
-      const suffix = lang === 'it' ? (connectedPeers === 1 ? 'o' : 'i') : connectedPeers > 1 ? 's' : ''
-      subWebrtcState.textContent = t('subsystemWebrtcPeers', { count: String(connectedPeers), suffix })
-      subWebrtcMeta.textContent = degradedPeers > 0 ? `Loss: ${maxLoss.toFixed(1)}%` : `RTT: ${Math.round(maxRtt)}ms`
-    } else {
-      subWebrtcCard.className = 'subsystem-card status-warn'
-      subWebrtcState.textContent = t('subsystemWebrtcIdle')
-      subWebrtcMeta.textContent = `${totalPeers} in negotiation`
-    }
-  }
-
-  // Signal Card
-  if (subSignalCard && subSignalState && subSignalMeta) {
-    if (socket?.readyState === WebSocket.OPEN) {
-      subSignalCard.className = 'subsystem-card status-ok'
-      subSignalState.textContent = t('subsystemSignalWsLive')
-      subSignalMeta.textContent = `ws://${location.host}/signal`
-    } else if (socket?.readyState === WebSocket.CONNECTING) {
-      subSignalCard.className = 'subsystem-card status-warn'
-      subSignalState.textContent = t('subsystemSignalWsReconnecting')
-      subSignalMeta.textContent = 'Retrying...'
-    } else {
-      subSignalCard.className = 'subsystem-card status-bad'
-      subSignalState.textContent = t('subsystemSignalWsOffline')
-      subSignalMeta.textContent = 'Disconnected'
-    }
-  }
-
-  // Audio Card
-  if (subAudioCard && subAudioState && subAudioMeta) {
-    if (isMuted) {
-      subAudioCard.className = 'subsystem-card status-warn'
-      subAudioState.textContent = t('subsystemAudioMuted')
-      subAudioMeta.textContent = 'Mute Active'
-    } else if (outputStream && outputStream.active) {
-      subAudioCard.className = 'subsystem-card status-ok'
-      subAudioState.textContent = t('subsystemAudioActive')
-      subAudioMeta.textContent = 'Opus 20ms'
-    } else {
-      subAudioCard.className = 'subsystem-card status-bad'
-      subAudioState.textContent = t('subsystemAudioInactive')
-      subAudioMeta.textContent = 'No stream'
-    }
-  }
-
-  // Network Card
-  if (subNetworkCard && subNetworkState && subNetworkMeta) {
-    const isLan = listenerUrl && !listenerUrl.includes('localhost') && !listenerUrl.includes('127.0.0.1')
-    subNetworkCard.className = isLan ? 'subsystem-card status-ok' : 'subsystem-card status-warn'
-    subNetworkState.textContent = isLan ? t('subsystemNetworkLan') : 'Localhost Only'
-    subNetworkMeta.textContent = isLan ? 'Wi-Fi / LAN' : '127.0.0.1'
+    mainWebRtcStatusText.textContent = t(overallStatusKey)
   }
 }
 
@@ -539,12 +380,11 @@ function addDeviceElement(sessionKey, deviceName, deviceType = 'phone') {
       <div class="device-meta">
         <span class="device-name-text">${deviceName}</span>
         <div id="stat-${safeId}" class="device-telemetry-row">
-          <span class="telemetry-badge badge-pending"><span class="status-dot"></span> CONNECTING</span>
-          <span class="telemetry-badge badge-pending">${t('badgePending')}</span>
+          <span>${t('badgePending')}</span>
         </div>
       </div>
     </div>
-    <button class="btn btn-danger btn-sm kick-btn" type="button" aria-label="${t('disconnectDeviceBtn')} ${deviceName}">${t('disconnectDeviceBtn')}</button>
+    <button class="btn btn-secondary btn-sm kick-btn" type="button" aria-label="${t('disconnectDeviceBtn')} ${deviceName}">${t('disconnectDeviceBtn')}</button>
   `
 
   item.querySelector('.kick-btn').addEventListener('click', () => {
@@ -568,6 +408,7 @@ function cleanupPeerSession(sessionKey, reason = '') {
   if (!session) return
   logger.info(`Cleaning up peer session [${sessionKey}]`, { reason })
   clearTimeout(session.disconnectTimeout)
+  clearTimeout(session.restartTimeout)
   session.disconnectTimeout = null
   if (session.peer) {
     session.peer.onconnectionstatechange = null
@@ -587,6 +428,37 @@ function cleanupPeerSession(sessionKey, reason = '') {
     sessionId: session.sessionKey || sessionKey,
     reason,
   })
+}
+
+/** Retry ICE before destroying an established WebRTC session. */
+async function restartIceSession(session, reason) {
+  const peer = session?.peer
+  if (
+    !peer ||
+    session.renegotiating ||
+    session.restartAttempts >= 2 ||
+    peer.connectionState === 'closed' ||
+    !socket ||
+    socket.readyState !== WebSocket.OPEN
+  )
+    return false
+
+  session.renegotiating = true
+  session.restartAttempts++
+  logger.info(`Restarting ICE for peer [${session.sessionKey}]`, { reason, attempt: session.restartAttempts })
+  try {
+    if (typeof peer.restartIce === 'function') peer.restartIce()
+    const offer = await peer.createOffer({ iceRestart: true })
+    offer.sdp = tuneOpusSdp(offer.sdp, session.transportPolicy.snapshot())
+    await peer.setLocalDescription(offer)
+    signal({ type: 'offer', target: session.clientId, sdp: peer.localDescription })
+    return true
+  } catch (err) {
+    logger.warn(`ICE restart failed for peer [${session.sessionKey}]:`, err?.message || err)
+    return false
+  } finally {
+    session.renegotiating = false
+  }
 }
 
 function kickDevice(sessionKey) {
@@ -611,28 +483,6 @@ async function fetchLanUrl() {
   if (!ip) throw new Error('Nessun indirizzo Wi-Fi o Ethernet rilevato sul PC.')
   const tokenParam = listenerToken ? `&token=${listenerToken}` : ''
   return `${location.protocol}//${ip}:${data.port}/listen.html?room=${roomId}${tokenParam}`
-}
-
-function tuneOpusSdp(sdp, profileKey, maxBitrate) {
-  const prof = profiles[profileKey] || profiles.adaptive
-  const opusMatch = sdp.match(/a=rtpmap:(\d+) opus\/48000\/2/i)
-  if (!opusMatch) return sdp
-  const payload = opusMatch[1]
-
-  // 20 ms packets retain low latency while halving packet-rate overhead versus
-  // forced 10 ms packets. FEC is kept enabled to recover isolated Wi-Fi loss.
-  const isCbr = Boolean(prof.cbr)
-  let options = `minptime=10;ptime=20;maxptime=20;useinbandfec=1;usedtx=0;stereo=1;sprop-stereo=1;maxaveragebitrate=${maxBitrate ?? prof.maxBitrate};maxplaybackrate=48000`
-  if (isCbr) {
-    options += ';cbr=1'
-  } else {
-    options += ';cbr=0'
-  }
-
-  const fmtp = new RegExp(`a=fmtp:${payload}[^\\r\\n]*`, 'i')
-  return fmtp.test(sdp)
-    ? sdp.replace(fmtp, `a=fmtp:${payload} ${options}`)
-    : sdp.replace(opusMatch[0], `${opusMatch[0]}\r\na=fmtp:${payload} ${options}`)
 }
 
 async function configureSender(sender, maxBitrate) {
@@ -667,7 +517,8 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
 
   const peer = new RTCPeerConnection({ iceServers: [], bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' })
   const selectedProfile = liveQualitySelect.value
-  const prof = profiles[selectedProfile] || profiles.adaptive
+  const transportPolicy = new TransportPolicy({ profileKey: selectedProfile })
+  const initialPolicy = transportPolicy.snapshot()
 
   const session = {
     peer,
@@ -683,12 +534,16 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
     smoothedRtt: null,
     smoothedJitter: null,
     smoothedLoss: null,
-    pendingDowngradeTier: null,
-    pendingDowngradeSamples: 0,
-    bitrate: prof.isAdaptive ? AUTO_TIERS[ADAPTIVE_START_TIER - 1].bitrate : prof.maxBitrate,
-    currentTier: prof.isAdaptive ? ADAPTIVE_START_TIER : 5,
-    consecutiveGood: 0,
+    listenerTelemetry: null,
+    listenerTelemetryAt: 0,
+    clockSync: null,
+    transportPolicy,
+    bitrate: initialPolicy.bitrate,
     disconnectTimeout: null,
+    restartTimeout: null,
+    restartAttempts: 0,
+    renegotiating: false,
+    pendingCandidates: [],
   }
   peers.set(sessionKey, session)
   addDeviceElement(sessionKey, deviceName, deviceType)
@@ -703,29 +558,41 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
 
     if (connState === 'connected' && (iceState === 'connected' || iceState === 'completed')) {
       clearTimeout(session.disconnectTimeout)
+      clearTimeout(session.restartTimeout)
       session.disconnectTimeout = null
+      session.restartTimeout = null
+      session.restartAttempts = 0
       session.lastActiveTime = Date.now()
       addDeviceElement(sessionKey, session.deviceName, session.deviceType)
       return
     }
 
-    if (['failed', 'closed'].includes(connState) || ['failed', 'closed'].includes(iceState)) {
+    if (connState === 'closed' || iceState === 'closed') {
       clearTimeout(session.disconnectTimeout)
       session.disconnectTimeout = null
       cleanupPeerSession(sessionKey, 'connection-failed')
       return
     }
 
-    if (connState === 'disconnected' || iceState === 'disconnected') {
+    if (
+      connState === 'failed' ||
+      iceState === 'failed' ||
+      connState === 'disconnected' ||
+      iceState === 'disconnected'
+    ) {
       if (!session.disconnectTimeout) {
         session.disconnectTimeout = setTimeout(() => {
-          if (
-            ['disconnected', 'closed', 'failed'].includes(peer.connectionState) ||
-            ['disconnected', 'closed', 'failed'].includes(peer.iceConnectionState)
-          ) {
-            cleanupPeerSession(sessionKey, 'connection-lost')
+          restartIceSession(session, 'connection-state').then((started) => {
+            if (!started && ['failed', 'closed'].includes(peer.connectionState)) {
+              cleanupPeerSession(sessionKey, 'connection-lost')
+            }
+          })
+        }, 750)
+        session.restartTimeout = setTimeout(() => {
+          if (['disconnected', 'closed', 'failed'].includes(peer.connectionState)) {
+            cleanupPeerSession(sessionKey, 'ice-recovery-timeout')
           }
-        }, 3500)
+        }, 6_000)
       }
     }
   }
@@ -739,10 +606,24 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
   const offer = await peer.createOffer()
   // SDP advertises the profile ceiling; setParameters above still starts the
   // actual sender at the conservative tier and allows it to rise later.
-  offer.sdp = tuneOpusSdp(offer.sdp, selectedProfile)
+  offer.sdp = tuneOpusSdp(offer.sdp, initialPolicy)
   await peer.setLocalDescription(offer)
 
   signal({ type: 'offer', target: clientId, sdp: peer.localDescription })
+  sendPeerPolicy(session)
+}
+
+function sendPeerPolicy(session) {
+  if (!session?.sessionKey || !roomId) return
+  const policy = session.transportPolicy.snapshot()
+  signal({
+    type: 'audio.policy',
+    version: 1,
+    sessionId: session.sessionKey,
+    deviceId: `host-${roomId}`,
+    timestamp: Date.now(),
+    payload: policy,
+  })
 }
 
 function connectSignal() {
@@ -776,6 +657,48 @@ function connectSignal() {
       await makeOffer(sessionKey, msg.clientId, msg.deviceName, msg.deviceType)
     }
 
+    if (msg.type === 'telemetry.report') {
+      const sessionKey = msg.sessionId || msg.clientId
+      let session = peers.get(sessionKey)
+      if (!session) {
+        session = [...peers.values()].find((candidate) => candidate.clientId === msg.clientId)
+      }
+      if (session) {
+        session.listenerTelemetry = msg.payload
+        session.listenerTelemetryAt = Date.now()
+      }
+      return
+    }
+
+    if (msg.type === 'clock.sync') {
+      const sessionKey = msg.sessionId || msg.clientId
+      let session = peers.get(sessionKey)
+      if (!session) {
+        session = [...peers.values()].find((candidate) => candidate.clientId === msg.clientId)
+      }
+      if (!session) return
+
+      if (msg.payload.mode === 'probe') {
+        const hostReceivedAt = Date.now()
+        signal({
+          type: 'clock.sync',
+          version: 1,
+          sessionId: session.sessionKey,
+          deviceId: `host-${roomId}`,
+          timestamp: hostReceivedAt,
+          payload: {
+            mode: 'reply',
+            clientSentAt: msg.payload.clientSentAt,
+            hostReceivedAt,
+            hostSentAt: Date.now(),
+          },
+        })
+      } else if (msg.payload.mode === 'report') {
+        session.clockSync = { ...msg.payload, receivedAt: Date.now() }
+      }
+      return
+    }
+
     if (msg.type === 'answer') {
       const sessionKey = msg.sessionId || msg.clientId
       let session = peers.get(sessionKey)
@@ -790,6 +713,9 @@ function connectSignal() {
       if (session) {
         try {
           await session.peer.setRemoteDescription(msg.sdp)
+          for (const candidate of session.pendingCandidates.splice(0)) {
+            await session.peer.addIceCandidate(candidate)
+          }
           logger.debug(`Remote description set for peer [${sessionKey}]`)
         } catch (err) {
           logger.error(`Failed to set remote description for [${sessionKey}]:`, err)
@@ -809,10 +735,14 @@ function connectSignal() {
         }
       }
       if (session && msg.candidate) {
-        try {
-          await session.peer.addIceCandidate(msg.candidate)
-        } catch (err) {
-          logger.debug(`Ignored candidate error for [${sessionKey}]:`, err?.message || err)
+        if (session.peer.remoteDescription) {
+          try {
+            await session.peer.addIceCandidate(msg.candidate)
+          } catch (err) {
+            logger.debug(`Ignored candidate error for [${sessionKey}]:`, err?.message || err)
+          }
+        } else {
+          session.pendingCandidates.push(msg.candidate)
         }
       }
     }
@@ -860,8 +790,20 @@ function connectSignal() {
 }
 
 // --- Real-time Adaptive Network & Audio Engine (ANAE) ---
+function freshTelemetry(session, now) {
+  if (!session.listenerTelemetry || now - session.listenerTelemetryAt > 4_000) return null
+  return session.listenerTelemetry
+}
+
+function worstMetric(hostValue, listenerValue) {
+  const host = Number.isFinite(hostValue) ? hostValue : null
+  const listener = Number.isFinite(listenerValue) ? listenerValue : null
+  if (host == null) return listener
+  if (listener == null) return host
+  return Math.max(host, listener)
+}
+
 async function pollTelemetryAndAdapt() {
-  const isAdaptiveMode = profiles[liveQualitySelect.value]?.isAdaptive ?? true
   const now = Date.now()
 
   for (const [sessionKey, session] of peers.entries()) {
@@ -869,7 +811,7 @@ async function pollTelemetryAndAdapt() {
     const connState = session.peer.connectionState
     const iceState = session.peer.iceConnectionState
 
-    if (['failed', 'closed'].includes(connState) || ['failed', 'closed'].includes(iceState)) {
+    if (connState === 'closed' || iceState === 'closed') {
       cleanupPeerSession(sessionKey, 'connection-failed')
       continue
     }
@@ -962,96 +904,69 @@ async function pollTelemetryAndAdapt() {
       if (isStale) {
         if (statElem) {
           statElem.innerHTML = `
-            <span class="telemetry-badge badge-bad">${t('wifiLost')}</span>
-            <span class="telemetry-item">${t('telemetryReconnecting')}</span>
+            <span class="device-warn-text">${t('wifiLost')}</span>
+            <span class="telemetry-separator" aria-hidden="true">•</span>
+            <span>${t('telemetryReconnecting')}</span>
           `
         }
         continue
       }
 
-      // Determine Target Tier when in Auto-Adaptive mode
-      let activeTierObj = AUTO_TIERS[4] // Default Tier 5 (Master)
-
-      if (isAdaptiveMode) {
-        const evalRtt = session.smoothedRtt ?? 10
-        const evalLoss = session.smoothedLoss ?? 0
-        const evalJitter = session.smoothedJitter ?? 1
-
-        let targetTier = 1
-        for (let i = AUTO_TIERS.length - 1; i >= 0; i--) {
-          const tObj = AUTO_TIERS[i]
-          if (evalRtt <= tObj.maxRtt && evalLoss <= tObj.maxLoss && evalJitter <= tObj.maxJitter) {
-            targetTier = tObj.tier
-            break
-          }
-        }
-
-        // A serious collapse drops immediately; ordinary one-sample spikes must
-        // repeat before changing the codec target. Recovery is deliberately slow.
-        const isSevere = (rtt != null && rtt >= 200) || (instantLossRate != null && instantLossRate >= 10)
-        if (targetTier < session.currentTier) {
-          if (isSevere || session.pendingDowngradeTier === targetTier) {
-            session.pendingDowngradeSamples++
-          } else {
-            session.pendingDowngradeTier = targetTier
-            session.pendingDowngradeSamples = 1
-          }
-          if (isSevere || session.pendingDowngradeSamples >= 2) {
-            session.currentTier = targetTier
-            session.consecutiveGood = 0
-            session.pendingDowngradeTier = null
-            session.pendingDowngradeSamples = 0
-            session.bitrate = AUTO_TIERS[targetTier - 1].bitrate
-            const sender = session.peer.getSenders().find((s) => s.track?.kind === 'audio')
-            if (sender) configureSender(sender, session.bitrate)
-          }
-        } else if (targetTier > session.currentTier) {
-          session.pendingDowngradeTier = null
-          session.pendingDowngradeSamples = 0
-          session.consecutiveGood++
-          if (session.consecutiveGood >= 5) {
-            session.currentTier = Math.min(session.currentTier + 1, targetTier)
-            session.consecutiveGood = 0
-            session.bitrate = AUTO_TIERS[session.currentTier - 1].bitrate
-            const sender = session.peer.getSenders().find((s) => s.track?.kind === 'audio')
-            if (sender) configureSender(sender, session.bitrate)
-          }
-        } else {
-          session.pendingDowngradeTier = null
-          session.pendingDowngradeSamples = 0
-          session.consecutiveGood = Math.min(session.consecutiveGood + 1, 5)
-        }
-
-        activeTierObj = AUTO_TIERS[session.currentTier - 1]
-      } else {
-        const fixedBitrate = profiles[liveQualitySelect.value]?.maxBitrate || 384000
-        session.bitrate = fixedBitrate
-        activeTierObj = {
-          badge: rtt != null && rtt > 80 ? 'badge-bad' : 'badge-good',
-          labelKey: null,
-          customLabel: `${Math.round(fixedBitrate / 1000)}k`,
-        }
+      const receiverTelemetry = freshTelemetry(session, now)
+      const effectiveRtt = worstMetric(session.smoothedRtt, receiverTelemetry?.rttMs)
+      const effectiveLoss = worstMetric(session.smoothedLoss, receiverTelemetry?.lossPercent)
+      const effectiveJitter = worstMetric(session.smoothedJitter, receiverTelemetry?.jitterMs)
+      const transport = session.transportPolicy.update({
+        rttMs: effectiveRtt,
+        lossPercent: effectiveLoss,
+        jitterMs: effectiveJitter,
+        severe: (rtt != null && rtt >= 200) || (instantLossRate != null && instantLossRate >= 10),
+      })
+      session.bitrate = transport.bitrate
+      if (transport.changed) {
+        const sender = session.peer.getSenders().find((s) => s.track?.kind === 'audio')
+        if (sender) configureSender(sender, transport.bitrate)
+        sendPeerPolicy(session)
       }
 
       // Update Device Item Telemetry UI
       if (statElem) {
-        const pingDisplay = session.smoothedRtt != null ? `${Math.round(session.smoothedRtt)} ms` : t('liveBadge')
-        const lossDisplay = `${(session.smoothedLoss ?? 0).toFixed(1)}%`
-        const bitrateDisplay = `${Math.round(session.bitrate / 1000)} kbps`
-        const badgeLabel = activeTierObj.labelKey ? t(activeTierObj.labelKey) : activeTierObj.customLabel
+        const pingDisplay = effectiveRtt != null ? `${Math.round(effectiveRtt)} ms` : null
+        const jitterDisplay = effectiveJitter != null ? `Jitter ${Math.round(effectiveJitter)} ms` : null
+        const playoutDisplay = Number.isFinite(receiverTelemetry?.playoutDelayMs)
+          ? `Buffer ${Math.round(receiverTelemetry.playoutDelayMs)} ms`
+          : null
+        const syncDisplay = Number.isFinite(session.clockSync?.offsetMs)
+          ? `Sync ${session.clockSync.offsetMs >= 0 ? '+' : ''}${session.clockSync.offsetMs.toFixed(1)} ms`
+          : null
+        const bitrateKbps = Math.round((session.bitrate || 160000) / 1000)
+        const loss = effectiveLoss ?? 0
+        const isDegraded = loss > 4.0 || (effectiveRtt ?? 0) > 120
 
-        const isDegraded =
-          (session.smoothedLoss ?? 0) > 4 || (session.smoothedRtt ?? 0) > 100 || (session.currentTier ?? 5) <= 2
-        const statusBadgeClass = isDegraded ? 'badge-warn' : 'badge-good'
-        const statusBadgeText = isDegraded ? 'DEGRADED' : 'CONNECTED'
+        const parts = []
+        if (pingDisplay) {
+          parts.push(`<span>${pingDisplay}</span>`)
+        }
+        if (jitterDisplay) {
+          parts.push(`<span>${jitterDisplay}</span>`)
+        }
+        if (playoutDisplay) {
+          parts.push(`<span>${playoutDisplay}</span>`)
+        }
+        if (syncDisplay) {
+          parts.push(`<span>${syncDisplay}</span>`)
+        }
+        parts.push(`<span>${bitrateKbps} kbps</span>`)
+        if (loss > 0.1) {
+          parts.push(`<span>${loss.toFixed(1)}% ${t('telemetryLoss').toLowerCase()}</span>`)
+        }
+        if (isDegraded) {
+          parts.push(
+            `<span class="device-warn-text">${t('statusDegraded')} (${loss.toFixed(0)}% ${t('telemetryLoss').toLowerCase()})</span>`
+          )
+        }
 
-        statElem.innerHTML = `
-          <span class="telemetry-badge ${statusBadgeClass}"><span class="status-dot"></span> ${statusBadgeText}</span>
-          <span class="telemetry-badge ${activeTierObj.badge}">${badgeLabel}</span>
-          <span class="telemetry-item">Ping: <strong>${pingDisplay}</strong></span>
-          <span class="telemetry-item">Bitrate: <strong>${bitrateDisplay}</strong></span>
-          <span class="telemetry-item">Loss: <strong>${lossDisplay}</strong></span>
-        `
+        statElem.innerHTML = parts.join('<span class="telemetry-separator" aria-hidden="true">•</span>')
       }
     } catch (err) {
       logger.debug('Error polling telemetry for peer:', err?.message || err)

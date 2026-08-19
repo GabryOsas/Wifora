@@ -133,9 +133,7 @@ async function showMenu() {
       })
 
       console.log(`\n${c.dim}───────────────────────────────────────────────────${c.reset}`)
-      console.log(
-        `${c.dim}Configured port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`
-      )
+      console.log(`${c.dim}Configured port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`)
     }
 
     render()
@@ -324,19 +322,33 @@ async function startServerLive() {
   })
 }
 
-function stopServer() {
-  if (activeServerProcess) {
+async function stopServer() {
+  const child = activeServerProcess
+  activeServerProcess = null
+
+  if (child) {
     try {
-      activeServerProcess.kill('SIGTERM')
+      if (isWindows && child.pid) {
+        spawn('taskkill', ['/F', '/T', '/PID', String(child.pid)], { stdio: 'ignore' })
+      } else {
+        child.kill('SIGKILL')
+      }
     } catch {}
-    activeServerProcess = null
   }
+
+  await killPortProcess(currentPort)
+  await new Promise((r) => setTimeout(r, 300))
 }
 
 // Main CLI Loop
 async function main() {
-  process.on('SIGINT', () => {
-    stopServer()
+  process.on('SIGINT', async () => {
+    await stopServer()
+    process.exit(0)
+  })
+
+  process.on('SIGTERM', async () => {
+    await stopServer()
     process.exit(0)
   })
 

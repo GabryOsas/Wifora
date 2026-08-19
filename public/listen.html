@@ -206,27 +206,26 @@
       <!-- LIVE RECEIVER SECTION (Shown when connected and listening) -->
       <section id="liveSection" class="card" hidden aria-label="Ricezione Audio in Diretta">
         <div class="card-title-row">
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-            <div>
-              <h2 class="card-title" data-i18n="liveTitle">Audio in Diretta</h2>
-              <p id="liveStatusText" class="card-subtitle" data-i18n="liveStatusConnecting" aria-live="polite">
-                Connessione in corso...
-              </p>
-            </div>
-            <span id="listenerWebRtcStatus" class="status-pill status-connecting" aria-live="polite" role="status">
-              <span class="status-dot"></span>
-              <span id="listenerWebRtcStatusText">CONNECTING</span>
-            </span>
+          <div>
+            <h2 class="card-title" data-i18n="liveTitle">Audio in Diretta</h2>
+            <p id="liveStatusText" class="card-subtitle" data-i18n="liveStatusConnecting" aria-live="polite">
+              Connessione in corso...
+            </p>
           </div>
-          <button
-            id="disconnectBtn"
-            class="btn btn-secondary btn-sm"
-            type="button"
-            data-i18n="disconnectBtn"
-            aria-label="Disconnetti da questa trasmissione"
-          >
-            Disconnetti
-          </button>
+          <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0">
+            <span id="listenerWebRtcStatus" class="status-pill status-connecting" aria-live="polite" role="status">
+              <span id="listenerWebRtcStatusText" data-i18n="statusConnecting">In attesa</span>
+            </span>
+            <button
+              id="disconnectBtn"
+              class="btn btn-secondary btn-sm"
+              type="button"
+              data-i18n="disconnectBtn"
+              aria-label="Disconnetti da questa trasmissione"
+            >
+              Disconnetti
+            </button>
+          </div>
         </div>
 
         <!-- Autoplay Unlock banner (if iOS blocks autoplay) -->

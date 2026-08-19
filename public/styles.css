@@ -792,16 +792,22 @@ a:focus-visible {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 13px;
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
 }
 
-.telemetry-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
+.telemetry-separator {
+  color: var(--text-dim);
+  opacity: 0.5;
+  user-select: none;
+  font-size: 11px;
+}
+
+.device-warn-text {
+  color: var(--color-warning);
+  font-weight: 500;
 }
 
 .telemetry-badge {
@@ -809,34 +815,29 @@ a:focus-visible {
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .badge-good {
   background: var(--color-success-bg);
   color: var(--color-success);
-  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .badge-warn {
   background: var(--color-warning-bg);
   color: var(--color-warning);
-  border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
 .badge-bad {
   background: var(--color-danger-bg);
   color: var(--color-danger);
-  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .badge-pending {
   background: var(--bg-subtle);
   color: var(--text-dim);
-  border: 1px solid var(--border-subtle);
 }
 
 /* Mobile Telemetry HUD */
@@ -996,196 +997,45 @@ a:focus-visible {
 }
 
 /* ==========================================================================
-   WebRTC Subsystem Diagnostics & Status Indicators
+   WebRTC & Session Status Indicators
    ========================================================================== */
 
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-  transition: all 0.2s ease;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
 }
 
 .status-connected {
   background: var(--color-success-bg);
   color: var(--color-success);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-}
-
-.status-connected .status-dot {
-  background-color: var(--color-success);
-  box-shadow: 0 0 8px var(--color-success);
-  animation: pulse-dot-green 2s infinite ease-in-out;
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .status-connecting {
   background: var(--color-warning-bg);
   color: var(--color-warning);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-.status-connecting .status-dot {
-  background-color: var(--color-warning);
-  box-shadow: 0 0 6px var(--color-warning);
-  animation: pulse-dot-yellow 1.4s infinite ease-in-out;
+  border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
 .status-degraded {
   background: rgba(249, 115, 22, 0.12);
-  color: #f97316;
-  border: 1px solid rgba(249, 115, 22, 0.35);
-}
-
-.status-degraded .status-dot {
-  background-color: #f97316;
-  box-shadow: 0 0 6px #f97316;
-  animation: pulse-dot-orange 1.6s infinite ease-in-out;
+  color: #ea580c;
+  border: 1px solid rgba(249, 115, 22, 0.25);
 }
 
 .status-disconnected {
   background: var(--color-danger-bg);
   color: var(--color-danger);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-}
-
-.status-disconnected .status-dot {
-  background-color: var(--color-danger);
-}
-
-@keyframes pulse-dot-green {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.25);
-    opacity: 0.7;
-  }
-}
-
-@keyframes pulse-dot-yellow {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.6;
-  }
-}
-
-@keyframes pulse-dot-orange {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.6;
-  }
-}
-
-/* Subsystem Diagnostics HUD Grid */
-.subsystems-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 14px;
-}
-
-@media (max-width: 600px) {
-  .subsystems-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.subsystem-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.subsystem-card:hover {
-  border-color: var(--border-card);
-  background: var(--bg-subtle);
-}
-
-.subsystem-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.subsystem-name {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-}
-
-.subsystem-badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-dim);
-}
-
-.subsystem-card.status-ok .subsystem-badge-dot {
-  background: var(--color-success);
-  box-shadow: 0 0 5px var(--color-success);
-}
-
-.subsystem-card.status-warn .subsystem-badge-dot {
-  background: var(--color-warning);
-  box-shadow: 0 0 5px var(--color-warning);
-}
-
-.subsystem-card.status-degraded .subsystem-badge-dot {
-  background: #f97316;
-  box-shadow: 0 0 5px #f97316;
-}
-
-.subsystem-card.status-bad .subsystem-badge-dot {
-  background: var(--color-danger);
-}
-
-.subsystem-state {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.subsystem-meta {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }

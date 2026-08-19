@@ -32,6 +32,7 @@
 - **Subsystem & WebRTC Status Diagnostics**: Live visual indicators (`CONNECTED 🟢`, `CONNECTING 🟡`, `DEGRADED 🟠`, `DISCONNECTED 🔴`) and health telemetry for WebRTC, Signal, Audio, and Network layers.
 - **Studio DSP Chain**: Integrated Web Audio processing including a 20 Hz sub-rumble high-pass filter, dialogue presence booster, and transparent lookahead peak limiter (-0.5 dBFS threshold, soft knee).
 - **100% Local LAN Operation**: Zero cloud dependencies, no STUN/TURN relays, and no third-party tracking. WebRTC audio is encrypted peer-to-peer via **DTLS-SRTP**, while signaling stays strictly within your private LAN.
+- **Bonjour/mDNS Host Advertisement**: The host publishes `_wifora._tcp.local` with version and transport capabilities, while the QR/link remains the reliable browser fallback.
 - **Mobile-Optimized Experience**: Dynamic WebRTC Jitter Buffer (22–50 ms), Screen Wake Lock API, and native iOS `AudioSession` routing (preventing call speaker playback).
 
 ---
@@ -67,6 +68,8 @@ _Tip (Windows): You can also double-click `Avvia-Wifora.bat` or run `npm run men
 1. Open `http://localhost:3975` in Chrome or Edge on your PC.
 2. Click **Start Audio Broadcast**, select **Entire Screen**, and ensure **"Share system audio"** is checked.
 3. Scan the displayed **QR code** with your iPhone or Android camera to start listening!
+
+> **Discovery note:** Wifora publishes itself through Bonjour/mDNS when started normally. Browser JavaScript, including Safari on iPhone, cannot enumerate local mDNS services directly; the QR code and LAN link therefore remain the supported zero-install connection flow.
 
 ---
 

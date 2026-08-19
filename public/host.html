@@ -281,27 +281,26 @@
         <!-- Share & Code Card -->
         <div class="card">
           <div class="card-title-row">
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
-              <div>
-                <h2 class="card-title" data-i18n="sessionTitle">Sessione in Corso</h2>
-                <p class="card-subtitle" data-i18n="sessionSubtitle">
-                  Inquadra il QR o inserisci il codice per connettere il telefono.
-                </p>
-              </div>
-              <span id="mainWebRtcStatus" class="status-pill status-connecting" aria-live="polite" role="status">
-                <span class="status-dot"></span>
-                <span id="mainWebRtcStatusText">CONNECTING</span>
-              </span>
+            <div>
+              <h2 class="card-title" data-i18n="sessionTitle">Sessione in Corso</h2>
+              <p class="card-subtitle" data-i18n="sessionSubtitle">
+                Inquadra il QR o inserisci il codice per connettere il telefono.
+              </p>
             </div>
-            <button
-              id="stopBroadcastBtn"
-              class="btn btn-danger btn-sm"
-              type="button"
-              data-i18n="stopBroadcastBtn"
-              aria-label="Termina trasmissione audio"
-            >
-              Termina Trasmissione
-            </button>
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0">
+              <span id="mainWebRtcStatus" class="status-pill status-connecting" aria-live="polite" role="status">
+                <span id="mainWebRtcStatusText" data-i18n="statusConnecting">In attesa</span>
+              </span>
+              <button
+                id="stopBroadcastBtn"
+                class="btn btn-danger btn-sm"
+                type="button"
+                data-i18n="stopBroadcastBtn"
+                aria-label="Termina trasmissione audio"
+              >
+                Termina Trasmissione
+              </button>
+            </div>
           </div>
 
           <div class="share-section">
@@ -325,48 +324,6 @@
                   Copia
                 </button>
               </div>
-            </div>
-          </div>
-
-          <!-- Subsystems Diagnostics HUD -->
-          <div class="subsystems-grid" role="region" aria-label="Diagnostica Sottosistemi">
-            <div id="subWebrtcCard" class="subsystem-card status-ok">
-              <div class="subsystem-header">
-                <span class="subsystem-name" data-i18n="subsystemWebrtc">WebRTC</span>
-                <span class="subsystem-badge-dot"></span>
-              </div>
-              <span id="subWebrtcState" class="subsystem-state" data-i18n="subsystemWebrtcIdle"
-                >In attesa ascoltatori</span
-              >
-              <span id="subWebrtcMeta" class="subsystem-meta">0 peer</span>
-            </div>
-            <div id="subSignalCard" class="subsystem-card status-ok">
-              <div class="subsystem-header">
-                <span class="subsystem-name" data-i18n="subsystemSignal">Signal</span>
-                <span class="subsystem-badge-dot"></span>
-              </div>
-              <span id="subSignalState" class="subsystem-state" data-i18n="subsystemSignalWsLive"
-                >WebSocket Attivo</span
-              >
-              <span id="subSignalMeta" class="subsystem-meta">/signal</span>
-            </div>
-            <div id="subAudioCard" class="subsystem-card status-ok">
-              <div class="subsystem-header">
-                <span class="subsystem-name" data-i18n="subsystemAudio">Audio</span>
-                <span class="subsystem-badge-dot"></span>
-              </div>
-              <span id="subAudioState" class="subsystem-state" data-i18n="subsystemAudioActive"
-                >48 kHz Stereo WASAPI</span
-              >
-              <span id="subAudioMeta" class="subsystem-meta">Opus 20ms</span>
-            </div>
-            <div id="subNetworkCard" class="subsystem-card status-ok">
-              <div class="subsystem-header">
-                <span class="subsystem-name" data-i18n="subsystemNetwork">Network</span>
-                <span class="subsystem-badge-dot"></span>
-              </div>
-              <span id="subNetworkState" class="subsystem-state" data-i18n="subsystemNetworkLan">LAN Attiva</span>
-              <span id="subNetworkMeta" class="subsystem-meta">IPv4 LAN</span>
             </div>
           </div>
         </div>
