@@ -8,7 +8,7 @@ This document details the internal architecture, mathematical formulations, sign
 
 Wifora is a local WebRTC audio application with a Node.js signaling server and browser-side audio processing:
 
-- **Host (Windows PC)**: Uses the browser's `getDisplayMedia({ audio: true, systemAudio: 'include' })` capture path for system audio, applies browser-side Web Audio processing, and sends the resulting Opus track through a WebRTC peer connection.
+- **Host (Windows PC)**: Uses the browser's `getDisplayMedia({ audio: true, systemAudio: 'include' })` capture path by default. The optional native path uses WASAPI loopback, binary framed Float32 PCM over a localhost WebSocket, a short resampling worklet buffer, then the same browser-side Web Audio and WebRTC path.
 - **Signaling Hub (Node.js Server)**: Serves the static UI and QR endpoint, then relays WebSocket signaling messages for room registration, authentication, ICE candidates, and SDP offers/answers. Media does not pass through the server.
 - **Listener (Mobile / Secondary Device)**: Receives the peer-to-peer Opus RTP stream in the browser, plays it through an HTML5 Audio element, optionally adjusts `RTCRtpReceiver.jitterBufferTarget`, and displays Web Audio telemetry.
 
@@ -37,6 +37,10 @@ flowchart TD
     Listener <-->|WebSocket Signaling| WS
     Peer -.->|RTCP stats| HostPC
 ```
+
+The native relay deliberately remains host-local: raw PCM never traverses the Wi-Fi network. Its source queue is capped at eight capture packets, the browser starts after two packets and drops stale packets above a short ceiling. This bounds capture-to-encoder delay rather than allowing a transient stall to accumulate into audible lag. The worklet resamples the fixed 48 kHz helper output to the actual `AudioContext` rate so a 44.1 kHz output device cannot change pitch or introduce artifacts.
+
+Signaling reconnection is session-based. A listener re-registers with its persistent session id and the host with its authenticated room key; abnormal host signaling disconnects receive an 8-second grace window. A clean user stop still closes the room immediately.
 
 ---
 
@@ -199,7 +203,7 @@ Wifora coordinates multi-device playback synchronization via `MultiDeviceSyncCon
 The `AudioEngine` is fully decoupled from specific network transports via the abstract `AudioTransport` interface (`src/transport/base.mjs`):
 
 - **`WebRtcAudioTransport`**: Standard peer-to-peer browser transmission.
-- **`AirPlayAudioTransport`**: RAOP/RTSP state machine (`ANNOUNCE`, `SETUP`, `RECORD`, `FLUSH`, `TEARDOWN`), RTP audio packaging (44.1/48 kHz PCM/ALAC), and Bonjour/mDNS service publication for AirPlay-compatible receivers.
+- **`AirPlayAudioTransport`**: isolated RAOP/RTSP state-machine and RTP packetization prototype, covered by unit tests. It does not open RTSP/UDP sockets, implement ALAC, Apple pairing/FairPlay, encryption, or AirPlay 2 discovery; it must not be advertised as compatible with Apple AirPlay devices yet.
 
 ---
 
@@ -210,3 +214,5 @@ For environments requiring background playback beyond Safari's browser limits, t
 - **`WiforaAudioSession`**: Native `AVAudioSession` category `.playback` with background audio preservation, route change listener (AirPods disconnect pauses/resumes), and 10 ms IO buffer duration.
 - **`WiforaSignalingClient`**: Direct URLSession WebSocket client communicating via Wifora Control Protocol v1.
 - **`WiforaClockSync`**: Native Swift 4-timestamp NTP clock sync engine.
+
+The package is not yet an installable receiver: it has no WebRTC peer implementation, SDP/candidate application, Opus decoder, or audio renderer. Those pieces are required before it can play a Wifora stream on iOS.

@@ -1,6 +1,8 @@
 import { WebSocket } from 'ws'
 import { ROOM_GRACE_MS } from '../shared/constants.mjs'
 
+const HOST_RECONNECT_GRACE_MS = 8_000
+
 /**
  * Creates and manages active Wifora streaming rooms, host sessions,
  * listener connections, and automatic cleanup timers.
@@ -54,8 +56,22 @@ export function createRoomManager(options = {}) {
     const room = rooms.get(roomId)
 
     if (role === 'host' && room.host === socket) {
-      log.info(`Host disconnected from room [${roomId}], code: ${closeCode}`)
-      closeRoom(roomId)
+      // A short Wi-Fi/browser interruption should not terminate every
+      // listener. A new socket is still authenticated by the same host key.
+      const isCleanClose = closeCode === 1000 || closeCode === 1001
+      if (isCleanClose) {
+        log.info(`Host disconnected from room [${roomId}], code: ${closeCode}`)
+        closeRoom(roomId)
+        return
+      }
+      log.debug?.(`Host signaling lost for room [${roomId}], grace window ${HOST_RECONNECT_GRACE_MS}ms active`)
+      socket.disconnectTimer = setTimeout(() => {
+        if (room.host === socket) {
+          log.info(`Host reconnection grace expired for room [${roomId}]`)
+          closeRoom(roomId)
+        }
+      }, HOST_RECONNECT_GRACE_MS)
+      socket.disconnectTimer.unref?.()
       return
     }
 

@@ -20,6 +20,7 @@ import { createRateLimiter } from './rate-limiter.mjs'
  * @param {number} [options.maxSignalBytes] - Max allowed signal payload size
  * @param {number} [options.pingIntervalMs] - Heartbeat check interval
  * @param {Object} [options.rateLimiters] - Optional custom rate limiters
+ * @param {Function} [options.handleUpgrade] - Optional handler for another authenticated WebSocket endpoint
  * @param {Object} [options.logger] - Logger instance
  * @returns {Object} Signaling server controller
  */
@@ -57,7 +58,12 @@ export function createSignalingServer(options = {}) {
 
     const activePort = server.address()?.port || port
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`)
-    if (url.pathname !== '/signal' || !isAllowedOrigin(request, activePort)) {
+    if (url.pathname !== '/signal') {
+      if (options.handleUpgrade?.(request, socket, head, { activePort, remoteIp, url })) return
+      socket.destroy()
+      return
+    }
+    if (!isAllowedOrigin(request, activePort)) {
       socket.destroy()
       return
     }

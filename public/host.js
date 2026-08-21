@@ -1,3 +1,5 @@
+/* global AudioWorkletNode */
+
 import { initI18n, t } from './i18n.js'
 import { getDeviceInfo } from './device-detector.js'
 import { createLogger } from './logger.js'
@@ -14,6 +16,7 @@ const sunIcon = document.querySelector('#sunIcon')
 const moonIcon = document.querySelector('#moonIcon')
 
 const startBroadcastBtn = document.querySelector('#startBroadcastBtn')
+const startNativeBroadcastBtn = document.querySelector('#startNativeBroadcastBtn')
 const homeStatusBanner = document.querySelector('#homeStatusBanner')
 const homeStatusText = document.querySelector('#homeStatusText')
 
@@ -58,6 +61,12 @@ let limiterNode = null
 let gainNode = null
 let analyserNode = null
 let animFrameId = null
+let nativeAudioSocket = null
+let nativeAudioNode = null
+let startNativeAfterRegistration = false
+let nativeAudioReconnectTimer = null
+let nativeAudioReconnectAttempts = 0
+let signalReconnectTimer = null
 
 let roomId = ''
 let hostKey = ''
@@ -133,13 +142,26 @@ function setHomeStatus(msg, type = '') {
 
 // --- Modular DSP & Real-Time Studio Audio Graph ---
 async function initAudio(track) {
+  return initAudioFromSource((context) => context.createMediaStreamSource(new MediaStream([track])))
+}
+
+async function initNativeAudio() {
+  return initAudioFromSource(async (context) => {
+    if (!context.audioWorklet) throw new Error('AudioWorklet non è supportato da questo browser.')
+    await context.audioWorklet.addModule('/native-audio-worklet.js')
+    nativeAudioNode = new AudioWorkletNode(context, 'wifora-native-pcm', { outputChannelCount: [2] })
+    return nativeAudioNode
+  })
+}
+
+async function initAudioFromSource(createSource) {
   const AudioCtx = window.AudioContext || window.webkitAudioContext
   audioContext = new AudioCtx({ latencyHint: 0, sampleRate: 48000 })
   if (audioContext.state === 'suspended') {
     await audioContext.resume()
   }
 
-  const source = audioContext.createMediaStreamSource(new MediaStream([track]))
+  const source = await createSource(audioContext)
 
   // 1. High-Pass Sub-Bass Filter (Stops inaudible DC/sub-rumble < 20Hz without affecting audible punch)
   highPassFilter = audioContext.createBiquadFilter()
@@ -232,7 +254,7 @@ function startLevelMeter() {
       if (data[i] > max) max = data[i]
     }
     const percent = Math.min(100, Math.round((max / 255) * 100))
-    if (levelBar) levelBar.style.width = `${percent}%`
+    if (levelBar) levelBar.value = percent
     animFrameId = requestAnimationFrame(update)
   }
 
@@ -515,6 +537,25 @@ async function makeOffer(sessionKey, clientId, deviceName = 'Smartphone', device
     return
   }
 
+  // A listener re-registering after an ICE/signaling interruption keeps its
+  // session key. Tear down an unhealthy predecessor before replacing it so
+  // that only one peer and one set of state timers can survive per device.
+  if (existing) {
+    clearTimeout(existing.disconnectTimeout)
+    clearTimeout(existing.restartTimeout)
+    if (existing.peer) {
+      existing.peer.onconnectionstatechange = null
+      existing.peer.oniceconnectionstatechange = null
+      existing.peer.onicecandidate = null
+      try {
+        existing.peer.close()
+      } catch (err) {
+        logger.debug(`Error closing stale peer [${sessionKey}]:`, err)
+      }
+    }
+    peers.delete(sessionKey)
+  }
+
   const peer = new RTCPeerConnection({ iceServers: [], bundlePolicy: 'max-bundle', rtcpMuxPolicy: 'require' })
   const selectedProfile = liveQualitySelect.value
   const transportPolicy = new TransportPolicy({ profileKey: selectedProfile })
@@ -627,11 +668,14 @@ function sendPeerPolicy(session) {
 }
 
 function connectSignal() {
+  if (stoppedByUser || (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState))) return
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
   const ws = new WebSocket(`${protocol}//${location.host}/signal`)
   socket = ws
 
   ws.addEventListener('open', () => {
+    clearTimeout(signalReconnectTimer)
+    signalReconnectTimer = null
     logger.info(`Host signaling connected, registering room [${roomId}]`)
     signal({ type: 'register', role: 'host', roomId, hostKey, listenerToken })
   })
@@ -648,6 +692,12 @@ function connectSignal() {
     if (msg.type === 'error') {
       logger.error(`Signaling error received: ${msg.message}`)
       showToast(msg.message)
+      return
+    }
+
+    if (msg.type === 'registered' && startNativeAfterRegistration) {
+      startNativeAfterRegistration = false
+      openNativeAudioSocket()
       return
     }
 
@@ -783,10 +833,56 @@ function connectSignal() {
   })
 
   ws.addEventListener('close', () => {
-    if (socket === ws && !stoppedByUser) {
-      setTimeout(connectSignal, 1500)
+    if (socket !== ws || stoppedByUser) return
+    socket = null
+    scheduleSignalReconnect()
+  })
+}
+
+function scheduleSignalReconnect() {
+  if (stoppedByUser || signalReconnectTimer) return
+  signalReconnectTimer = setTimeout(() => {
+    signalReconnectTimer = null
+    connectSignal()
+  }, 500)
+}
+
+function openNativeAudioSocket() {
+  if (!nativeAudioNode) return
+  if (nativeAudioSocket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(nativeAudioSocket.readyState)) return
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const ws = new WebSocket(
+    `${protocol}//${location.host}/native-audio?room=${encodeURIComponent(roomId)}&key=${encodeURIComponent(hostKey)}`
+  )
+  nativeAudioSocket = ws
+  ws.binaryType = 'arraybuffer'
+  ws.addEventListener('open', () => {
+    nativeAudioReconnectAttempts = 0
+    logger.info('Native WASAPI audio relay connected')
+  })
+  ws.addEventListener('message', ({ data }) => {
+    if (data instanceof ArrayBuffer) {
+      nativeAudioNode?.port.postMessage(data, [data])
     }
   })
+  ws.addEventListener('close', (event) => {
+    if (nativeAudioSocket === ws) nativeAudioSocket = null
+    if (!stoppedByUser && event.code !== 1000) {
+      logger.warn(`Native WASAPI audio relay closed (code ${event.code}); retrying`)
+      scheduleNativeAudioReconnect()
+    }
+  })
+  ws.addEventListener('error', () => logger.warn('Native WASAPI audio relay connection error'))
+}
+
+function scheduleNativeAudioReconnect() {
+  if (stoppedByUser || !nativeAudioNode || nativeAudioReconnectTimer) return
+  const delay = Math.min(5_000, 250 * 2 ** nativeAudioReconnectAttempts)
+  nativeAudioReconnectAttempts = Math.min(nativeAudioReconnectAttempts + 1, 5)
+  nativeAudioReconnectTimer = setTimeout(() => {
+    nativeAudioReconnectTimer = null
+    openNativeAudioSocket()
+  }, delay)
 }
 
 // --- Real-time Adaptive Network & Audio Engine (ANAE) ---
@@ -1027,26 +1123,7 @@ async function startTransmission() {
       t.stop() // Immediately stop video to conserve 100% bandwidth and CPU for pure audio
     })
 
-    outputStream = await initAudio(audioTrack)
-    roomId = randomCode(8)
-    hostKey = generateKey()
-    listenerToken = generateListenerToken()
-    listenerUrl = await fetchLanUrl()
-
-    logger.info(`Broadcast initialized: Room [${roomId}]`)
-
-    roomCodeText.textContent = roomId
-    lanUrlDisplay.textContent = listenerUrl
-    qrImage.src = `/qr?text=${encodeURIComponent(listenerUrl)}`
-
-    homeSection.hidden = true
-    activeDashboardSection.hidden = false
-    setHomeStatus('')
-
-    connectSignal()
-    clearInterval(telemetryTimer)
-    telemetryTimer = setInterval(pollTelemetryAndAdapt, 1000)
-    updateDeviceCountBadge()
+    await activateBroadcast(await initAudio(audioTrack))
   } catch (err) {
     if (err.name === 'NotAllowedError') {
       logger.info('Screen capture permission cancelled by user')
@@ -1058,10 +1135,46 @@ async function startTransmission() {
   }
 }
 
+async function startNativeTransmission() {
+  try {
+    stoppedByUser = false
+    setHomeStatus('Avvio della cattura WASAPI nativa…')
+    await activateBroadcast(await initNativeAudio(), { native: true })
+  } catch (err) {
+    logger.error('startNativeTransmission error:', err)
+    stopTransmission()
+    setHomeStatus(`Cattura WASAPI nativa non disponibile: ${err.message}`, 'error')
+  }
+}
+
+async function activateBroadcast(stream, { native = false } = {}) {
+  outputStream = stream
+  roomId = randomCode(8)
+  hostKey = generateKey()
+  listenerToken = generateListenerToken()
+  listenerUrl = await fetchLanUrl()
+
+  logger.info(`Broadcast initialized: Room [${roomId}]${native ? ' (native WASAPI)' : ''}`)
+  roomCodeText.textContent = roomId
+  lanUrlDisplay.textContent = listenerUrl
+  qrImage.src = `/qr?text=${encodeURIComponent(listenerUrl)}`
+  homeSection.hidden = true
+  activeDashboardSection.hidden = false
+  setHomeStatus('')
+
+  startNativeAfterRegistration = native
+  connectSignal()
+  clearInterval(telemetryTimer)
+  telemetryTimer = setInterval(pollTelemetryAndAdapt, 1000)
+  updateDeviceCountBadge()
+}
+
 function stopTransmission() {
   logger.info('Stopping broadcast...')
   stoppedByUser = true
   clearInterval(telemetryTimer)
+  clearTimeout(signalReconnectTimer)
+  signalReconnectTimer = null
   cancelAnimationFrame(animFrameId)
 
   if (socket?.readyState === WebSocket.OPEN) {
@@ -1081,6 +1194,18 @@ function stopTransmission() {
   document.querySelectorAll('.device-item').forEach((el) => el.remove())
 
   captureStream?.getTracks().forEach((t) => t.stop())
+  startNativeAfterRegistration = false
+  clearTimeout(nativeAudioReconnectTimer)
+  nativeAudioReconnectTimer = null
+  nativeAudioReconnectAttempts = 0
+  if (nativeAudioSocket) {
+    try {
+      nativeAudioSocket.close(1000, 'Broadcast stopped')
+    } catch (err) {
+      logger.debug('Error closing native audio socket:', err)
+    }
+  }
+  nativeAudioSocket = null
   outputStream?.getTracks().forEach((t) => t.stop())
   if (audioContext) {
     try {
@@ -1098,6 +1223,7 @@ function stopTransmission() {
   limiterNode = null
   gainNode = null
   analyserNode = null
+  nativeAudioNode = null
 
   if (socket) {
     try {
@@ -1110,12 +1236,13 @@ function stopTransmission() {
 
   homeSection.hidden = false
   activeDashboardSection.hidden = true
-  levelBar.style.width = '0%'
+  if (levelBar) levelBar.value = 0
   setHomeStatus(t('statusEnded'))
 }
 
 // --- Event Listeners ---
 startBroadcastBtn.addEventListener('click', startTransmission)
+startNativeBroadcastBtn?.addEventListener('click', startNativeTransmission)
 stopBroadcastBtn.addEventListener('click', stopTransmission)
 
 copyUrlBtn.addEventListener('click', async () => {

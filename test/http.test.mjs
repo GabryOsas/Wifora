@@ -126,6 +126,11 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     assert.match(resHost.headers['content-type'], /text\/html/)
     assert.strictEqual(resHost.headers['x-frame-options'], 'DENY')
     assert.strictEqual(resHost.headers['x-content-type-options'], 'nosniff')
+    assert.doesNotMatch(resHost.body, /\sstyle\s*=/i, 'Host markup must not require inline styles under the CSP')
+
+    const resListen = await request(baseUrl, '/listen.html')
+    assert.strictEqual(resListen.statusCode, 200)
+    assert.doesNotMatch(resListen.body, /\sstyle\s*=/i, 'Listener markup must not require inline styles under the CSP')
 
     const resCss = await request(baseUrl, '/styles.css')
     assert.strictEqual(resCss.statusCode, 200)
@@ -135,6 +140,10 @@ test('HTTP API Endpoints & Static Serving', async (t) => {
     assert.strictEqual(resTransportPolicy.statusCode, 200)
     assert.match(resTransportPolicy.headers['content-type'], /text\/javascript/)
     assert.match(resTransportPolicy.body, /export class TransportPolicy/)
+
+    const resNativeWorklet = await request(baseUrl, '/native-audio-worklet.js')
+    assert.strictEqual(resNativeWorklet.statusCode, 200)
+    assert.match(resNativeWorklet.body, /registerProcessor\('wifora-native-pcm'/)
 
     const resNotFound = await request(baseUrl, '/nonexistent.file')
     assert.strictEqual(resNotFound.statusCode, 404)

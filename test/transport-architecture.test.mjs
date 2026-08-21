@@ -37,6 +37,14 @@ test('WebRtcAudioTransport manages peer listeners and transmits frames', async (
 
 test('AirPlayAudioTransport handles RTSP handshake and RTP audio packetization', async () => {
   const airplay = new AirPlayAudioTransport()
+  assert.deepEqual(airplay.getCapabilities(), {
+    experimental: true,
+    appleDeviceCompatible: false,
+    codecs: ['pcm-s16le'],
+    networkServer: false,
+    unsupported: ['ALAC', 'RTSP/UDP sockets', 'pairing', 'FairPlay', 'AirPlay 2'],
+  })
+  assert.equal(airplay.handleRtspRequest('RECORD', { CSeq: '0' }).statusCode, 455)
 
   // 1. ANNOUNCE
   const annRes = airplay.handleRtspRequest('ANNOUNCE', { CSeq: '1' })
@@ -64,6 +72,7 @@ test('AirPlayAudioTransport handles RTSP handshake and RTP audio packetization',
   const teardownRes = airplay.handleRtspRequest('TEARDOWN', { CSeq: '4' })
   assert.equal(teardownRes.statusCode, 200)
   assert.equal(airplay.state, AirPlayState.IDLE)
+  assert.equal(airplay.handleRtspRequest('OPTIONS', { CSeq: '5' }).statusCode, 501)
 })
 
 test('AudioEngine broadcasts ingested frames to registered transports', async () => {

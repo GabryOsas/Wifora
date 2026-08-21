@@ -7,6 +7,9 @@ export const WASAPI_FRAME_MAGIC = 'WFR1'
 export const WASAPI_FRAME_HEADER_BYTES = 32
 export const WASAPI_SAMPLE_RATE = 48_000
 export const WASAPI_CHANNELS = 2
+export const WASAPI_MAX_SAMPLES_PER_CHANNEL = WASAPI_SAMPLE_RATE
+const DEFAULT_HELPER_PATH = join(ROOT_DIR, 'native', 'wasapi', 'wifora-audio.exe')
+const CMAKE_RELEASE_HELPER_PATH = join(ROOT_DIR, 'native', 'wasapi', 'build', 'Release', 'wifora-audio.exe')
 
 /** Decodes the framed PCM stream emitted by wifora-audio.exe. */
 export class WasapiFrameDecoder {
@@ -30,7 +33,15 @@ export class WasapiFrameDecoder {
       const samplesPerChannel = this.pending.readUInt32LE(12)
       const sequence = this.pending.readUInt32LE(16)
       const timestampBigInt = this.pending.readBigUInt64LE(24)
-      if (version !== 1 || channels < 1 || sampleRate < 1 || samplesPerChannel < 1 || samplesPerChannel > sampleRate) {
+      if (
+        version !== 1 ||
+        channels < 1 ||
+        channels > 8 ||
+        sampleRate < 1 ||
+        sampleRate > 192_000 ||
+        samplesPerChannel < 1 ||
+        samplesPerChannel > WASAPI_MAX_SAMPLES_PER_CHANNEL
+      ) {
         this.pending = this.pending.subarray(4)
         continue
       }
@@ -64,15 +75,22 @@ export class WasapiFrameDecoder {
  */
 export class WasapiCaptureSource {
   constructor({
-    helperPath = process.env.WIFORA_WASAPI_HELPER || join(ROOT_DIR, 'native', 'wasapi', 'wifora-audio.exe'),
+    helperPath = process.env.WIFORA_WASAPI_HELPER || null,
     spawnImpl = spawn,
     platform = process.platform,
     logger = console,
+    maxQueuedFrames = 8,
   } = {}) {
-    this.helperPath = helperPath
+    if (!Number.isInteger(maxQueuedFrames) || maxQueuedFrames < 1) {
+      throw new RangeError('maxQueuedFrames must be a positive integer')
+    }
+    this.helperPath = helperPath || DEFAULT_HELPER_PATH
+    this.fallbackHelperPath = helperPath ? null : CMAKE_RELEASE_HELPER_PATH
+    this.resolvedHelperPath = null
     this.spawnImpl = spawnImpl
     this.platform = platform
     this.logger = logger
+    this.maxQueuedFrames = maxQueuedFrames
     this.sampleRate = WASAPI_SAMPLE_RATE
     this.channels = WASAPI_CHANNELS
     this.deviceInfo = null
@@ -80,25 +98,47 @@ export class WasapiCaptureSource {
     this.frames = []
     this.waiters = []
     this.child = null
+    this.closedError = null
+    this.stats = {
+      framesReceived: 0,
+      framesDelivered: 0,
+      droppedFrames: 0,
+      helperErrors: 0,
+    }
   }
 
   async available() {
     if (this.platform !== 'win32' || !this.helperPath) return false
-    try {
-      await access(this.helperPath)
-      return true
-    } catch {
-      return false
+    for (const candidate of [this.helperPath, this.fallbackHelperPath].filter(Boolean)) {
+      try {
+        await access(candidate)
+        this.resolvedHelperPath = candidate
+        return true
+      } catch {
+        // Keep looking: a standard CMake Release build does not copy the executable.
+      }
     }
+    return false
   }
 
   async start({ deviceId } = {}) {
     if (this.child) return
     if (!(await this.available())) throw new Error('WASAPI helper is not available')
+    this.closedError = null
     const args = ['--stdout']
     if (deviceId) args.push('--device', deviceId)
-    const child = this.spawnImpl(this.helperPath, args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true })
+    let child
+    try {
+      child = this.spawnImpl(this.resolvedHelperPath || this.helperPath, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true,
+      })
+    } catch (error) {
+      this.#close(error)
+      throw error
+    }
     this.child = child
+    this.deviceInfo = { id: deviceId || null, backend: 'wasapi-loopback' }
     child.stdout.on('data', (chunk) => this.#accept(chunk))
     child.stderr.on('data', (chunk) => this.logger.debug?.(`WASAPI helper: ${chunk.toString().trim()}`))
     child.once('exit', () => this.#close(new Error('WASAPI helper exited')))
@@ -107,7 +147,11 @@ export class WasapiCaptureSource {
 
   read() {
     const frame = this.frames.shift()
-    if (frame) return Promise.resolve(frame)
+    if (frame) {
+      this.stats.framesDelivered++
+      return Promise.resolve(frame)
+    }
+    if (this.closedError) return Promise.reject(this.closedError)
     return new Promise((resolve, reject) => this.waiters.push({ resolve, reject }))
   }
 
@@ -116,15 +160,36 @@ export class WasapiCaptureSource {
     this.#close(new Error('WASAPI capture stopped'))
   }
 
+  getStats() {
+    return {
+      running: Boolean(this.child),
+      queuedFrames: this.frames.length,
+      maxQueuedFrames: this.maxQueuedFrames,
+      ...this.stats,
+    }
+  }
+
   #accept(chunk) {
     for (const frame of this.decoder.push(chunk)) {
+      this.stats.framesReceived++
       const waiter = this.waiters.shift()
-      if (waiter) waiter.resolve(frame)
-      else this.frames.push(frame)
+      if (waiter) {
+        this.stats.framesDelivered++
+        waiter.resolve(frame)
+      } else {
+        if (this.frames.length >= this.maxQueuedFrames) {
+          this.frames.shift()
+          this.stats.droppedFrames++
+        }
+        this.frames.push(frame)
+      }
     }
   }
 
   #close(error) {
+    if (this.closedError) return
+    this.closedError = error
+    if (error?.message !== 'WASAPI capture stopped') this.stats.helperErrors++
     const child = this.child
     this.child = null
     if (child) child.removeAllListeners()

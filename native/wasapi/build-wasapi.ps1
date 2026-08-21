@@ -49,6 +49,30 @@ if (Get-Command g++ -ErrorAction SilentlyContinue) {
     }
 }
 
+# A double-clicked PowerShell session normally does not inherit the Visual
+# Studio developer environment. Discover it and build in a child cmd.exe so
+# the script works without asking the user to launch a special shell first.
+$vsDevCmd = Get-ChildItem -Path @("C:\Program Files\Microsoft Visual Studio", "D:\Microsoft Visual Studio") -Filter "VsDevCmd.bat" -Recurse -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+if ($vsDevCmd) {
+    $vsRoot = (Resolve-Path (Join-Path $vsDevCmd.DirectoryName "..\..")).Path
+    $vsCmake = Join-Path $vsRoot "Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+    if (Test-Path $vsCmake) {
+        Write-Host "Found Visual Studio developer tools. Attempting CMake build..."
+        $buildDir = Join-Path $scriptDir "build"
+        $command = 'call "{0}" -arch=x64 -host_arch=x64 && "{1}" -S "{2}" -B "{3}" -A x64 && "{1}" --build "{3}" --config Release' -f $vsDevCmd.FullName, $vsCmake, $scriptDir, $buildDir
+        cmd.exe /d /c $command
+        if ($LASTEXITCODE -eq 0) {
+            $builtBinary = Join-Path $buildDir "Release\wifora-audio.exe"
+            if (Test-Path $builtBinary) {
+                Copy-Item -Path $builtBinary -Destination $outputExe -Force
+                Write-Host "Successfully built and copied wifora-audio.exe" -ForegroundColor Green
+                exit 0
+            }
+        }
+    }
+}
+
 Write-Host "No C++20 Windows compiler found in PATH (CMake, MSVC cl.exe, or g++)." -ForegroundColor Yellow
 Write-Host "Wifora will seamlessly use the browser capture fallback path until wifora-audio.exe is compiled."
 exit 0

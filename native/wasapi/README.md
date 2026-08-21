@@ -1,6 +1,6 @@
 # Wifora WASAPI helper
 
-This optional Windows executable captures an output endpoint with shared-mode WASAPI loopback and writes 48 kHz stereo Float32 PCM to stdout. It has no network access and does not replace browser capture until a future native media transport consumes its frames.
+This optional Windows executable captures an output endpoint with shared-mode WASAPI loopback and writes 48 kHz stereo Float32 PCM to stdout. It has no network access. Its stdout is explicitly opened in binary mode: this is essential on Windows, where text-mode newline conversion would otherwise corrupt PCM and produce noise.
 
 ## Build
 
@@ -11,7 +11,9 @@ cmake -S native/wasapi -B native/wasapi/build
 cmake --build native/wasapi/build --config Release
 ```
 
-Set `WIFORA_WASAPI_HELPER` to the resulting `wifora-audio.exe` for an integration that uses `selectCaptureSource()`. If the executable is absent, the selector returns the supplied browser-capture source unchanged.
+Set `WIFORA_WASAPI_HELPER` to the resulting `wifora-audio.exe` for an integration that uses `selectCaptureSource()`. A normal CMake Release build is also discovered automatically at `native/wasapi/build/Release/wifora-audio.exe`; if neither executable is present, the selector returns the supplied browser-capture source unchanged.
+
+The source queue is bounded (8 frames by default) and drops the oldest frame under back-pressure, prioritizing current audio over a growing latency backlog. The browser-side worklet keeps a two-packet (~20 ms) startup buffer and caps its backlog at roughly 60 ms.
 
 ## IPC frame layout
 

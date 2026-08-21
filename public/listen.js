@@ -288,8 +288,16 @@ function schedulePeerRecovery() {
     const state = peer?.connectionState
     if (shouldListen && ['disconnected', 'failed'].includes(state)) {
       logger.warn('WebRTC recovery timed out; reconnecting signaling')
-      if (!socket || socket.readyState !== WebSocket.OPEN) connectSignal()
-      else stopListening(t('toastRoomEnded'), true)
+      if (socket?.readyState === WebSocket.OPEN) {
+        try {
+          socket.close(4001, 'Requesting WebRTC recovery')
+        } catch (err) {
+          logger.debug('Unable to recycle signaling socket for recovery:', err)
+          scheduleSignalReconnect()
+        }
+      } else {
+        scheduleSignalReconnect()
+      }
     }
   }, 8_000)
 }
@@ -344,7 +352,7 @@ function setupVisualizer(stream) {
         if (data[i] > max) max = data[i]
       }
       const percent = Math.min(100, Math.round((max / 255) * 100))
-      if (levelBar) levelBar.style.width = `${percent}%`
+      if (levelBar) levelBar.value = percent
       animFrameId = requestAnimationFrame(update)
     }
     update()
@@ -566,6 +574,7 @@ function startClockSync() {
 
 async function connectSignal() {
   if (!shouldListen) return
+  if (socket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(socket.readyState)) return
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
   const ws = new WebSocket(`${protocol}//${location.host}/signal`)
   socket = ws
@@ -578,6 +587,8 @@ async function connectSignal() {
   }
 
   ws.addEventListener('open', () => {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
     logger.info(`Signaling opened, registering listener in room [${roomId}] (session: ${listenerSessionId})`)
     signal({
       type: 'register',
@@ -681,22 +692,28 @@ async function connectSignal() {
   })
 
   ws.addEventListener('close', (event) => {
+    if (socket !== ws) return
+    socket = null
     clearInterval(pingTimer)
     logger.info(`Signaling closed (code: ${event.code}, reason: ${event.reason})`)
     if (event.code === 4000 || event.reason === 'Kicked by host') {
       stopListening(t('toastKickedByHost'), true)
       return
     }
-    // If WebRTC is still active and connected, attempt graceful signaling reconnection in background
+    // Re-register the existing listener session after a temporary signaling
+    // loss. The server replaces the old socket by session id.
     if (shouldListen) {
-      if (peer && peer.connectionState === 'connected') {
-        logger.info('WebRTC media peer is still live, reconnecting signaling in 2s...')
-        setTimeout(connectSignal, 2000)
-      } else {
-        stopListening(t('toastRoomEnded'), true)
-      }
+      scheduleSignalReconnect()
     }
   })
+}
+
+function scheduleSignalReconnect() {
+  if (!shouldListen || reconnectTimer) return
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null
+    connectSignal()
+  }, 500)
 }
 
 async function acceptOffer(msg) {
@@ -911,7 +928,7 @@ function stopListening(message = '', showForm = false) {
   }
   resumeBox.hidden = true
 
-  if (levelBar) levelBar.style.width = '0%'
+  if (levelBar) levelBar.value = 0
   updateListenerStatus('DISCONNECTED')
 
   if (showForm) {

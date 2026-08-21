@@ -31,3 +31,6 @@ tmp/
 *.tmp
 *.docx
 
+# Local native build outputs
+native/wasapi/build/
+native/wasapi/wifora-audio.exe

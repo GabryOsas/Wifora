@@ -22,6 +22,7 @@ import { createRoomManager } from './src/server/rooms.mjs'
 import { createHttpHandler } from './src/server/http.mjs'
 import { createSignalingServer } from './src/server/websocket.mjs'
 import { createDiscoveryPublisher } from './src/server/discovery.mjs'
+import { NativeAudioRelay } from './src/audio/capture/native-audio-relay.mjs'
 
 // Backward-compatible re-exports
 export const root = ROOT_DIR
@@ -109,6 +110,9 @@ export function createWiforaServer(options = {}) {
     logger: log,
     roomGraceMs,
   })
+  const nativeAudio =
+    options.nativeAudioRelay ||
+    new NativeAudioRelay({ rooms: roomManager.rooms, logger: log, sourceFactory: options.nativeSourceFactory })
 
   // 2. Initialize HTTP Request Handler
   const httpHandler = createHttpHandler({
@@ -116,6 +120,7 @@ export function createWiforaServer(options = {}) {
     publicDir: serverPublicDir,
     port: serverPort,
     discovery,
+    nativeAudio,
     logger: log,
   })
 
@@ -133,9 +138,11 @@ export function createWiforaServer(options = {}) {
     pingIntervalMs,
     rateLimiters: options.rateLimiters,
     logger: log,
+    handleUpgrade: (request, socket, head, context) => nativeAudio.handleUpgrade(request, socket, head, context),
   })
 
   async function close() {
+    await nativeAudio.close()
     await discovery.close()
     await signaling.close()
     return new Promise((res) => {
@@ -152,6 +159,7 @@ export function createWiforaServer(options = {}) {
     scheduleRoomCleanup: roomManager.scheduleRoomCleanup,
     isHttps,
     discovery,
+    nativeAudio,
     close,
     listen: (customPort, host = '0.0.0.0') =>
       new Promise((res) => {

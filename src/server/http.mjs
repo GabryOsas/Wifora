@@ -16,7 +16,14 @@ import { setSecurityHeaders } from './security.mjs'
  * @returns {import('node:http').RequestListener} HTTP request handler
  */
 export function createHttpHandler(options = {}) {
-  const { roomManager, publicDir = PUBLIC_DIR, port = DEFAULT_PORT, discovery, logger: _logger = console } = options
+  const {
+    roomManager,
+    publicDir = PUBLIC_DIR,
+    port = DEFAULT_PORT,
+    discovery,
+    nativeAudio,
+    logger: _logger = console,
+  } = options
   const rooms = roomManager?.rooms || new Map()
 
   return async function requestListener(request, response) {
@@ -43,6 +50,7 @@ export function createHttpHandler(options = {}) {
         JSON.stringify({
           protocolVersion: 1,
           transports: ['webrtc'],
+          nativeCapture: nativeAudio?.snapshot?.() || { available: false },
           discovery: discovery?.snapshot?.() || { enabled: false, published: false },
           browserDiscovery: false,
           browserDiscoveryNote:

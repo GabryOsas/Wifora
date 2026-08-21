@@ -14,8 +14,9 @@ export const AirPlayState = {
 }
 
 /**
- * AirPlay / RAOP (Remote Audio Output Protocol) Audio Transport backend.
- * Provides RTSP session management, timing synchronization, and RTP audio packaging.
+ * Experimental RAOP protocol adapter. It is deliberately network-free so it
+ * cannot be confused with an Apple AirPlay implementation: no RTSP/UDP
+ * sockets, ALAC encoder, pairing, FairPlay, or AirPlay 2 support exists here.
  */
 export class AirPlayAudioTransport extends AudioTransport {
   constructor({
@@ -45,8 +46,8 @@ export class AirPlayAudioTransport extends AudioTransport {
       txt: {
         txtvers: '1',
         ch: String(this.channels),
-        cn: '0,1', // PCM, ALAC
-        et: '0,1', // encryption types
+        cn: '0', // PCM only; ALAC is not implemented.
+        et: '0', // Unencrypted prototype only.
         sv: 'false',
         da: 'true',
         sr: String(this.sampleRate),
@@ -59,6 +60,16 @@ export class AirPlayAudioTransport extends AudioTransport {
     }
   }
 
+  getCapabilities() {
+    return {
+      experimental: true,
+      appleDeviceCompatible: false,
+      codecs: ['pcm-s16le'],
+      networkServer: false,
+      unsupported: ['ALAC', 'RTSP/UDP sockets', 'pairing', 'FairPlay', 'AirPlay 2'],
+    }
+  }
+
   handleRtspRequest(method, headers = {}, _body = '') {
     const cseq = headers['CSeq'] || headers['cseq'] || '1'
     const responseHeaders = {
@@ -68,6 +79,7 @@ export class AirPlayAudioTransport extends AudioTransport {
 
     switch (method.toUpperCase()) {
       case 'ANNOUNCE': {
+        if (this.state !== AirPlayState.IDLE) return this.#invalidState(responseHeaders)
         this.state = AirPlayState.ANNOUNCED
         this.session = {
           id: String(Math.floor(Math.random() * 1_000_000)),
@@ -76,6 +88,7 @@ export class AirPlayAudioTransport extends AudioTransport {
         return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
       }
       case 'SETUP': {
+        if (this.state !== AirPlayState.ANNOUNCED) return this.#invalidState(responseHeaders)
         this.state = AirPlayState.CONFIGURED
         responseHeaders['Transport'] =
           `RTP/AVP/UDP;unicast;mode=record;server_port=${this.audioPort};control_port=${AIRPLAY_RTP_CONTROL_PORT};timing_port=${AIRPLAY_RTP_TIMING_PORT}`
@@ -83,6 +96,9 @@ export class AirPlayAudioTransport extends AudioTransport {
         return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
       }
       case 'RECORD': {
+        if (this.state !== AirPlayState.CONFIGURED && this.state !== AirPlayState.PAUSED) {
+          return this.#invalidState(responseHeaders)
+        }
         this.state = AirPlayState.STREAMING
         this.running = true
         this.stats.activeClients = 1
@@ -90,6 +106,7 @@ export class AirPlayAudioTransport extends AudioTransport {
         return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
       }
       case 'FLUSH': {
+        if (this.state !== AirPlayState.STREAMING) return this.#invalidState(responseHeaders)
         this.state = AirPlayState.PAUSED
         return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
       }
@@ -101,7 +118,7 @@ export class AirPlayAudioTransport extends AudioTransport {
         return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
       }
       default:
-        return { statusCode: 200, statusText: 'OK', headers: responseHeaders }
+        return { statusCode: 501, statusText: 'Not Implemented', headers: responseHeaders }
     }
   }
 
@@ -146,5 +163,9 @@ export class AirPlayAudioTransport extends AudioTransport {
       rtpSequence: this.rtpSequence,
       rtpTimestamp: this.rtpTimestamp,
     }
+  }
+
+  #invalidState(headers) {
+    return { statusCode: 455, statusText: 'Method Not Valid in This State', headers }
   }
 }

@@ -200,6 +200,26 @@ test('WebSocket Signaling & Lifecycle', async (t) => {
     l2.close()
   })
 
+  await t.test('Host can re-register after an abnormal signaling disconnect without ending the room', async () => {
+    const host = connectClient(port)
+    await host.ready()
+    host.send({ type: 'register', role: 'host', roomId: 'RECOVR01', hostKey: validHostKeyA })
+    await host.waitForMessage((m) => m.type === 'registered')
+
+    const closed = new Promise((resolve) => host.ws.once('close', resolve))
+    host.ws.terminate()
+    await closed
+    assert.equal(app.rooms.has('RECOVR01'), true)
+
+    const reconnectedHost = connectClient(port)
+    await reconnectedHost.ready()
+    reconnectedHost.send({ type: 'register', role: 'host', roomId: 'RECOVR01', hostKey: validHostKeyA })
+    await reconnectedHost.waitForMessage((m) => m.type === 'registered')
+    assert.equal(app.rooms.get('RECOVR01').host.clientId !== undefined, true)
+
+    reconnectedHost.close(1000, 'Test complete')
+  })
+
   await t.test('Listener voluntary leave & kick from host', async () => {
     const host = connectClient(port)
     await host.ready()

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Wifora | Stream PC Audio over Wi-Fi</title>
+    <link rel="icon" type="image/png" href="/wifora-logo.png" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -75,8 +76,7 @@
       <!-- MOBILE / TABLET ADVISORY (If opened directly on phone/tablet) -->
       <section
         id="mobileAdvisory"
-        class="status-banner"
-        style="background: var(--bg-card); border: 1px solid var(--border-subtle)"
+        class="status-banner status-banner--outlined"
         role="status"
         aria-live="polite"
         hidden
@@ -93,21 +93,15 @@
           <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
           <line x1="12" y1="18" x2="12.01" y2="18"></line>
         </svg>
-        <span style="flex: 1; font-size: 13px">
+        <span class="advisory-copy">
           <span data-i18n="mobileAdvisoryText">Stai usando un telefono o tablet. Per ricevere l'audio dal PC, usa</span>
-          <a
-            href="/listen.html"
-            style="color: var(--accent-primary); font-weight: 600; text-decoration: underline"
-            data-i18n="mobileAdvisoryLink"
-          >
-            Ricevi Audio dal PC
-          </a>
+          <a href="/listen.html" class="advisory-link" data-i18n="mobileAdvisoryLink"> Ricevi Audio dal PC </a>
           .
         </span>
       </section>
 
       <!-- HOMEPAGE PRESENTATION (PRE-STREAM) -->
-      <main id="homeSection" style="display: flex; flex-direction: column; gap: 24px">
+      <main id="homeSection" class="vertical-stack vertical-stack--home">
         <!-- Hero Presentation Card -->
         <section class="hero-card" aria-labelledby="heroHeading">
           <span class="hero-badge" data-i18n="heroBadge">Audio Streaming Locale • Zero App</span>
@@ -124,10 +118,18 @@
               id="startBroadcastBtn"
               class="btn btn-primary"
               type="button"
-              style="min-height: 52px; font-size: 16px"
+              class="btn btn-primary btn--broadcast"
               data-i18n="startBroadcastBtn"
             >
               Avvia Trasmissione Audio
+            </button>
+            <button
+              id="startNativeBroadcastBtn"
+              class="btn btn-secondary btn--native-broadcast"
+              type="button"
+              title="Usa il helper WASAPI nativo già compilato sul PC"
+            >
+              Avvia con WASAPI nativo (sperimentale)
             </button>
             <p class="hero-hint">
               <svg
@@ -274,7 +276,7 @@
       <!-- ACTIVE BROADCAST DASHBOARD (DURING STREAM) -->
       <section
         id="activeDashboardSection"
-        style="display: flex; flex-direction: column; gap: 20px"
+        class="vertical-stack vertical-stack--dashboard"
         hidden
         aria-label="Pannello Trasmissione Attiva"
       >
@@ -287,7 +289,7 @@
                 Inquadra il QR o inserisci il codice per connettere il telefono.
               </p>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0">
+            <div class="title-row-actions">
               <span id="mainWebRtcStatus" class="status-pill status-connecting" aria-live="polite" role="status">
                 <span id="mainWebRtcStatusText" data-i18n="statusConnecting">In attesa</span>
               </span>
@@ -334,7 +336,7 @@
 
           <div class="audio-control-box">
             <div class="volume-row">
-              <label for="volSlider" class="field-label" style="min-width: 60px">
+              <label for="volSlider" class="field-label field-label--volume">
                 <span data-i18n="volumeLabel">Volume:</span> <strong id="volValue">100%</strong>
               </label>
               <input
@@ -371,7 +373,7 @@
                 aria-valuemax="100"
                 aria-valuenow="0"
               >
-                <div id="levelBar" class="level-bar"></div>
+                <progress id="levelBar" class="level-bar" max="100" value="0"></progress>
               </div>
             </div>
           </div>

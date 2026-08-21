@@ -1,6 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { WASAPI_FRAME_HEADER_BYTES, WasapiFrameDecoder, selectCaptureSource } from '../src/audio/capture/wasapi.mjs'
+import { EventEmitter } from 'node:events'
+import { fileURLToPath } from 'node:url'
+import { AudioEngine } from '../src/audio/engine.mjs'
+import {
+  WASAPI_FRAME_HEADER_BYTES,
+  WasapiCaptureSource,
+  WasapiFrameDecoder,
+  selectCaptureSource,
+} from '../src/audio/capture/wasapi.mjs'
 
 function makeFrame({ timestamp = 960, sequence = 2, samples = new Float32Array([0.25, -0.25, 0.5, -0.5]) } = {}) {
   const header = Buffer.alloc(WASAPI_FRAME_HEADER_BYTES)
@@ -36,4 +44,58 @@ test('selectCaptureSource retains browser capture when the optional native helpe
   const browserSource = { kind: 'browser' }
   const selected = await selectCaptureSource({ browserSource, wasapi: { platform: 'linux' } })
   assert.equal(selected, browserSource)
+})
+
+test('WasapiCaptureSource bounds queued PCM frames with a drop-oldest policy', async () => {
+  const child = Object.assign(new EventEmitter(), {
+    stdout: new EventEmitter(),
+    stderr: new EventEmitter(),
+    kill() {},
+  })
+  const source = new WasapiCaptureSource({
+    helperPath: fileURLToPath(import.meta.url),
+    platform: 'win32',
+    maxQueuedFrames: 2,
+    spawnImpl: () => child,
+  })
+  await source.start()
+  child.stdout.emit('data', makeFrame({ timestamp: 0 }))
+  child.stdout.emit('data', makeFrame({ timestamp: 2 }))
+  child.stdout.emit('data', makeFrame({ timestamp: 4 }))
+  assert.equal(source.getStats().queuedFrames, 2)
+  assert.equal(source.getStats().droppedFrames, 1)
+  assert.equal(source.frames[0].timestamp, 2)
+  source.stop()
+})
+
+test('AudioEngine continuously ingests frames from a capture source and stops it cleanly', async () => {
+  let rejectPendingRead
+  const source = {
+    deviceInfo: { backend: 'test' },
+    started: false,
+    stopped: false,
+    frames: [{ samples: new Float32Array([0.1, -0.1]), sampleRate: 48_000, channels: 2, timestamp: 0 }],
+    async start() {
+      this.started = true
+    },
+    read() {
+      const frame = this.frames.shift()
+      if (frame) return Promise.resolve(frame)
+      return new Promise((_, reject) => {
+        rejectPendingRead = reject
+      })
+    },
+    async stop() {
+      this.stopped = true
+      rejectPendingRead?.(new Error('capture stopped'))
+    },
+  }
+  const engine = new AudioEngine()
+  await engine.startCapture(source)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(engine.snapshot().capture.framesIngested, 1)
+  assert.equal(engine.snapshot().capture.running, true)
+  assert.equal(await engine.stopCapture(), true)
+  assert.equal(source.started, true)
+  assert.equal(source.stopped, true)
 })

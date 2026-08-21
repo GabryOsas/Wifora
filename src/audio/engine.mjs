@@ -17,6 +17,9 @@ export class AudioEngine {
     this.drift = new DriftController({ ...drift, sampleRate })
     this.metrics = new AudioMetrics()
     this.transports = new Set()
+    this.captureSource = null
+    this.captureTask = null
+    this.captureStats = { framesIngested: 0, errors: 0, lastError: null }
   }
 
   registerTransport(transport) {
@@ -29,6 +32,47 @@ export class AudioEngine {
 
   unregisterTransport(transport) {
     return this.transports.delete(transport)
+  }
+
+  /**
+   * Start consuming a native or browser-independent capture source. A source
+   * must implement start(), read(), and stop(); frames are validated by ingest
+   * before they can reach the engine or any registered transport.
+   */
+  async startCapture(source, options) {
+    if (
+      !source ||
+      typeof source.start !== 'function' ||
+      typeof source.read !== 'function' ||
+      typeof source.stop !== 'function'
+    ) {
+      throw new TypeError('capture source must implement start(), read(), and stop()')
+    }
+    if (this.captureSource) throw new Error('a capture source is already running')
+
+    this.captureSource = source
+    try {
+      await source.start(options)
+    } catch (error) {
+      this.captureSource = null
+      throw error
+    }
+
+    this.captureTask = this.#consumeCapture(source)
+    return source
+  }
+
+  async stopCapture() {
+    const source = this.captureSource
+    if (!source) return false
+    this.captureSource = null
+    try {
+      await source.stop()
+    } finally {
+      await this.captureTask
+      this.captureTask = null
+    }
+    return true
   }
 
   async broadcast(frame) {
@@ -85,11 +129,41 @@ export class AudioEngine {
     const transportStats = Array.from(this.transports).map((t) =>
       typeof t.getStats === 'function' ? t.getStats() : { name: t.name }
     )
+    const hasCaptureActivity =
+      this.captureSource || this.captureStats.framesIngested > 0 || this.captureStats.errors > 0
     return {
       ...this.metrics.snapshot(this.buffer),
       clock: this.clock.snapshot(),
       drift: this.drift.snapshot(),
+      ...(hasCaptureActivity
+        ? {
+            capture: {
+              running: Boolean(this.captureSource),
+              ...this.captureStats,
+              source: this.captureSource?.deviceInfo || null,
+              sourceStats: this.captureSource?.getStats?.() || null,
+            },
+          }
+        : {}),
       transports: transportStats,
+    }
+  }
+
+  async #consumeCapture(source) {
+    try {
+      while (this.captureSource === source) {
+        const frame = await source.read()
+        if (this.captureSource !== source) break
+        this.ingest(frame)
+        this.captureStats.framesIngested++
+      }
+    } catch (error) {
+      // stopCapture intentionally terminates a pending read; it is not a capture fault.
+      if (this.captureSource === source) {
+        this.captureStats.errors++
+        this.captureStats.lastError = error?.message || String(error)
+        this.captureSource = null
+      }
     }
   }
 }
