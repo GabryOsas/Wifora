@@ -60,6 +60,33 @@ export function createHttpHandler(options = {}) {
       return
     }
 
+    if (url.pathname === '/api/stats') {
+      // Live room/session summary. Loopback only: it is consumed by the
+      // local CLI dashboard and the Web Control Center.
+      const remote = request.socket?.remoteAddress || ''
+      const isLoopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote)
+      if (!isLoopback) {
+        response.writeHead(403, { 'content-type': 'application/json; charset=utf-8' })
+        response.end(JSON.stringify({ error: 'Forbidden' }))
+        return
+      }
+      const roomList = []
+      for (const [roomId, room] of rooms) {
+        roomList.push({
+          roomId,
+          hostConnected: Boolean(room.host),
+          listeners: room.listeners.size,
+          listenerNames: [...room.listeners.values()].map((l) => l.deviceName || l.clientId || 'device'),
+        })
+      }
+      response.writeHead(200, {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store, no-cache, must-revalidate',
+      })
+      response.end(JSON.stringify({ rooms: roomList, totalListeners: roomList.reduce((n, r) => n + r.listeners, 0) }))
+      return
+    }
+
     if (url.pathname === '/api/leave' && request.method === 'POST') {
       let body = ''
       request.on('data', (chunk) => {

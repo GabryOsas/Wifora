@@ -452,12 +452,22 @@ export function createSignalingServer(options = {}) {
       connectionLimiter.close()
       roomMissLimiter.close()
       authFailLimiter.close()
+      // 4001 = "server gone, do not reconnect". Clients tear down their
+      // WebRTC peers instead of entering the reconnect loop.
       for (const client of wss.clients) {
         try {
-          client.close(1001, 'Server shutting down')
+          if (client.readyState === 1) client.send(JSON.stringify({ type: 'server-shutdown' }))
+          client.close(4001, 'Server shutting down')
         } catch {}
       }
-      wss.close(() => resolve())
+      setTimeout(() => {
+        for (const client of wss.clients) {
+          try {
+            client.terminate()
+          } catch {}
+        }
+        wss.close(() => resolve())
+      }, 150)
     })
   }
 

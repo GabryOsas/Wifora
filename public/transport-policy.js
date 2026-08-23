@@ -76,15 +76,14 @@ export class TransportPolicy {
   snapshot({ changed = false } = {}) {
     const tier = AUTO_TIERS[this.currentTier - 1]
     const isLowLatency = this.profileKey === 'lowlatency'
-    const isResilient = this.currentTier <= 3
     return {
       changed,
       profileKey: this.profileKey,
       currentTier: this.currentTier,
       bitrate: this.profile.isAdaptive ? tier.bitrate : this.profile.maxBitrate,
-      // Preserve FEC for every explicit user profile. Adaptive sessions can
-      // disable it only after a sustained recovery to the high-quality tiers.
-      fec: this.profileKey !== 'adaptive' || isResilient,
+      // In-band FEC stays negotiated for every profile and tier: on a LAN the
+      // extra ~20-30% payload is cheap insurance against audible dropouts.
+      fec: true,
       stereo: this.currentTier > 1,
       ptime: isLowLatency ? 10 : 20,
       dtx: false,

@@ -1128,3 +1128,96 @@ a:focus-visible {
   color: var(--color-danger);
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
+
+/* ==========================================================================
+   CONTROL CENTER (Web Console)
+   ========================================================================== */
+
+.control-metrics {
+  margin: 16px 0;
+}
+
+.control-metric-value {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.control-actions .btn {
+  flex: 1 1 auto;
+  min-width: 130px;
+}
+
+.control-inline-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 8px;
+}
+
+.control-port-input {
+  max-width: 180px;
+  text-align: center;
+}
+
+.control-free-btn {
+  margin-top: 8px;
+}
+
+.control-network-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-network-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+}
+
+.control-network-item strong {
+  color: var(--text-main);
+}
+
+.control-network-item span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.control-network-item code {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  word-break: break-all;
+}
+
+.control-device-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.control-device-list li {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 0.9rem;
+}

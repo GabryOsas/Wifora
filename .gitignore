@@ -12,6 +12,9 @@ $RECYCLE.BIN/
 .env.local
 .env.*.local
 
+# Local runtime config (chosen port, persisted by CLI/Web console)
+wifora.config.json
+
 # Logs
 *.log
 npm-debug.log*

@@ -30,6 +30,7 @@
   "scripts": {
     "start": "node server.mjs",
     "menu": "node cli-menu.mjs",
+    "console": "node control-center.mjs --wifora-control --open",
     "test": "node --test test/*.test.mjs",
     "test:watch": "node --test --watch test/*.test.mjs",
     "lint": "eslint .",

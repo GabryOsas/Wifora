@@ -1,11 +1,20 @@
-import { spawn } from 'node:child_process'
 import { networkInterfaces } from 'node:os'
-import { createServer } from 'node:net'
 import readline from 'node:readline'
+import {
+  checkPortFree,
+  killPortProcess,
+  killMarkedProcesses,
+  spawnManagedServer,
+  stopManagedChild,
+  openInBrowser as openBrowser,
+} from './src/server/process-utils.mjs'
+import { loadRuntimeConfig, saveRuntimeConfig } from './src/shared/runtime-config.mjs'
 
-const isWindows = process.platform === 'win32'
-let currentPort = Number(process.env.PORT || 3975)
-let activeServerProcess = null
+const CONTROL_PORT = Number(process.env.WIFORA_CONTROL_PORT) > 0 ? Number(process.env.WIFORA_CONTROL_PORT) : 3976
+const DAEMON_URL = `http://127.0.0.1:${CONTROL_PORT}`
+let currentPort = Number(process.env.PORT) > 0 ? Number(process.env.PORT) : 3975
+let activeServerProcess = null // only used in direct-manage fallback mode
+let serverRunning = false
 
 // ANSI Color Codes & Styles
 const c = {
@@ -59,37 +68,6 @@ function getLanAddresses() {
   return [...preferred, ...fallback]
 }
 
-function checkPortFree(port) {
-  return new Promise((resolve) => {
-    const tester = createServer()
-      .once('error', () => resolve(false))
-      .once('listening', () => {
-        tester.close(() => resolve(true))
-      })
-      .listen(port, '0.0.0.0')
-  })
-}
-
-function killPortProcess(port) {
-  return new Promise((resolve) => {
-    if (!isWindows) return resolve(false)
-    const cmd = `Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }`
-    const proc = spawn('powershell', ['-NoProfile', '-Command', cmd], { stdio: 'ignore' })
-    proc.on('close', () => resolve(true))
-    proc.on('error', () => resolve(false))
-  })
-}
-
-function openBrowser(url) {
-  if (isWindows) {
-    spawn('cmd.exe', ['/c', 'start', '', url], { stdio: 'ignore', detached: true }).unref()
-  } else if (process.platform === 'darwin') {
-    spawn('open', [url], { stdio: 'ignore', detached: true }).unref()
-  } else {
-    spawn('xdg-open', [url], { stdio: 'ignore', detached: true }).unref()
-  }
-}
-
 function printBanner() {
   const banner = [
     '   ██╗    ██╗██╗███████╗ ██████╗ ██████╗  █████╗ ',
@@ -105,14 +83,82 @@ function printBanner() {
   console.log(`${c.reset}${c.dim}      PC Audio Streamer for iPhone & Mobile${c.reset}\n`)
 }
 
+// ---------------------------------------------------------------------------
+// Daemon client: the Web Control Center is the SINGLE owner of the streaming
+// server. The CLI never spawns it directly anymore, so starting/stopping from
+// the terminal or from the browser always acts on the same process.
+// ---------------------------------------------------------------------------
+async function daemonUp() {
+  try {
+    const res = await fetch(`${DAEMON_URL}/api/status`, { signal: AbortSignal.timeout(700) })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function ensureDaemon() {
+  if (await daemonUp()) return true
+  console.log(`${c.dim}Starting the Wifora service manager...${c.reset}`)
+  try {
+    const { spawn } = await import('node:child_process')
+    const child = spawn(process.execPath, ['control-center.mjs', '--wifora-control'], {
+      env: { ...process.env, WIFORA_CONTROL_PORT: String(CONTROL_PORT) },
+      stdio: 'ignore',
+      detached: true,
+      windowsHide: true,
+    })
+    child.unref()
+  } catch {}
+  for (let i = 0; i < 24; i++) {
+    await new Promise((r) => setTimeout(r, 250))
+    if (await daemonUp()) return true
+  }
+  return false
+}
+
+async function apiGet(path) {
+  const res = await fetch(`${DAEMON_URL}${path}`, { signal: AbortSignal.timeout(1500) })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
+}
+
+async function apiPost(path, body = {}) {
+  const res = await fetch(`${DAEMON_URL}${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  })
+  const data = await res.json().catch(() => ({}))
+  return { status: res.status, data }
+}
+
+/** Refreshes the shared "serverRunning" state from the daemon's view. */
+async function refreshRunningState() {
+  if (!(await daemonUp())) return
+  try {
+    const status = await apiGet('/api/status')
+    serverRunning = Boolean(status.running)
+    if (Number(status.configuredPort) > 0 && status.configuredPort !== currentPort && !process.env.PORT) {
+      currentPort = Number(status.configuredPort)
+    }
+  } catch {}
+}
+
 // Interactive Arrow-Key Menu
 async function showMenu() {
   const menuItems = [
-    { id: 'start', label: 'Start Wifora Server', icon: '▶' },
+    {
+      id: 'start',
+      label: serverRunning ? `Restart Wifora Server (running on port ${currentPort})` : 'Start Wifora Server',
+      icon: '▶',
+    },
+    { id: 'console', label: 'Open Web Control Center (browser)', icon: '🖥' },
     { id: 'port', label: `Change Port (Current: ${currentPort})`, icon: '⚙' },
     { id: 'net', label: 'View Network Adapters & IP Addresses', icon: '📶' },
-    { id: 'kill', label: 'Free Port & Stop Leftover Processes', icon: '🛑' },
-    { id: 'exit', label: 'Exit Program', icon: '✖' },
+    { id: 'kill', label: `Stop Server & Free Port ${currentPort}`, icon: '🛑' },
+    { id: 'exit', label: serverRunning ? 'Exit Program (stops the server)' : 'Exit Program', icon: '✖' },
   ]
 
   let selectedIndex = 0
@@ -133,7 +179,10 @@ async function showMenu() {
       })
 
       console.log(`\n${c.dim}───────────────────────────────────────────────────${c.reset}`)
-      console.log(`${c.dim}Configured port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`)
+      const status = serverRunning
+        ? `${c.brightGreen}● RUNNING on port ${currentPort}${c.dim}`
+        : `${c.dim}○ STOPPED`
+      console.log(`${c.dim}Server status: ${status} | Port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`)
     }
 
     render()
@@ -178,11 +227,17 @@ async function promptChangePort() {
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise((resolve) => {
-    rl.question(`\nNew port [${currentPort}]: `, (input) => {
+    rl.question(`\nNew port [${currentPort}]: `, async (input) => {
       rl.close()
       const parsed = parseInt(input.trim(), 10)
       if (!isNaN(parsed) && parsed >= 1024 && parsed <= 65535) {
         currentPort = parsed
+        // Persist so the Web Control Center uses the same port.
+        await saveRuntimeConfig({ port: currentPort })
+        // If a server is running, move it to the new port through the daemon.
+        if (serverRunning && (await daemonUp())) {
+          await apiPost('/api/port', { port: currentPort })
+        }
         console.log(`\n${c.brightGreen}✔ Port updated to ${currentPort}!${c.reset}`)
       } else if (input.trim() !== '') {
         console.log(`\n${c.red}✖ Invalid value. Keeping ${currentPort}.${c.reset}`)
@@ -220,34 +275,58 @@ async function showNetworkInfo() {
   })
 }
 
-// Kill Port Action
+// Stop Server & Free Port Action
 async function handleKillPort() {
   clearScreen()
   printBanner()
-  console.log(`${c.bold}${c.yellow}FREEING PORT ${currentPort}${c.reset}\n`)
-  console.log(`Checking for and stopping active processes...`)
-  await killPortProcess(currentPort)
-  console.log(`\n${c.brightGreen}✔ Port ${currentPort} freed successfully!${c.reset}`)
-  await new Promise((r) => setTimeout(r, 1500))
+  console.log(`${c.bold}${c.yellow}STOP SERVER & FREE PORT ${currentPort}${c.reset}\n`)
+  console.log(`Stopping active processes and releasing the port...`)
+  const freed = await stopServer()
+  if (freed) {
+    console.log(`\n${c.brightGreen}✔ Verified: port ${currentPort} is now free.${c.reset}`)
+  } else {
+    console.log(
+      `\n${c.red}✖ Port ${currentPort} is still busy. Run this option again or reboot the terminal.${c.reset}`
+    )
+  }
+  await new Promise((r) => setTimeout(r, 1800))
 }
 
-// Start Server & Run Live Interactive Dashboard
+// Start Server & Run Live Interactive Dashboard.
+// The server itself belongs to the Control Center daemon; this view talks to
+// its API and mirrors logs/stats, so terminal and browser can never fight.
 async function startServerLive() {
   clearScreen()
   printBanner()
 
-  // 1. Check if port is free
-  const isFree = await checkPortFree(currentPort)
-  if (!isFree) {
-    console.log(`${c.yellow}⚠ Port ${currentPort} is already in use by another process.${c.reset}`)
-    console.log(`Stopping the previous process...`)
-    await killPortProcess(currentPort)
-    await new Promise((r) => setTimeout(r, 800))
+  const daemonReady = await ensureDaemon()
+  if (!daemonReady) {
+    console.log(`${c.yellow}⚠ Service manager unreachable on port ${CONTROL_PORT}.${c.reset}`)
+    console.log(`${c.dim}Falling back to direct local management.${c.reset}\n`)
+    return startServerDirect()
   }
 
-  const lanAddrs = getLanAddresses()
-  const lanIp = lanAddrs[0]?.ip || 'IP-DEL-PC'
+  let startResult
+  try {
+    startResult = await apiPost('/api/server/start', { port: currentPort })
+  } catch (err) {
+    console.log(`${c.red}✖ Could not reach the service manager (${err.message}).${c.reset}`)
+    await new Promise((r) => setTimeout(r, 1600))
+    return 'menu'
+  }
 
+  if (startResult.status === 409 || startResult.data?.error === 'already-running') {
+    console.log(`${c.yellow}⚠ Server already running (started from the Web Console).${c.reset}`)
+    console.log(`${c.dim}Attaching this dashboard to the running server...${c.reset}`)
+  } else if (!startResult.data?.ok) {
+    console.log(`${c.red}✖ Failed to start the server: ${startResult.data?.error || 'unknown error'}${c.reset}`)
+    if (startResult.data?.details) console.log(`${c.dim}${startResult.data.details}${c.reset}`)
+    await new Promise((r) => setTimeout(r, 2200))
+    return 'menu'
+  }
+  serverRunning = true
+
+  const lanIp = getLanAddresses()[0]?.ip || 'IP-DEL-PC'
   const hostUrl = `http://localhost:${currentPort}/host.html`
   const listenUrl = `http://${lanIp}:${currentPort}/listen.html`
 
@@ -258,33 +337,42 @@ async function startServerLive() {
   console.log(`│ 🖥️  ${c.bold}Browser PC (Host):${c.reset}     ${c.brightCyan}${hostUrl.padEnd(31)}${c.reset}│`)
   console.log(`│ 📱 ${c.bold}iPhone / Mobile:${c.reset}       ${c.brightGreen}${listenUrl.padEnd(31)}${c.reset}│`)
   console.log(`└─────────────────────────────────────────────────────────────┘\n`)
-
-  console.log(`${c.dim}Opening the browser on the PC...${c.reset}`)
-  openBrowser(hostUrl)
-
-  // Spawn node server
-  const child = spawn(process.execPath, ['server.mjs'], {
-    env: { ...process.env, PORT: String(currentPort) },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  })
-
-  activeServerProcess = child
-
-  child.stdout.on('data', (d) => {
-    process.stdout.write(d.toString())
-  })
-
-  child.stderr.on('data', (d) => {
-    const err = d.toString()
-    if (!err.includes('EADDRINUSE')) {
-      process.stderr.write(`${c.red}${err}${c.reset}`)
-    }
-  })
+  console.log(`${c.dim}(The server runs under the Control Center service - terminal and web stay in sync.)${c.reset}`)
 
   console.log(`\n${c.bold}Keyboard shortcuts:${c.reset}`)
   console.log(`  ${c.brightCyan}[B]${c.reset} Reopen browser on the PC`)
+  console.log(`  ${c.brightCyan}[C]${c.reset} Open Web Control Center`)
   console.log(`  ${c.yellow}[S]${c.reset} Stop server and return to menu`)
   console.log(`  ${c.red}[Q]${c.reset} Stop everything and exit\n`)
+
+  // Skip historical log backlog, then stream incrementally.
+  let logCursor = 0
+  try {
+    logCursor = (await apiGet('/api/logs')).cursor
+  } catch {}
+
+  let lastListeners = null
+  const pumpTimer = setInterval(async () => {
+    if (!serverRunning) return
+    try {
+      const logs = await apiGet(`/api/logs?since=${logCursor}`)
+      for (const line of logs.lines || []) {
+        process.stdout.write(`${c.dim}${line}${c.reset}\n`)
+      }
+      logCursor = logs.cursor
+      const stats = await fetch(`http://127.0.0.1:${currentPort}/api/stats`, { signal: AbortSignal.timeout(900) })
+      if (stats.ok) {
+        const data = await stats.json()
+        if (data.totalListeners !== lastListeners) {
+          lastListeners = data.totalListeners
+          const names = (data.rooms || []).flatMap((r) => r.listenerNames || [])
+          const label = names.length ? ` (${names.slice(0, 5).join(', ')})` : ''
+          process.stdout.write(`${c.dim}👥 Connected listeners: ${data.totalListeners}${label}${c.reset}\n`)
+        }
+      }
+    } catch {}
+  }, 1200)
+  pumpTimer.unref?.()
 
   return new Promise((resolve) => {
     readline.emitKeypressEvents(process.stdin)
@@ -295,13 +383,18 @@ async function startServerLive() {
       if (key.name === 'b') {
         openBrowser(hostUrl)
         console.log(`${c.dim}Browser reopened.${c.reset}`)
+      } else if (key.name === 'c') {
+        openBrowser(`http://localhost:${CONTROL_PORT}`)
+        console.log(`${c.dim}Web Control Center opened in your browser.${c.reset}`)
       } else if (key.name === 's') {
         cleanup()
+        clearInterval(pumpTimer)
         console.log(`\n${c.yellow}Stopping the server...${c.reset}`)
         await stopServer()
         resolve('menu')
       } else if (key.name === 'q' || (key.ctrl && key.name === 'c')) {
         cleanup()
+        clearInterval(pumpTimer)
         console.log(`\n${c.red}Shutting down the server...${c.reset}`)
         await stopServer()
         resolve('exit')
@@ -314,34 +407,121 @@ async function startServerLive() {
     }
 
     process.stdin.on('keypress', onKey)
-
-    child.on('close', () => {
-      cleanup()
-      resolve('menu')
-    })
   })
 }
 
-async function stopServer() {
-  const child = activeServerProcess
-  activeServerProcess = null
+// Direct-management fallback used only when the daemon cannot run at all.
+async function startServerDirect() {
+  const isFree = await checkPortFree(currentPort)
+  if (!isFree) {
+    console.log(`${c.yellow}⚠ Port ${currentPort} is already in use by another process.${c.reset}`)
+    console.log(`Stopping the previous process...`)
+    await stopServerLocal()
+    await new Promise((r) => setTimeout(r, 500))
+  }
 
-  if (child) {
+  activeServerProcess = spawnManagedServer(currentPort)
+  serverRunning = true
+  activeServerProcess.stdout.on('data', (d) => process.stdout.write(d.toString()))
+  activeServerProcess.stderr.on('data', (d) => {
+    if (!d.toString().includes('EADDRINUSE')) process.stderr.write(`${c.red}${d.toString()}${c.reset}`)
+  })
+
+  console.log(`\n${c.yellow}[Direct mode] Press [S] to stop and return to the menu.${c.reset}`)
+  return new Promise((resolve) => {
+    readline.emitKeypressEvents(process.stdin)
+    if (process.stdin.isTTY) process.stdin.setRawMode(true)
+
+    function onKey(str, key) {
+      if (!key) return
+      if (key.name === 's' || key.name === 'q' || (key.ctrl && key.name === 'c')) {
+        cleanup()
+        resolve(key.name === 's' ? 'menu' : 'exit')
+      }
+    }
+    function cleanup() {
+      process.stdin.removeListener('keypress', onKey)
+      if (process.stdin.isTTY) process.stdin.setRawMode(false)
+    }
+    process.stdin.on('keypress', onKey)
+    activeServerProcess.on('close', () => {
+      activeServerProcess = null
+      serverRunning = false
+      cleanup()
+      resolve('menu')
+    })
+  }).then(async (result) => {
+    await stopServerLocal()
+    return result
+  })
+}
+
+/**
+ * Stops the streaming server ONCE, no matter which front-end started it:
+ * goes through the daemon when available (single owner), otherwise falls
+ * back to local sweep. Verifies the port is actually free afterwards.
+ */
+async function stopServer() {
+  if (await ensureDaemon()) {
     try {
-      if (isWindows && child.pid) {
-        spawn('taskkill', ['/F', '/T', '/PID', String(child.pid)], { stdio: 'ignore' })
-      } else {
-        child.kill('SIGKILL')
+      const res = await apiPost('/api/server/stop')
+      serverRunning = false
+      if (typeof res.data?.portFree === 'boolean') {
+        await new Promise((r) => setTimeout(r, 200))
+        return res.data.portFree ? await checkPortFree(currentPort) : false
       }
     } catch {}
   }
+  return stopServerLocal()
+}
 
+// Legacy local path (daemon unavailable): graceful IPC -> hard kill -> sweep.
+async function stopServerLocal() {
+  const child = activeServerProcess
+  activeServerProcess = null
+  serverRunning = false
+
+  await stopManagedChild(child)
+  await killMarkedProcesses(['wifora-managed'])
   await killPortProcess(currentPort)
   await new Promise((r) => setTimeout(r, 300))
+
+  let freed = await checkPortFree(currentPort)
+  if (!freed) {
+    await killMarkedProcesses(['wifora-managed'])
+    await killPortProcess(currentPort)
+    await new Promise((r) => setTimeout(r, 600))
+    freed = await checkPortFree(currentPort)
+  }
+  return freed
+}
+
+// Opens (or reuses) the local Web Control Center and navigates the browser to it.
+async function handleOpenConsole() {
+  clearScreen()
+  printBanner()
+  console.log(`${c.bold}${c.brightCyan}WEB CONTROL CENTER${c.reset}\n`)
+
+  const ok = await ensureDaemon()
+  if (!ok) {
+    console.log(`${c.red}✖ Could not start the Web Control Center on port ${CONTROL_PORT}.${c.reset}`)
+    await new Promise((r) => setTimeout(r, 1800))
+    return
+  }
+
+  console.log(`${c.brightGreen}✔ Opening ${c.bold}http://localhost:${CONTROL_PORT}${c.brightGreen} in your browser...${c.reset}`)
+  openBrowser(`http://localhost:${CONTROL_PORT}`)
+  await new Promise((r) => setTimeout(r, 1200))
 }
 
 // Main CLI Loop
 async function main() {
+  // Adopt the persisted port unless explicitly overridden by the environment.
+  if (!process.env.PORT) {
+    const config = await loadRuntimeConfig()
+    currentPort = config.port
+  }
+
   process.on('SIGINT', async () => {
     await stopServer()
     process.exit(0)
@@ -354,10 +534,13 @@ async function main() {
 
   let running = true
   while (running) {
+    await refreshRunningState()
     const action = await showMenu()
     if (action === 'start') {
       const next = await startServerLive()
       if (next === 'exit') running = false
+    } else if (action === 'console') {
+      await handleOpenConsole()
     } else if (action === 'port') {
       await promptChangePort()
     } else if (action === 'net') {

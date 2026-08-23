@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wifora | Control Center</title>
+    <link rel="icon" type="image/png" href="/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <!-- Screen reader live announcer -->
+    <div id="a11yAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <div class="container">
+      <!-- Header -->
+      <header class="topbar" role="banner">
+        <a href="/" class="brand" aria-label="Wifora Control Center">
+          <img src="/wifora-logo.png" width="30" height="30" alt="Logo Wifora" />
+          <span>Wifora</span>
+        </a>
+        <div class="topbar-actions">
+          <div class="lang-selector-box">
+            <label for="langSelect" class="sr-only" data-i18n="langSelect">Lingua</label>
+            <select id="langSelect" class="lang-select" aria-label="Language Selector">
+              <option value="it">🇮🇹 IT</option>
+              <option value="en">🇬🇧 EN</option>
+            </select>
+          </div>
+
+          <button
+            id="themeToggleBtn"
+            class="theme-btn"
+            type="button"
+            aria-label="Toggle theme"
+            title="Toggle dark/light theme"
+            data-i18n-title="themeToggle"
+          >
+            <svg
+              id="sunIcon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            </svg>
+            <svg
+              id="moonIcon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              hidden
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="vertical-stack vertical-stack--dashboard" aria-labelledby="controlHeading">
+        <!-- Server Status Card -->
+        <section class="card" aria-labelledby="controlHeading">
+          <div class="card-title-row">
+            <div>
+              <h1 id="controlHeading" class="card-title" data-i18n="controlTitle">Control Center</h1>
+              <p class="card-subtitle" data-i18n="controlSubtitle">
+                Gestisci il server Wifora dal browser, senza terminale.
+              </p>
+            </div>
+            <span id="statusPill" class="status-pill status-disconnected" data-i18n="controlStatusStopped">
+              Fermo
+            </span>
+          </div>
+
+          <div id="statusBanner" class="status-banner" role="status" aria-live="polite" hidden>
+            <span id="statusBannerText"></span>
+          </div>
+
+          <dl class="steps-grid control-metrics">
+            <div class="step-card">
+              <span class="step-num" data-i18n="controlMetricPort">Porta</span>
+              <strong id="metricPort" class="control-metric-value">—</strong>
+            </div>
+            <div class="step-card">
+              <span class="step-num" data-i18n="controlMetricUptime">Uptime</span>
+              <strong id="metricUptime" class="control-metric-value">—</strong>
+            </div>
+            <div class="step-card">
+              <span class="step-num" data-i18n="controlMetricListeners">Ascoltatori</span>
+              <strong id="metricListeners" class="control-metric-value">—</strong>
+            </div>
+          </dl>
+
+          <ul id="deviceList" class="control-device-list" hidden></ul>
+
+          <div class="control-actions">
+            <button id="startBtn" class="btn btn-primary" type="button" data-i18n="controlStartBtn">
+              Avvia Server
+            </button>
+            <button id="stopBtn" class="btn btn-danger" type="button" disabled data-i18n="controlStopBtn">
+              Ferma Server
+            </button>
+            <button id="restartBtn" class="btn btn-secondary" type="button" disabled data-i18n="controlRestartBtn">
+              Riavvia
+            </button>
+            <a
+              id="openHostLink"
+              class="btn btn-secondary"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              hidden
+              data-i18n="controlOpenHost"
+            >
+              Apri Pagina Host
+            </a>
+          </div>
+        </section>
+
+        <!-- Phone Connection Card -->
+        <section class="card" aria-labelledby="qrTitle">
+          <h2 id="qrTitle" class="card-title" data-i18n="controlQrTitle">Collega il Telefono</h2>
+          <p class="card-subtitle" data-i18n="controlQrDesc">
+            Inquadra il QR con il telefono (stessa rete Wi-Fi) oppure copia il link.
+          </p>
+          <div class="qr-code-box" style="text-align: center">
+            <img
+              id="qrImage"
+              alt="QR Code per ascoltare dal telefono"
+              width="200"
+              height="200"
+              style="border-radius: var(--radius-md); background: #fff; padding: 6px"
+            />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="listenUrl" data-i18n="controlListenUrlLabel">Link di ascolto</label>
+            <input id="listenUrl" class="code-input-large" type="text" readonly spellcheck="false" />
+          </div>
+          <button id="copyUrlBtn" class="btn btn-secondary btn-full btn-sm" type="button" data-i18n="copyBtn">
+            Copia
+          </button>
+        </section>
+
+        <!-- Port Configuration Card -->
+        <section class="card" aria-labelledby="portTitle">
+          <h2 id="portTitle" class="card-title" data-i18n="controlPortTitle">Configurazione Porta</h2>
+          <p class="card-subtitle" data-i18n="controlPortDesc">
+            Se il server è attivo verrà riavviato automaticamente sulla nuova porta.
+          </p>
+          <div class="control-inline-row">
+            <input
+              id="portInput"
+              class="code-input-large control-port-input"
+              type="number"
+              min="1024"
+              max="65535"
+              inputmode="numeric"
+            />
+            <button id="savePortBtn" class="btn btn-primary" type="button" data-i18n="controlSavePort">
+              Salva
+            </button>
+          </div>
+          <button id="freePortBtn" class="btn btn-secondary btn-full btn-sm control-free-btn" type="button" data-i18n="controlFreePort">
+            Libera Porta & Ferma Processi
+          </button>
+        </section>
+
+        <!-- Network Adapters Card -->
+        <section class="card" aria-labelledby="netTitle">
+          <h2 id="netTitle" class="card-title" data-i18n="controlNetworkTitle">Schede di Rete</h2>
+          <p id="networkList" class="control-network-list"></p>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/control.js"></script>
+  </body>
+</html>

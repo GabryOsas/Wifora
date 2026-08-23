@@ -201,4 +201,10 @@ if (isDirectExecution) {
 
   process.on('SIGTERM', gracefulShutdown)
   process.on('SIGINT', gracefulShutdown)
+
+  // IPC channel from the CLI command center: triggers the same graceful
+  // shutdown (mDNS down, "server-shutdown" broadcast, peers torn down).
+  process.on('message', (msg) => {
+    if (msg && msg.type === 'wifora:shutdown') gracefulShutdown()
+  })
 }

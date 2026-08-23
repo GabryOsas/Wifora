@@ -19,6 +19,7 @@ export const contentTypes = {
   '.js': 'text/javascript; charset=utf-8',
   '.png': 'image/png',
   '.json': 'application/json; charset=utf-8',
-  '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
 }

@@ -38,6 +38,12 @@ export default [
         webkitAudioContext: 'readonly',
         MediaStream: 'readonly',
         fetch: 'readonly',
+        AbortSignal: 'readonly',
+        AudioWorkletNode: 'readonly',
+        MediaRecorder: 'readonly',
+        MediaMetadata: 'readonly',
+        Blob: 'readonly',
+        MediaStreamTrackProcessor: 'readonly',
       },
     },
     rules: {
@@ -45,6 +51,18 @@ export default [
       'no-undef': 'error',
       'no-constant-condition': 'warn',
       'no-empty': ['warn', { allowEmptyCatch: true }],
+    },
+  },
+  {
+    files: ['public/wifora-sw.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        clients: 'readonly',
+      },
     },
   },
 ]

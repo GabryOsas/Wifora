@@ -113,7 +113,7 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 The static file server normalizes requested paths, strips leading slashes, and verifies that the resolved file path strictly resides within the `public/` directory:
 
 - Rejects requests containing `..` or `%2e%2e` with `403 Forbidden`.
-- Restricts served MIME types to a strict whitelist (`.html`, `.js`, `.css`, `.png`, `.json`, `.svg`, `.ico`).
+- Restricts served MIME types to a strict whitelist (`.html`, `.js`, `.css`, `.png`, `.json`, `.webmanifest`, `.svg`, `.ico`).
 
 ---
 

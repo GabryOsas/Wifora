@@ -21,6 +21,7 @@ const homeStatusBanner = document.querySelector('#homeStatusBanner')
 const homeStatusText = document.querySelector('#homeStatusText')
 
 const stopBroadcastBtn = document.querySelector('#stopBroadcastBtn')
+const recordBroadcastBtn = document.querySelector('#recordBroadcastBtn')
 const qrImage = document.querySelector('#qrImage')
 const roomCodeText = document.querySelector('#roomCodeText')
 const lanUrlDisplay = document.querySelector('#lanUrlDisplay')
@@ -67,6 +68,8 @@ let startNativeAfterRegistration = false
 let nativeAudioReconnectTimer = null
 let nativeAudioReconnectAttempts = 0
 let signalReconnectTimer = null
+const SIGNAL_RECONNECT_MAX_ATTEMPTS = 6
+let signalReconnectAttempts = 0
 
 let roomId = ''
 let hostKey = ''
@@ -74,8 +77,12 @@ let listenerToken = ''
 let listenerUrl = ''
 let telemetryTimer = null
 let stoppedByUser = false
+let stoppedByServer = false
 let isMuted = false
 let currentVol = 1
+let didReuseHostSession = false
+let mediaRecorder = null
+let recordedChunks = []
 
 // --- Theme Management ---
 function initTheme() {
@@ -128,6 +135,39 @@ function generateListenerToken() {
     .replaceAll('+', '-')
     .replaceAll('/', '_')
     .replaceAll('=', '')
+}
+
+// --- Room persistence across accidental host page reloads ---
+const HOST_SESSION_KEY = 'wifora_host_session'
+const HOST_SESSION_TTL_MS = 12 * 60 * 60 * 1000
+
+function loadHostSession() {
+  try {
+    const session = JSON.parse(sessionStorage.getItem(HOST_SESSION_KEY) || 'null')
+    if (!session || typeof session !== 'object') return null
+    if (Date.now() - Number(session.createdAt || 0) > HOST_SESSION_TTL_MS) return null
+    if (!/^[A-Z0-9]{8}$/.test(session.roomId || '')) return null
+    if (!/^[A-Za-z0-9_-]{43}$/.test(session.hostKey || '')) return null
+    if (!/^[A-Za-z0-9_-]{22}$/.test(session.listenerToken || '')) return null
+    return session
+  } catch (err) {
+    logger.debug('Host session restore skipped:', err)
+    return null
+  }
+}
+
+function saveHostSession() {
+  try {
+    sessionStorage.setItem(HOST_SESSION_KEY, JSON.stringify({ roomId, hostKey, listenerToken, createdAt: Date.now() }))
+  } catch (err) {
+    logger.debug('Host session persist failed:', err)
+  }
+}
+
+function clearHostSession() {
+  try {
+    sessionStorage.removeItem(HOST_SESSION_KEY)
+  } catch {}
 }
 
 function setHomeStatus(msg, type = '') {
@@ -306,6 +346,84 @@ muteBtn.addEventListener('click', () => {
   muteBtn.setAttribute('aria-pressed', String(isMuted))
   applyVolume()
   updateSubsystemsStatus()
+})
+
+// --- Broadcast Recording (host-side, pre-transmission tap) ---
+function pickRecordingMimeType() {
+  if (typeof MediaRecorder === 'undefined') return null
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || null
+}
+
+function updateRecordButton() {
+  if (!recordBroadcastBtn) return
+  const recording = mediaRecorder && mediaRecorder.state === 'recording'
+  recordBroadcastBtn.textContent = recording ? t('recordActiveBtn') : t('recordBtn')
+  recordBroadcastBtn.setAttribute('aria-pressed', String(recording))
+  recordBroadcastBtn.classList.toggle('btn-danger', recording)
+}
+
+function saveRecording() {
+  const mimeType = mediaRecorder?.mimeType || 'audio/webm'
+  const blob = new Blob(recordedChunks, { type: mimeType })
+  recordedChunks = []
+  mediaRecorder = null
+  updateRecordButton()
+  if (blob.size === 0) return
+  const extension = mimeType.includes('mp4') ? 'm4a' : 'webm'
+  const stamp = new Date().toISOString().slice(0, 19).replaceAll(':', '-')
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `wifora-${roomId || 'session'}-${stamp}.${extension}`
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 5_000)
+  showToast(t('toastRecordSaved'))
+}
+
+function startRecording() {
+  if (!outputStream || outputStream.getAudioTracks().length === 0) return
+  const mimeType = pickRecordingMimeType()
+  if (!mimeType) {
+    showToast(t('toastRecordUnsupported'))
+    return
+  }
+  try {
+    recordedChunks = []
+    mediaRecorder = new MediaRecorder(outputStream, { mimeType })
+    mediaRecorder.addEventListener('dataavailable', (event) => {
+      if (event.data && event.data.size > 0) recordedChunks.push(event.data)
+    })
+    mediaRecorder.addEventListener('stop', saveRecording)
+    mediaRecorder.start(1_000)
+    logger.info(`Broadcast recording started (${mimeType})`)
+  } catch (err) {
+    logger.warn('Recording failed to start:', err?.message || err)
+    mediaRecorder = null
+    recordedChunks = []
+    showToast(t('toastRecordUnsupported'))
+  }
+  updateRecordButton()
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop()
+  } else {
+    mediaRecorder = null
+    recordedChunks = []
+  }
+  updateRecordButton()
+}
+
+recordBroadcastBtn?.addEventListener('click', () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecording()
+  } else {
+    startRecording()
+  }
 })
 
 // --- WebRTC & Subsystem Diagnostics & Status Indicators ---
@@ -676,6 +794,7 @@ function connectSignal() {
   ws.addEventListener('open', () => {
     clearTimeout(signalReconnectTimer)
     signalReconnectTimer = null
+    signalReconnectAttempts = 0
     logger.info(`Host signaling connected, registering room [${roomId}]`)
     signal({ type: 'register', role: 'host', roomId, hostKey, listenerToken })
   })
@@ -689,9 +808,24 @@ function connectSignal() {
       return
     }
 
+    if (msg.type === 'server-shutdown') {
+      logger.warn('Server is shutting down; tearing down the broadcast')
+      stoppedByServer = true
+      stopTransmission()
+      return
+    }
+
     if (msg.type === 'error') {
       logger.error(`Signaling error received: ${msg.message}`)
       showToast(msg.message)
+      // A restored session whose credentials were rejected must not poison
+      // the next start: drop it so a fresh room is generated.
+      if (didReuseHostSession) {
+        clearHostSession()
+        didReuseHostSession = false
+        setHomeStatus(t('statusError', { msg: msg.message }), 'error')
+        stopTransmission()
+      }
       return
     }
 
@@ -832,9 +966,25 @@ function connectSignal() {
     }
   })
 
-  ws.addEventListener('close', () => {
+  ws.addEventListener('close', (event) => {
     if (socket !== ws || stoppedByUser) return
     socket = null
+    // Code 4001 = the server process is gone: do not reconnect, tear down
+    // every peer so audio to listeners stops immediately.
+    if (event.code === 4001) {
+      stoppedByServer = true
+      stopTransmission()
+      return
+    }
+    // Transient drop: retry a few times, then treat the server as dead and
+    // fully tear down instead of streaming P2P forever without signaling.
+    signalReconnectAttempts += 1
+    if (signalReconnectAttempts >= SIGNAL_RECONNECT_MAX_ATTEMPTS) {
+      logger.warn('Signaling unreachable after repeated attempts; stopping broadcast')
+      stoppedByServer = true
+      stopTransmission()
+      return
+    }
     scheduleSignalReconnect()
   })
 }
@@ -1082,6 +1232,7 @@ async function startTransmission() {
 
   try {
     stoppedByUser = false
+    stoppedByServer = false
     setHomeStatus(t('statusSelectPrompt'))
 
     const capture = await navigator.mediaDevices.getDisplayMedia({
@@ -1138,6 +1289,7 @@ async function startTransmission() {
 async function startNativeTransmission() {
   try {
     stoppedByUser = false
+    stoppedByServer = false
     setHomeStatus('Avvio della cattura WASAPI nativa…')
     await activateBroadcast(await initNativeAudio(), { native: true })
   } catch (err) {
@@ -1149,9 +1301,12 @@ async function startNativeTransmission() {
 
 async function activateBroadcast(stream, { native = false } = {}) {
   outputStream = stream
-  roomId = randomCode(8)
-  hostKey = generateKey()
-  listenerToken = generateListenerToken()
+  const previous = loadHostSession()
+  didReuseHostSession = Boolean(previous)
+  roomId = previous?.roomId || randomCode(8)
+  hostKey = previous?.hostKey || generateKey()
+  listenerToken = previous?.listenerToken || generateListenerToken()
+  saveHostSession()
   listenerUrl = await fetchLanUrl()
 
   logger.info(`Broadcast initialized: Room [${roomId}]${native ? ' (native WASAPI)' : ''}`)
@@ -1160,6 +1315,10 @@ async function activateBroadcast(stream, { native = false } = {}) {
   qrImage.src = `/qr?text=${encodeURIComponent(listenerUrl)}`
   homeSection.hidden = true
   activeDashboardSection.hidden = false
+  if (recordBroadcastBtn) {
+    recordBroadcastBtn.hidden = typeof MediaRecorder === 'undefined'
+    updateRecordButton()
+  }
   setHomeStatus('')
 
   startNativeAfterRegistration = native
@@ -1170,12 +1329,16 @@ async function activateBroadcast(stream, { native = false } = {}) {
 }
 
 function stopTransmission() {
-  logger.info('Stopping broadcast...')
+  logger.info(stoppedByServer ? 'Stopping broadcast (server shut down)...' : 'Stopping broadcast...')
+  stoppedByServer = false
   stoppedByUser = true
   clearInterval(telemetryTimer)
   clearTimeout(signalReconnectTimer)
   signalReconnectTimer = null
+  signalReconnectAttempts = 0
   cancelAnimationFrame(animFrameId)
+  stopRecording()
+  if (recordBroadcastBtn) recordBroadcastBtn.hidden = true
 
   if (socket?.readyState === WebSocket.OPEN) {
     signal({ type: 'stop-stream' })
@@ -1274,3 +1437,6 @@ async function checkMobileAdvisory() {
 initTheme()
 initI18n()
 checkMobileAdvisory()
+if ('serviceWorker' in navigator && ['https:', 'http:'].includes(location.protocol)) {
+  navigator.serviceWorker.register('/wifora-sw.js').catch((err) => logger.debug('SW registration skipped:', err))
+}

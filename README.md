@@ -31,9 +31,11 @@
 - **ANAE Adaptive Quality Engine**: Real-time telemetry monitoring (RTT, jitter, differential packet loss) with anti-flapping hysteresis automatically adjusts bitrate across dynamic quality tiers (96–256 kbps).
 - **Subsystem & WebRTC Status Diagnostics**: Live visual indicators (`CONNECTED 🟢`, `CONNECTING 🟡`, `DEGRADED 🟠`, `DISCONNECTED 🔴`) and health telemetry for WebRTC, Signal, Audio, and Network layers.
 - **Studio DSP Chain**: Integrated Web Audio processing including a 20 Hz sub-rumble high-pass filter, dialogue presence booster, and transparent lookahead peak limiter (-0.5 dBFS threshold, soft knee).
+- **Glitch-Free Elastic Playout**: A receiver-side AudioWorklet ring buffer with bounded micro-rate correction and hold-and-fade concealment turns packet-loss gaps into inaudible micro-fades instead of clicks or dropouts.
+- **Installable PWA**: Web app manifest and service worker let Android/iOS devices install Wifora on the home screen with an offline-capable shell.
 - **100% Local LAN Operation**: Zero cloud dependencies, no STUN/TURN relays, and no third-party tracking. WebRTC audio is encrypted peer-to-peer via **DTLS-SRTP**, while signaling stays strictly within your private LAN.
 - **Bonjour/mDNS Host Advertisement**: The host publishes `_wifora._tcp.local` with version and transport capabilities, while the QR/link remains the reliable browser fallback.
-- **Mobile-Optimized Experience**: Dynamic WebRTC Jitter Buffer (22–50 ms), Screen Wake Lock API, and native iOS `AudioSession` routing (preventing call speaker playback).
+- **Mobile-Optimized Experience**: Dynamic WebRTC Jitter Buffer (22–65 ms), Screen Wake Lock API, and native iOS `AudioSession` routing (preventing call speaker playback).
 
 ---
 
@@ -101,7 +103,7 @@ The following matrix documents real-world compatibility verified in our test lab
 ## 🔍 How It Works
 
 ```
-[ Windows PC (WASAPI Loopback) ]
+[ Windows PC (Browser Loopback Capture*) ]
                │
                ▼
 [ Web Audio Studio DSP ] ──> Highpass (20Hz) + Peaking EQ + Peak Limiter (-0.5 dB)
@@ -110,14 +112,16 @@ The following matrix documents real-world compatibility verified in our test lab
 [ Opus Encoder (48 kHz) ] ──> 20 ms Framing (`ptime=20`) + In-Band FEC (`useinbandfec=1`)
                │
                ▼  (Local Wi-Fi Network • DTLS-SRTP)
-[ Mobile Device (Receiver) ] ──> Adaptive JitterBuffer (22-50ms) ──> AudioSession Output DAC
+[ Mobile Device (Receiver) ] ──> Elastic Worklet Playout Buffer ──> AudioSession Output DAC
 ```
 
-1. **Capture**: Chromium captures Windows audio output via WASAPI loopback.
+\* _Optional native path: the `wifora-audio.exe` helper performs true WASAPI loopback and feeds raw PCM to the host tab over localhost only._
+
+1. **Capture**: Chromium captures Windows system audio through its own loopback path; an optional native WASAPI helper can replace it for a more robust capture chain.
 2. **DSP Mastering**: Real-time Web Audio API cleans DC rumble and prevents digital clipping.
-3. **Opus Encoding**: Negotiated with 20 ms framing, in-band FEC, and 48 kHz stereo.
+3. **Opus Encoding**: Negotiated with 20 ms framing, always-on in-band FEC, and 48 kHz stereo.
 4. **Local Transport**: Direct WebRTC peer connection over LAN with WebSocket signaling.
-5. **Adaptive Playback**: Mobile receiver dynamically manages jitter buffer targets (22 ms, 35 ms, 50 ms) according to instantaneous RF packet loss.
+5. **Resilient Playback**: The receiver decodes into an elastic AudioWorklet playout buffer (configurable safety margin, bounded micro-rate correction against clock drift) that conceals packet-loss gaps with hold-and-fade ramps instead of clicks, while browser jitter buffer targets adapt across 22–65 ms.
 
 ---
 

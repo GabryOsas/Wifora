@@ -101,6 +101,8 @@ let currentReceiver = null
 let pendingCandidates = []
 let shouldListen = false
 let reconnectTimer = null
+let reconnectAttempts = 0
+const SIGNAL_RECONNECT_MAX_ATTEMPTS = 6
 let peerRecoveryTimer = null
 let telemetryTimer = null
 let clockSyncTimer = null
@@ -122,6 +124,15 @@ let currentJitterBufferTarget = null
 let audioContext = null
 let analyserNode = null
 let animFrameId = null
+
+let playbackMode = 'element'
+let playoutNode = null
+let playoutGain = null
+let playoutSource = null
+let playoutReader = null
+let playoutPumpActive = false
+let playoutStats = null
+let lastPlayoutUnderruns = 0
 
 // Configure iOS AudioSession for Dedicated Media Playback (prevents low-volume / earpiece routing)
 function setupAudioSession() {
@@ -290,7 +301,9 @@ function schedulePeerRecovery() {
       logger.warn('WebRTC recovery timed out; reconnecting signaling')
       if (socket?.readyState === WebSocket.OPEN) {
         try {
-          socket.close(4001, 'Requesting WebRTC recovery')
+          // 4010 is a client-initiated recycle; the server reserves 4001
+          // to signal a real shutdown that must not be retried.
+          socket.close(4010, 'Requesting WebRTC recovery')
         } catch (err) {
           logger.debug('Unable to recycle signaling socket for recovery:', err)
           scheduleSignalReconnect()
@@ -361,12 +374,147 @@ function setupVisualizer(stream) {
   }
 }
 
+// --- Elastic Worklet Playout (glitch-free receiver path) ---
+function perceptualVolume(percent01) {
+  const clamped = Math.max(0, Math.min(1, Number.isFinite(percent01) ? percent01 : 0))
+  return clamped * clamped
+}
+
+async function resumePlayout() {
+  if (audioContext && audioContext.state === 'suspended') await audioContext.resume()
+}
+
+function stopPlayout() {
+  playoutPumpActive = false
+  try {
+    playoutReader?.cancel()
+  } catch {}
+  playoutReader = null
+  try {
+    playoutSource?.disconnect()
+  } catch {}
+  playoutSource = null
+  try {
+    playoutGain?.disconnect()
+  } catch {}
+  playoutGain = null
+  if (playoutNode) {
+    try {
+      playoutNode.port.onmessage = null
+      playoutNode.disconnect()
+    } catch {}
+    playoutNode = null
+  }
+  playoutStats = null
+  lastPlayoutUnderruns = 0
+  playbackMode = 'element'
+}
+
+async function pumpTrack(track) {
+  try {
+    const processor = new MediaStreamTrackProcessor({ track })
+    playoutReader = processor.readable.getReader()
+    playoutPumpActive = true
+    while (playoutPumpActive && playoutReader && playoutNode) {
+      const { value, done } = await playoutReader.read()
+      if (done || !value) break
+      const frames = value.numberOfFrames
+      const channels = Math.max(1, value.numberOfChannels)
+      const interleaved = new Float32Array(frames * 2)
+      if (channels >= 2) {
+        if (value.format === 'f32-planar') {
+          value.copyTo(interleaved.subarray(0, frames), { planeIndex: 0 })
+          value.copyTo(interleaved.subarray(frames), { planeIndex: 1 })
+        } else {
+          const packed = new Float32Array(frames * channels)
+          value.copyTo(packed, { planeIndex: 0 })
+          for (let index = 0; index < frames; index++) {
+            interleaved[index * 2] = packed[index * channels]
+            interleaved[index * 2 + 1] = packed[index * channels + 1]
+          }
+        }
+      } else {
+        value.copyTo(interleaved.subarray(0, frames), { planeIndex: 0 })
+        for (let index = frames; index < frames * 2; index++) interleaved[index] = interleaved[index - frames]
+      }
+      playoutNode?.port.postMessage({ type: 'push', samples: interleaved }, [interleaved.buffer])
+      value.close()
+    }
+  } catch (err) {
+    logger.debug('Track pump stopped:', err?.message || err)
+  }
+}
+
+async function startPlayout(stream) {
+  const track = stream.getAudioTracks()[0]
+  if (!track || !window.AudioContext) return false
+  const AudioCtx = window.AudioContext || window.webkitAudioContext
+  if (!AudioCtx.prototype.audioWorklet) return false
+  try {
+    if (!audioContext || audioContext.state === 'closed') {
+      audioContext = new AudioCtx({ latencyHint: 0 })
+    }
+    if (audioContext.state === 'suspended') await audioContext.resume().catch(() => {})
+
+    await audioContext.audioWorklet.addModule('/listener-playout-worklet.js')
+    playoutNode = new AudioWorkletNode(audioContext, 'wifora-playout', {
+      outputChannelCount: [2],
+      processorOptions: { targetMs: 80, primeMs: 45, capacityMs: 240, fadeMs: 8, holdMs: 20 },
+    })
+    playoutNode.port.onmessage = ({ data }) => {
+      if (data?.type === 'telemetry') playoutStats = data
+    }
+    playoutGain = audioContext.createGain()
+    playoutGain.gain.value = isMuted ? 0 : perceptualVolume(currentVol)
+    playoutNode.connect(playoutGain)
+    playoutGain.connect(audioContext.destination)
+
+    if (typeof window.MediaStreamTrackProcessor === 'function') {
+      pumpTrack(track)
+    } else {
+      playoutSource = audioContext.createMediaStreamSource(stream)
+      playoutSource.connect(playoutNode)
+    }
+    playbackMode = 'worklet'
+    logger.info('Elastic worklet playout active')
+    return true
+  } catch (err) {
+    logger.debug('Worklet playout unavailable, falling back to audio element:', err?.message || err)
+    stopPlayout()
+    return false
+  }
+}
+
+function updateMediaSession() {
+  if (!('mediaSession' in navigator)) return
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Wifora — Audio in Diretta',
+      artist: 'PC System Audio',
+      artwork: [{ src: '/wifora-logo.png', sizes: '512x512', type: 'image/png' }],
+    })
+    navigator.mediaSession.setActionHandler('play', () => {
+      resumePlayout().catch((err) => logger.debug('MediaSession play failed:', err))
+      remoteAudio.play?.().catch(() => {})
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audioContext?.suspend().catch((err) => logger.debug('MediaSession pause failed:', err))
+      remoteAudio.pause?.()
+    })
+  } catch (err) {
+    logger.debug('MediaSession setup unsupported:', err?.message || err)
+  }
+}
+
 // --- Volume & Mute ---
 function applyVolume() {
-  const val = isMuted ? 0 : currentVol
   if (remoteAudio) {
-    remoteAudio.volume = val
+    remoteAudio.volume = currentVol
     remoteAudio.muted = isMuted
+  }
+  if (playoutGain && audioContext && playbackMode === 'worklet') {
+    const gain = isMuted ? 0 : perceptualVolume(currentVol)
+    playoutGain.gain.setTargetAtTime(gain, audioContext.currentTime, 0.02)
   }
 }
 
@@ -398,6 +546,7 @@ function resetReceiverTelemetry() {
   pendingQuality = null
   pendingQualitySamples = 0
   currentJitterBufferTarget = null
+  lastPlayoutUnderruns = 0
 }
 
 function setJitterBufferTarget(target) {
@@ -486,12 +635,25 @@ async function pollReceiverTelemetry() {
     smoothedJitter = smooth(smoothedJitter, jitter)
     smoothedLoss = smooth(smoothedLoss, instantLoss, 0.4)
 
+    const clockSnapshot = clockSyncController.snapshot()
+    const underrunDelta = playoutStats != null ? Math.max(0, (playoutStats.underruns || 0) - lastPlayoutUnderruns) : 0
+    if (playoutStats != null) lastPlayoutUnderruns = playoutStats.underruns || 0
+    const occupancyRatio = playoutStats
+      ? Math.min(2, (playoutStats.bufferedMs || 0) / Math.max(1, playoutStats.targetMs || 80))
+      : 1
+    const lateFrames = playoutStats ? ((playoutStats.gapFrames || 0) > 9_600 ? 2 : playoutStats.lateFrames || 0) : 0
+
     const jitterPolicy = jitterController.update({
       jitterMs: smoothedJitter,
       lossPercent: smoothedLoss,
       rttMs: smoothedRtt,
+      occupancyRatio,
+      underruns: underrunDelta,
+      lateFrames,
+      clockDriftPpm: clockSnapshot.driftPpm,
     })
     setJitterBufferTarget(jitterPolicy.targetMs)
+    if (playoutNode) playoutNode.port.postMessage({ type: 'drift', ppm: clockSnapshot.correctionPpm })
 
     if (hudPing) hudPing.textContent = smoothedRtt != null ? `${Math.round(smoothedRtt)} ms` : t('liveBadge')
     if (hudLoss) hudLoss.textContent = `${(smoothedLoss ?? 0).toFixed(1)}%`
@@ -507,9 +669,18 @@ async function pollReceiverTelemetry() {
         jitterMs: smoothedJitter == null ? null : Math.round(smoothedJitter),
         lossPercent: smoothedLoss == null ? null : Number(smoothedLoss.toFixed(2)),
         playoutDelayMs,
-        audioState: remoteAudio.paused ? 'paused' : 'playing',
+        audioState:
+          playbackMode === 'worklet'
+            ? audioContext?.state === 'running'
+              ? 'playing'
+              : 'suspended'
+            : remoteAudio.paused
+              ? 'paused'
+              : 'playing',
         visibility: document.visibilityState,
         jitterTargetMs: jitterPolicy.targetMs,
+        bufferMs: playoutStats ? (playoutStats.bufferedMs ?? null) : null,
+        playoutMode: playbackMode,
       },
     })
 
@@ -589,6 +760,7 @@ async function connectSignal() {
   ws.addEventListener('open', () => {
     clearTimeout(reconnectTimer)
     reconnectTimer = null
+    reconnectAttempts = 0
     logger.info(`Signaling opened, registering listener in room [${roomId}] (session: ${listenerSessionId})`)
     signal({
       type: 'register',
@@ -616,6 +788,12 @@ async function connectSignal() {
     }
 
     if (msg.type === 'pong') return
+
+    if (msg.type === 'server-shutdown') {
+      logger.warn('Server is shutting down; stopping listener')
+      stopListening(t('toastRoomEnded'), true)
+      return
+    }
 
     if (msg.type === 'registered') {
       logger.info(`Registered successfully: clientId=${msg.clientId}, hostAvailable=${msg.hostAvailable}`)
@@ -700,6 +878,10 @@ async function connectSignal() {
       stopListening(t('toastKickedByHost'), true)
       return
     }
+    if (event.code === 4001) {
+      stopListening(t('toastRoomEnded'), true)
+      return
+    }
     // Re-register the existing listener session after a temporary signaling
     // loss. The server replaces the old socket by session id.
     if (shouldListen) {
@@ -710,10 +892,19 @@ async function connectSignal() {
 
 function scheduleSignalReconnect() {
   if (!shouldListen || reconnectTimer) return
+  // The server is gone (stopped from the PC command center): stop retrying
+  // and tear down the WebRTC peer instead of streaming P2P without signaling.
+  if (reconnectAttempts >= SIGNAL_RECONNECT_MAX_ATTEMPTS) {
+    logger.warn('Signaling unreachable after repeated attempts; stopping listener')
+    stopListening(t('toastRoomEnded'), true)
+    return
+  }
+  const delay = Math.min(5_000, 500 * 2 ** reconnectAttempts)
+  reconnectAttempts = Math.min(reconnectAttempts + 1, SIGNAL_RECONNECT_MAX_ATTEMPTS)
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
     connectSignal()
-  }, 500)
+  }, delay)
 }
 
 async function acceptOffer(msg) {
@@ -745,9 +936,6 @@ async function acceptOffer(msg) {
     peer.ontrack = (event) => {
       logger.info('WebRTC media track received')
       const stream = event.streams[0] || new MediaStream([event.track])
-      remoteAudio.srcObject = stream
-      remoteAudio.volume = isMuted ? 0 : currentVol
-      remoteAudio.muted = isMuted
 
       currentReceiver = event.receiver
       setJitterBufferTarget(22)
@@ -758,21 +946,30 @@ async function acceptOffer(msg) {
       }
 
       setupVisualizer(stream)
+      updateMediaSession()
 
-      const playPromise = remoteAudio.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            logger.info('Audio playback started smoothly')
+      startPlayout(stream)
+        .then((active) => {
+          if (active) {
+            remoteAudio.srcObject = null
             resumeBox.hidden = true
             liveStatusText.textContent = t('liveStatusConnected')
-          })
-          .catch((err) => {
-            logger.info('Autoplay requires user touch interaction:', err?.message || err)
-            resumeBox.hidden = false
-            liveStatusText.textContent = t('liveStatusWaitingTap')
-          })
-      }
+            return resumePlayout()
+          }
+          remoteAudio.srcObject = stream
+          remoteAudio.volume = isMuted ? 0 : currentVol
+          remoteAudio.muted = isMuted
+          return remoteAudio.play()
+        })
+        .then(() => {
+          liveStatusText.textContent = t('liveStatusConnected')
+          resumeBox.hidden = true
+        })
+        .catch((err) => {
+          logger.info('Autoplay requires user touch interaction:', err?.message || err)
+          resumeBox.hidden = false
+          liveStatusText.textContent = t('liveStatusWaitingTap')
+        })
     }
 
     const handlePeerDisconnect = () => {
@@ -885,6 +1082,7 @@ function stopListening(message = '', showForm = false) {
 
   currentReceiver = null
   resetReceiverTelemetry()
+  stopPlayout()
 
   if (audioContext) {
     try {
@@ -957,8 +1155,8 @@ listenBtn.addEventListener('click', () => {
 
 resumeBtn.addEventListener('click', () => {
   setupAudioSession()
-  remoteAudio
-    .play()
+  const playPromise = playbackMode === 'worklet' ? resumePlayout() : Promise.resolve(remoteAudio.play()).then(() => {})
+  playPromise
     .then(() => {
       resumeBox.hidden = true
       liveStatusText.textContent = t('liveStatusConnected')
@@ -995,3 +1193,6 @@ window.addEventListener('beforeunload', handlePageExit)
 // Initialize
 initTheme()
 initI18n()
+if ('serviceWorker' in navigator && ['https:', 'http:'].includes(location.protocol)) {
+  navigator.serviceWorker.register('/wifora-sw.js').catch((err) => logger.debug('SW registration skipped:', err))
+}
