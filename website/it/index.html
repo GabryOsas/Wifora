@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wifora — L'audio del PC su ogni schermo, via Wi-Fi. Zero app.</title>
+    <meta
+      name="description"
+      content="Wifora trasmette l'audio di sistema del tuo PC Windows su iPhone, iPad e Android tramite WebRTC sulla rete locale, con latenza di 35-65 ms e nessuna app da installare. Open source, MIT."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <link rel="apple-touch-icon" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <meta property="og:title" content="Wifora — Low-Latency Wi-Fi Audio Streaming" />
+    <meta
+      property="og:description"
+      content="Stream your PC audio to any device over Wi-Fi. Zero apps, 35-65 ms latency, 100% local."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="">
+    <!-- ============ TOPBAR ============ -->
+    <header class="site-topbar">
+      <a class="brand" href="./index.html">
+        <img src="../assets/wifora-logo.png" alt="Logo Wifora" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigazione principale">
+        <a href="#features">Funzioni</a>
+        <a href="#how">Come funziona</a>
+        <a href="#performance">Prestazioni</a>
+        <a href="#download">Download</a>
+        <a href="./wiki/index.html">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a class="icon-btn icon-btn--lang" href="../index.html" aria-label="Switch language: English" title="English"
+          >EN</a
+        >
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="Repository GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambia tema" title="Tema chiaro/scuro">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="landing-wrap">
+      <!-- ============ HERO ============ -->
+      <section class="hero">
+        <div class="hero-grid">
+          <div>
+            <h1>L'audio del tuo PC,<br /><span class="grad">su ogni schermo</span> della casa.</h1>
+            <p class="hero-sub">
+              Wifora trasmette in tempo reale l'audio di sistema del tuo PC Windows a iPhone, iPad, Android o un secondo
+              computer, direttamente dal browser e attraverso la tua Wi-Fi. Nessuna app da installare, nessun account,
+              nessun cloud.
+            </p>
+            <div class="hero-cta">
+              <a class="btn btn-primary btn-lg" href="#download">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Scarica gratis
+              </a>
+              <a class="btn btn-secondary btn-lg" href="./wiki/index.html">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                Leggi la Wiki
+              </a>
+              <a class="btn btn-bmc btn-lg" href="https://buymeacoffee.com/gabryosas" target="_blank" rel="noopener">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                  <line x1="6" y1="1" x2="6" y2="4" />
+                  <line x1="10" y1="1" x2="10" y2="4" />
+                  <line x1="14" y1="1" x2="14" y2="4" />
+                </svg>
+                Buy Me a Coffee
+              </a>
+            </div>
+            <div class="hero-meta">
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                >Latenza tipica 35–65 ms</span
+              >
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                >Opus 48 kHz stereo</span
+              >
+              <span
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                >Crittografia DTLS-SRTP</span
+              >
+            </div>
+          </div>
+
+          <!-- Mock UI (replica dell'interfaccia host) -->
+          <div class="hero-visual" aria-hidden="true">
+            <div class="mock-glow"></div>
+            <div class="mock-card">
+              <div class="mock-head">
+                <span class="mock-title">Trasmissione attiva</span>
+                <span class="status-pill pill-green"><span class="status-dot"></span>Connesso</span>
+              </div>
+              <div class="mock-share">
+                <div class="qr-frame">
+                  <svg viewBox="0 0 29 29" shape-rendering="crispEdges">
+                    <rect width="29" height="29" fill="#ffffff" />
+                    <g fill="#111113">
+                      <rect x="0" y="0" width="7" height="7" />
+                      <rect x="22" y="0" width="7" height="7" />
+                      <rect x="0" y="22" width="7" height="7" />
+                      <rect x="2" y="2" width="3" height="3" fill="#ffffff" />
+                      <rect x="24" y="2" width="3" height="3" fill="#ffffff" />
+                      <rect x="2" y="24" width="3" height="3" fill="#ffffff" />
+                      <rect x="9" y="0" width="1" height="1" />
+                      <rect x="11" y="0" width="2" height="1" />
+                      <rect x="14" y="1" width="1" height="2" />
+                      <rect x="16" y="0" width="1" height="1" />
+                      <rect x="18" y="1" width="1" height="1" />
+                      <rect x="9" y="2" width="2" height="1" />
+                      <rect x="12" y="2" width="1" height="1" />
+                      <rect x="15" y="3" width="2" height="1" />
+                      <rect x="19" y="2" width="1" height="1" />
+                      <rect x="10" y="4" width="1" height="2" />
+                      <rect x="13" y="4" width="2" height="1" />
+                      <rect x="17" y="4" width="1" height="2" />
+                      <rect x="19" y="5" width="1" height="1" />
+                      <rect x="0" y="9" width="1" height="1" />
+                      <rect x="1" y="10" width="2" height="1" />
+                      <rect x="4" y="9" width="1" height="2" />
+                      <rect x="5" y="12" width="1" height="1" />
+                      <rect x="2" y="11" width="1" height="2" />
+                      <rect x="0" y="13" width="2" height="1" />
+                      <rect x="3" y="14" width="1" height="1" />
+                      <rect x="6" y="10" width="1" height="1" />
+                      <rect x="9" y="9" width="2" height="2" />
+                      <rect x="12" y="9" width="1" height="1" />
+                      <rect x="14" y="10" width="2" height="1" />
+                      <rect x="17" y="9" width="1" height="2" />
+                      <rect x="19" y="10" width="1" height="1" />
+                      <rect x="8" y="12" width="1" height="1" />
+                      <rect x="11" y="12" width="2" height="1" />
+                      <rect x="15" y="13" width="1" height="1" />
+                      <rect x="18" y="13" width="2" height="1" />
+                      <rect x="10" y="14" width="1" height="1" />
+                      <rect x="13" y="15" width="2" height="1" />
+                      <rect x="16" y="15" width="1" height="1" />
+                      <rect x="19" y="14" width="1" height="1" />
+                      <rect x="9" y="16" width="1" height="2" />
+                      <rect x="12" y="17" width="1" height="1" />
+                      <rect x="14" y="16" width="2" height="1" />
+                      <rect x="17" y="17" width="2" height="1" />
+                      <rect x="0" y="16" width="1" height="2" />
+                      <rect x="2" y="16" width="2" height="1" />
+                      <rect x="5" y="17" width="1" height="2" />
+                      <rect x="1" y="19" width="1" height="1" />
+                      <rect x="3" y="19" width="1" height="1" />
+                      <rect x="6" y="16" width="1" height="1" />
+                      <rect x="4" y="20" width="1" height="1" />
+                      <rect x="9" y="19" width="2" height="1" />
+                      <rect x="12" y="19" width="1" height="2" />
+                      <rect x="15" y="19" width="1" height="1" />
+                      <rect x="18" y="19" width="1" height="1" />
+                      <rect x="10" y="21" width="1" height="1" />
+                      <rect x="13" y="21" width="2" height="1" />
+                      <rect x="16" y="20" width="1" height="1" />
+                      <rect x="19" y="21" width="1" height="1" />
+                      <rect x="9" y="22" width="1" height="1" />
+                      <rect x="11" y="23" width="2" height="1" />
+                      <rect x="14" y="22" width="1" height="2" />
+                      <rect x="17" y="22" width="1" height="1" />
+                      <rect x="19" y="23" width="1" height="1" />
+                      <rect x="9" y="25" width="2" height="1" />
+                      <rect x="12" y="26" width="1" height="1" />
+                      <rect x="15" y="25" width="2" height="1" />
+                      <rect x="18" y="25" width="1" height="1" />
+                      <rect x="10" y="27" width="1" height="1" />
+                      <rect x="13" y="27" width="2" height="1" />
+                      <rect x="16" y="27" width="1" height="1" />
+                      <rect x="19" y="27" width="1" height="1" />
+                      <rect x="22" y="9" width="1" height="2" />
+                      <rect x="24" y="9" width="2" height="1" />
+                      <rect x="27" y="10" width="1" height="1" />
+                      <rect x="23" y="12" width="1" height="1" />
+                      <rect x="25" y="12" width="2" height="1" />
+                      <rect x="28" y="12" width="1" height="1" />
+                      <rect x="22" y="14" width="2" height="1" />
+                      <rect x="26" y="14" width="1" height="2" />
+                      <rect x="28" y="15" width="1" height="1" />
+                      <rect x="23" y="16" width="1" height="1" />
+                      <rect x="25" y="17" width="1" height="1" />
+                      <rect x="27" y="16" width="2" height="1" />
+                      <rect x="22" y="19" width="1" height="1" />
+                      <rect x="24" y="19" width="2" height="1" />
+                      <rect x="27" y="19" width="1" height="2" />
+                      <rect x="22" y="21" width="2" height="1" />
+                      <rect x="25" y="21" width="1" height="1" />
+                      <rect x="28" y="22" width="1" height="1" />
+                      <rect x="23" y="23" width="1" height="2" />
+                      <rect x="26" y="24" width="2" height="1" />
+                      <rect x="22" y="25" width="1" height="1" />
+                      <rect x="24" y="26" width="1" height="1" />
+                      <rect x="27" y="26" width="1" height="1" />
+                    </g>
+                  </svg>
+                </div>
+                <div class="mock-share-info">
+                  <span class="room-code-label">Codice stanza</span>
+                  <span class="room-code">K7P2M9XA</span>
+                  <span class="mock-url">http://192.168.1.50:3975/listen.html?room=K7P2M9XA</span>
+                </div>
+              </div>
+              <div class="mock-meter">
+                <span class="room-code-label">Livello audio</span>
+                <div class="meter-track"><div class="meter-fill"></div></div>
+              </div>
+              <div class="mock-devices">
+                <div class="device-item">
+                  <span class="device-name">iPhone di Gabriele</span>
+                  <span class="device-telemetry-row">Ping 4 ms • 256 kbps • 0.0%</span>
+                </div>
+                <div class="device-item">
+                  <span class="device-name">Galaxy Tab S9</span>
+                  <span class="device-telemetry-row">Ping 9 ms • 224 kbps • 0.1%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATS ============ -->
+      <section class="section" style="padding-top: 40px">
+        <div class="stats-band">
+          <div class="stat-cell">
+            <div class="stat-value">35–65 ms</div>
+            <div class="stat-label">Latenza glass-to-ear tipica</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">48 kHz</div>
+            <div class="stat-label">Opus fullband stereo</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">0</div>
+            <div class="stat-label">App da installare sui riceventi</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Locale: zero cloud, zero telemetria</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FUNZIONI ============ -->
+      <section class="section anchor-h" id="features">
+        <div class="section-head">
+          <span class="kicker">Funzioni</span>
+          <h2 class="section-title">Costruito come uno strumento da studio, usabile come una app.</h2>
+          <p class="section-desc">
+            Ogni componente è progettato per la latenza minima e per l'affidabilità sulle reti Wi-Fi reali.
+          </p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="5" y="2" width="14" height="20" rx="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" /></svg
+            ></span>
+            <div class="feature-title">Zero app richieste</div>
+            <p class="feature-desc">
+              Scansiona il QR code o digita il codice stanza di 8 caratteri: Safari iOS e Chrome Android entrano subito
+              in ascolto.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg
+            ></span>
+            <div class="feature-title">Ultra-low latency</div>
+            <p class="feature-desc">
+              35–65 ms end-to-end su Wi-Fi 5/6: perfettamente sincronizzato per film, gaming, YouTube e monitoraggio.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" /></svg
+            ></span>
+            <div class="feature-title">Qualità da studio</div>
+            <p class="feature-desc">
+              Opus 48 kHz stereo fullband, fino a 384 kbps con il profilo Hi-Fi, FEC sempre attiva contro i dropout.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 3v18h18" />
+                <path d="m19 9-5 5-4-4-3 3" /></svg
+            ></span>
+            <div class="feature-title">Motore adattivo ANAE</div>
+            <p class="feature-desc">
+              Telemetria RTT/jitter/packet loss in tempo reale con isteresi anti-flapping: bitrate 96–256 kbps sempre
+              ottimale.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                /></svg
+            ></span>
+            <div class="feature-title">DSP chain da studio</div>
+            <p class="feature-desc">
+              High-pass 20 Hz contro il sub-rumble, presence booster sui dialoghi e limiter trasparente a −0.5 dBFS.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg
+            ></span>
+            <div class="feature-title">Playout elastico</div>
+            <p class="feature-desc">
+              Buffer AudioWorklet con correzione micro-rate e hold-and-fade: i buchi di rete diventano micro-fade, non
+              click.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="5" y="2" width="14" height="20" rx="2" />
+                <line x1="9" y1="22" x2="15" y2="22" /></svg
+            ></span>
+            <div class="feature-title">PWA installabile</div>
+            <p class="feature-desc">
+              Aggiungi Wifora alla home screen: service worker offline-first e shell installabile come una vera app.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg
+            ></span>
+            <div class="feature-title">Sicuro by design</div>
+            <p class="feature-desc">
+              Media crittografati DTLS-SRTP, chiavi host a 256 bit verificate in constant-time, rate limiting per IP,
+              CSP rigorosa.
+            </p>
+          </div>
+          <div class="feature-tile">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                <line x1="12" y1="20" x2="12.01" y2="20" /></svg
+            ></span>
+            <div class="feature-title">Discovery mDNS</div>
+            <p class="feature-desc">
+              Il PC si annuncia sulla rete come <code class="inline">_wifora._tcp.local</code>; il QR code resta il
+              percorso più affidabile.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COME FUNZIONA ============ -->
+      <section class="section anchor-h" id="how">
+        <div class="section-head">
+          <span class="kicker">Come funziona</span>
+          <h2 class="section-title">Dal mixer di Windows alle tue orecchie in cinque passaggi.</h2>
+        </div>
+        <div class="two-col">
+          <div class="pipeline">
+            <div class="pipeline-node">
+              <span class="pipeline-tag">1 · Capture</span>
+              <div>
+                <strong>Cattura audio di sistema</strong><br /><span class="desc"
+                  >Loopback Chromium su Windows oppure helper WASAPI nativo opzionale.</span
+                >
+              </div>
+            </div>
+            <div class="pipeline-arrow">▼</div>
+            <div class="pipeline-node">
+              <span class="pipeline-tag">2 · DSP</span>
+              <div>
+                <strong>Mastering Web Audio</strong><br /><span class="desc"
+                  >High-pass 20 Hz + Presence EQ + Peak limiter −0.5 dBFS.</span
+                >
+              </div>
+            </div>
+            <div class="pipeline-arrow">▼</div>
+            <div class="pipeline-node">
+              <span class="pipeline-tag">3 · Encode</span>
+              <div>
+                <strong>Opus 48 kHz</strong><br /><span class="desc"
+                  >Framing 20 ms, FEC in-band sempre attiva, DTX disabilitata.</span
+                >
+              </div>
+            </div>
+            <div class="pipeline-arrow">▼</div>
+            <div class="pipeline-node">
+              <span class="pipeline-tag">4 · Transport</span>
+              <div>
+                <strong>WebRTC P2P sulla LAN</strong><br /><span class="desc"
+                  >DTLS-SRTP obbligatorio, iceServers vuoti: nulla esce dalla rete.</span
+                >
+              </div>
+            </div>
+            <div class="pipeline-arrow">▼</div>
+            <div class="pipeline-node">
+              <span class="pipeline-tag">5 · Playout</span>
+              <div>
+                <strong>Riproduzione elastica</strong><br /><span class="desc"
+                  >Jitter buffer adattivo 22–65 ms + worklet con correzione drift.</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <p class="lead" style="margin-bottom: 16px">Perché è diverso da Bluetooth e AirPlay?</p>
+            <div class="table-scroll" style="box-shadow: none">
+              <table class="wt">
+                <thead>
+                  <tr>
+                    <th>Metrica</th>
+                    <th class="num">Wifora</th>
+                    <th class="num">Bluetooth</th>
+                    <th class="num">AirPlay 2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Latenza</td>
+                    <td class="num"><strong>35–75 ms</strong></td>
+                    <td class="num">150–250 ms</td>
+                    <td class="num">1.000–2.000 ms</td>
+                  </tr>
+                  <tr>
+                    <td>App sul client</td>
+                    <td><span class="badge badge-good">Nessuna</span></td>
+                    <td>Pairing OS</td>
+                    <td>Solo Apple</td>
+                  </tr>
+                  <tr>
+                    <td>Dispositivi sincroni</td>
+                    <td class="num"><strong>Fino a 5–8</strong></td>
+                    <td class="num">1</td>
+                    <td class="num">Sì</td>
+                  </tr>
+                  <tr>
+                    <td>Sample rate</td>
+                    <td class="num"><strong>48 kHz</strong></td>
+                    <td class="num">44.1/48 kHz</td>
+                    <td class="num">44.1 kHz</td>
+                  </tr>
+                  <tr>
+                    <td>Bandwidth adattiva</td>
+                    <td><span class="badge badge-good">ANAE</span></td>
+                    <td><span class="badge badge-warn">Limitata</span></td>
+                    <td><span class="badge badge-bad">Fissa</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRESTAZIONI ============ -->
+      <section class="section anchor-h" id="performance">
+        <div class="section-head">
+          <span class="kicker">Prestazioni misurate</span>
+          <h2 class="section-title">Numeri reali, non promesse di marketing.</h2>
+          <p class="section-desc">
+            Misurazioni empiriche su reti domestiche reali con 1–5 dispositivi collegati. Dataset completo nella wiki.
+          </p>
+        </div>
+        <div class="table-scroll">
+          <table class="wt">
+            <thead>
+              <tr>
+                <th>Rete Wi-Fi</th>
+                <th class="num">Ascoltatori</th>
+                <th class="num">RTT medio</th>
+                <th class="num">Jitter</th>
+                <th class="num">Packet loss</th>
+                <th>Tier ANAE attivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Wi-Fi 6 / 6E</strong> (5/6 GHz)</td>
+                <td class="num">1–5</td>
+                <td class="num">2–8 ms</td>
+                <td class="num">&lt; 1 ms</td>
+                <td class="num">0.0%</td>
+                <td><span class="badge badge-good">Tier 5 · Studio Master 256k</span></td>
+              </tr>
+              <tr>
+                <td><strong>Wi-Fi 5</strong> (5 GHz canale pulito)</td>
+                <td class="num">1–4</td>
+                <td class="num">8–15 ms</td>
+                <td class="num">1–3 ms</td>
+                <td class="num">&lt; 0.1%</td>
+                <td><span class="badge badge-good">Tier 5 · Studio Master 256k</span></td>
+              </tr>
+              <tr>
+                <td><strong>Wi-Fi 5</strong> (attraverso muri)</td>
+                <td class="num">1–3</td>
+                <td class="num">18–35 ms</td>
+                <td class="num">3–6 ms</td>
+                <td class="num">0.2–0.8%</td>
+                <td><span class="badge badge-good">Tier 4 · Studio High 224k</span></td>
+              </tr>
+              <tr>
+                <td><strong>Wi-Fi 4</strong> (2.4 GHz congestionata)</td>
+                <td class="num">1–2</td>
+                <td class="num">65–110 ms</td>
+                <td class="num">15–25 ms</td>
+                <td class="num">2.0–3.8%</td>
+                <td><span class="badge badge-warn">Tier 2 · Anti-Lag 128k</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top: 14px; font-size: 13px; color: var(--text-dim)">
+          Metodologia, breakdown stage-per-stage e benchmark server completi nella
+          <a href="./wiki/performance.html" style="color: var(--accent-primary); font-weight: 600"
+            >pagina Performance della wiki</a
+          >.
+        </p>
+      </section>
+
+      <!-- ============ DOWNLOAD ============ -->
+      <section class="section anchor-h" id="download">
+        <div class="section-head">
+          <span class="kicker">Download</span>
+          <h2 class="section-title">Gratis, open source, pronto in 60 secondi.</h2>
+        </div>
+        <div class="download-grid">
+          <div class="dl-card">
+            <h3><span class="dl-step-num">1</span> Requisiti</h3>
+            <ul class="req-list">
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span><strong>PC host:</strong> Windows 10/11 con Chrome o Edge</span>
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span
+                  ><strong>Node.js</strong> v18 o superiore (<a
+                    href="https://nodejs.org"
+                    target="_blank"
+                    rel="noopener"
+                    style="color: var(--accent-primary); font-weight: 600"
+                    >nodejs.org</a
+                  >)</span
+                >
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span><strong>Riceventi:</strong> qualsiasi browser moderno sulla stessa rete Wi-Fi</span>
+              </li>
+            </ul>
+            <p class="dl-note">Nessun driver virtuale, nessun cavo audio, nessuna configurazione di rete.</p>
+          </div>
+          <div class="dl-card">
+            <h3><span class="dl-step-num">2</span> Installa e avvia</h3>
+            <pre class="code" data-copy><code>git clone https://github.com/GabryOsas/Wifora.git
+cd Wifora
+npm install
+npm start</code></pre>
+            <p class="dl-note">
+              Su Windows puoi anche doppio-cliccare <code class="inline">Avvia-Wifora.bat</code> oppure usare il menu
+              interattivo con <code class="inline">npm run menu</code>.
+            </p>
+          </div>
+          <div class="dl-card">
+            <h3><span class="dl-step-num">3</span> Trasmetti</h3>
+            <ul class="req-list">
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span>Apri <code class="inline">http://localhost:3975</code> su Chrome/Edge</span>
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span
+                  >Premi <strong>Avvia Trasmissione Audio</strong>, scegli l'intero schermo e spunta
+                  <strong>"Condividi audio di sistema"</strong></span
+                >
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" /></svg
+                ><span>Scansiona il QR code col telefono: l'audio parte all'istante</span>
+              </li>
+            </ul>
+          </div>
+          <div class="dl-card">
+            <h3><span class="dl-step-num">★</span> Altri formati</h3>
+            <p style="font-size: 14px; color: var(--text-muted)">
+              Preferisci lo ZIP o vuoi l'helper WASAPI precompilato? Trovi tutto nelle release ufficiali:
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px">
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/GabryOsas/Wifora/releases/latest"
+                target="_blank"
+                rel="noopener"
+                >Ultima release (ZIP)</a
+              >
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/GabryOsas/Wifora/archive/refs/heads/main.zip"
+                target="_blank"
+                rel="noopener"
+                >Source .zip</a
+              >
+              <a class="btn btn-secondary" href="./wiki/installation.html">Guida installazione completa</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COMPATIBILITA ============ -->
+      <section class="section anchor-h" id="compatibility">
+        <div class="section-head">
+          <span class="kicker">Compatibilità</span>
+          <h2 class="section-title">Ambienti verificati in laboratorio.</h2>
+        </div>
+        <div class="table-scroll">
+          <table class="wt">
+            <thead>
+              <tr>
+                <th>Piattaforma / Browser</th>
+                <th>Host (trasmette)</th>
+                <th>Listener (riceve)</th>
+                <th>Stato test</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Chrome</strong> (Windows 10/11)</td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Verificato</span></td>
+              </tr>
+              <tr>
+                <td><strong>Edge</strong> (Windows 10/11)</td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Verificato</span></td>
+              </tr>
+              <tr>
+                <td><strong>Safari</strong> (iOS / iPadOS 15+)</td>
+                <td>—</td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Verificato</span></td>
+              </tr>
+              <tr>
+                <td><strong>Chrome</strong> (Android 10+)</td>
+                <td>—</td>
+                <td><span class="badge badge-good">Supportato</span></td>
+                <td><span class="badge badge-good">Verificato</span></td>
+              </tr>
+              <tr>
+                <td><strong>Firefox</strong> (Windows/Linux)</td>
+                <td><span class="badge badge-warn">Limitato</span></td>
+                <td><span class="badge badge-neutral">Da verificare</span></td>
+                <td><span class="badge badge-neutral">Non testato</span></td>
+              </tr>
+              <tr>
+                <td><strong>Safari</strong> (macOS)</td>
+                <td>—</td>
+                <td><span class="badge badge-neutral">Da verificare</span></td>
+                <td><span class="badge badge-neutral">Non testato</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-info" style="margin-top: 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <p>
+            La cattura dell'audio di sistema richiede Chromium su Windows: è l'unico browser che espone il loopback
+            nativo senza cavi audio virtuali. Dettagli nella
+            <a href="./wiki/compatibility.html" style="color: var(--accent-primary); font-weight: 600"
+              >matrice di compatibilità</a
+            >.
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ SUPPORTO ============ -->
+      <section class="section anchor-h" id="support">
+        <div class="section-head">
+          <span class="kicker">Community &amp; Supporto</span>
+          <h2 class="section-title">Il progetto vive grazie alla community.</h2>
+        </div>
+        <div class="support-grid">
+          <div class="support-card">
+            <span class="feature-icon"
+              ><svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+                /></svg
+            ></span>
+            <h3>GitHub</h3>
+            <p>
+              Metti una stella al progetto, segnala bug, proponi funzioni o apri una pull request. Ogni contributo è
+              benvenuto.
+            </p>
+            <a class="btn btn-secondary" href="https://github.com/GabryOsas/Wifora" target="_blank" rel="noopener"
+              >Vai al repository</a
+            >
+          </div>
+          <div class="support-card">
+            <span class="feature-icon" style="background: rgba(255, 221, 0, 0.15); color: #eab308"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                <line x1="6" y1="1" x2="6" y2="4" />
+                <line x1="10" y1="1" x2="10" y2="4" />
+                <line x1="14" y1="1" x2="14" y2="4" /></svg
+            ></span>
+            <h3>Buy Me a Coffee</h3>
+            <p>
+              Wifora è gratuito e lo resterà per sempre. Se ti semplifica la vita, offrimi un caffè: è il carburante
+              dello sviluppo.
+            </p>
+            <a class="btn btn-bmc" href="https://buymeacoffee.com/gabryosas" target="_blank" rel="noopener"
+              >Offri un caffè</a
+            >
+          </div>
+          <div class="support-card">
+            <span class="feature-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg
+            ></span>
+            <h3>Documentazione</h3>
+            <p>
+              Una wiki completa: guide passo-passo, architettura interna, protocollo di rete, sicurezza e risoluzione
+              dei problemi. In italiano e inglese.
+            </p>
+            <a class="btn btn-secondary" href="./wiki/index.html">Apri la wiki</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="./index.html">
+              <img src="../assets/wifora-logo.png" alt="Logo Wifora" width="34" height="34" />
+              <span>Wifora</span>
+            </a>
+            <p class="footer-tagline">
+              Streaming audio locale a bassissima latenza dal PC a qualsiasi dispositivo, senza installare nulla.
+            </p>
+          </div>
+          <div class="footer-col">
+            <h4>Progetto</h4>
+            <ul>
+              <li><a href="./index.html#download">Download</a></li>
+              <li><a href="https://github.com/GabryOsas/Wifora/releases" target="_blank" rel="noopener">Release</a></li>
+              <li>
+                <a href="https://github.com/GabryOsas/Wifora/issues" target="_blank" rel="noopener">Segnala un bug</a>
+              </li>
+              <li><a href="./wiki/index.html">Wiki</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Documentazione tecnica</h4>
+            <ul>
+              <li><a href="./wiki/architecture.html">Architettura</a></li>
+              <li><a href="./wiki/security.html">Sicurezza</a></li>
+              <li><a href="./wiki/performance.html">Benchmark</a></li>
+              <li><a href="./wiki/signaling-protocol.html">Protocollo WebSocket</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4>Community</h4>
+            <ul>
+              <li><a href="https://buymeacoffee.com/gabryosas" target="_blank" rel="noopener">Buy Me a Coffee</a></li>
+              <li><a href="https://github.com/GabryOsas" target="_blank" rel="noopener">Profilo autore</a></li>
+              <li><a href="https://github.com/GabryOsas/Wifora" target="_blank" rel="noopener">GitHub</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-legal">
+          <span>© <span id="yearNow">2026</span> GabryOsas · Rilasciato sotto licenza MIT</span>
+          <span>Progettato per reti locali private. Nessun dato lascia mai la tua rete.</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

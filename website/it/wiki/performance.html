@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Benchmark & Latenza · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Latenza glass-to-ear, breakdown per stadio, benchmark Wi-Fi e suite di benchmark automatizzata di Wifora."
+    />
+    <link rel="icon" type="image/png" href="../../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+  </head>
+  <body data-page="performance">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../../assets/../index.html">
+        <img src="../../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Funzioni</a>
+        <a href="../index.html#how">Come funziona</a>
+        <a href="../index.html#performance">Prestazioni</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../../wiki/performance.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          EN
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Inizia qui</div>
+          <a class="wiki-link" href="index.html">Benvenuto nella Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Compatibilità Browser</a>
+          <a class="wiki-link" href="installation.html">Installazione</a>
+          <a class="wiki-link" href="quick-start.html">Guida Rapida (60 secondi)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Guide pratiche</div>
+          <a class="wiki-link" href="host-guide.html">Guida Host — Trasmettere</a>
+          <a class="wiki-link" href="listener-guide.html">Guida Ascoltatore — Ricevere</a>
+          <a class="wiki-link" href="control-center.html">Control Center Web</a>
+          <a class="wiki-link" href="cli-menu.html">Menu CLI &amp; Script Windows</a>
+          <a class="wiki-link" href="native-wasapi.html">Helper WASAPI Nativo</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configurazione</div>
+          <a class="wiki-link" href="configuration.html">Variabili d'Ambiente &amp; Porte</a>
+          <a class="wiki-link" href="networking.html">Rete, IP &amp; Discovery mDNS</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Architettura tecnica</div>
+          <a class="wiki-link" href="architecture.html">Architettura del Sistema</a>
+          <a class="wiki-link" href="dsp-audio.html">Pipeline DSP &amp; Codec Opus</a>
+          <a class="wiki-link" href="anae.html">Motore Adattivo ANAE</a>
+          <a class="wiki-link" href="playout-sync.html">Playout Elastico &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Riferimenti</div>
+          <a class="wiki-link" href="signaling-protocol.html">Protocollo WebSocket</a>
+          <a class="wiki-link" href="http-api.html">API HTTP</a>
+          <a class="wiki-link" href="performance.html">Benchmark &amp; Latenza</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Sicurezza</div>
+          <a class="wiki-link" href="security.html">Modello di Sicurezza &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Assistenza</div>
+          <a class="wiki-link" href="troubleshooting.html">Risoluzione Problemi</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Sviluppo &amp; Contribuire</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Percorso">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Benchmark &amp; Latenza</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Benchmark &amp; Latenza</h1>
+
+          <p class="lead">
+            Numeri misurati, non promessi: latenza end-to-end, comportamento per tipo di rete e suite di benchmark
+            riproducibile.
+          </p>
+
+          <h2 class="anchor-h" id="latenza">Latenza glass-to-ear</h2>
+          <p>
+            "Glass-to-ear" = dal momento in cui il suono esce dal mixer di Windows al momento in cui esce dal DAC del
+            telefono.
+          </p>
+          <ul>
+            <li><strong>Tipica osservata: 35–65 ms</strong> (Wi-Fi 5 GHz pulita, host via Ethernet).</li>
+            <li><strong>Stima conservativa: ~55–75 ms</strong> (somma dei limiti superiori di ogni stadio).</li>
+          </ul>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Stadio</th>
+                  <th class="num">Tipico</th>
+                  <th class="num">Limite conservativo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cattura (loopback → buffer Chromium)</td>
+                  <td class="num">5 ms</td>
+                  <td class="num">10 ms</td>
+                </tr>
+                <tr>
+                  <td>DSP (high-pass + EQ + limiter)</td>
+                  <td class="num">&lt; 1 ms</td>
+                  <td class="num">1 ms</td>
+                </tr>
+                <tr>
+                  <td>Encoding Opus (frame 20 ms)</td>
+                  <td class="num">20 ms</td>
+                  <td class="num">20 ms</td>
+                </tr>
+                <tr>
+                  <td>Trasmissione Wi-Fi (PC → AP → telefono)</td>
+                  <td class="num">2–4 ms</td>
+                  <td class="num">8 ms</td>
+                </tr>
+                <tr>
+                  <td>Jitter buffer ricevente</td>
+                  <td class="num">22 ms</td>
+                  <td class="num">22–35 ms</td>
+                </tr>
+                <tr>
+                  <td>Decode + DAC mobile</td>
+                  <td class="num">5–8 ms</td>
+                  <td class="num">15 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>Totale</strong></td>
+                  <td class="num"><strong>35–65 ms</strong></td>
+                  <td class="num"><strong>~55–75 ms</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="wifi">Comportamento per rete</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Rete</th>
+                  <th class="num">RTT</th>
+                  <th class="num">Jitter</th>
+                  <th class="num">Perdita</th>
+                  <th>Tier ANAE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Wi-Fi 6/6E</td>
+                  <td class="num">2–8 ms</td>
+                  <td class="num">&lt;1 ms</td>
+                  <td class="num">0.0%</td>
+                  <td>Tier 5 · 256k</td>
+                </tr>
+                <tr>
+                  <td>Wi-Fi 5 canale pulito</td>
+                  <td class="num">8–15 ms</td>
+                  <td class="num">1–3 ms</td>
+                  <td class="num">&lt;0.1%</td>
+                  <td>Tier 5 · 256k</td>
+                </tr>
+                <tr>
+                  <td>Wi-Fi 5 multi-muro</td>
+                  <td class="num">18–35 ms</td>
+                  <td class="num">3–6 ms</td>
+                  <td class="num">0.2–0.8%</td>
+                  <td>Tier 4 · 224k</td>
+                </tr>
+                <tr>
+                  <td>Wi-Fi 4 2.4 GHz tranquilla</td>
+                  <td class="num">25–45 ms</td>
+                  <td class="num">4–10 ms</td>
+                  <td class="num">0.5–1.5%</td>
+                  <td>Tier 3 · 160k</td>
+                </tr>
+                <tr>
+                  <td>Wi-Fi 4 2.4 GHz congestionata</td>
+                  <td class="num">65–110 ms</td>
+                  <td class="num">15–25 ms</td>
+                  <td class="num">2–3.8%</td>
+                  <td>Tier 2 · 128k</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="confronto">Confronto con le alternative locali</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Metrica</th>
+                  <th>Wifora</th>
+                  <th>Bluetooth</th>
+                  <th>AirPlay 2</th>
+                  <th>VLC HTTP + cavo virtuale</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Latenza</td>
+                  <td><strong>35–75 ms</strong></td>
+                  <td>150–250 ms</td>
+                  <td>1–2 s</td>
+                  <td>2–4 s</td>
+                </tr>
+                <tr>
+                  <td>App client</td>
+                  <td>Nessuna</td>
+                  <td>Pairing OS</td>
+                  <td>Solo Apple</td>
+                  <td>VLC richiesta</td>
+                </tr>
+                <tr>
+                  <td>Dispositivi sincroni</td>
+                  <td>Fino a 5–8</td>
+                  <td>1</td>
+                  <td>Sì</td>
+                  <td>Desincronizzati</td>
+                </tr>
+                <tr>
+                  <td>Sample rate</td>
+                  <td>48 kHz</td>
+                  <td>44.1/48 kHz</td>
+                  <td>44.1 kHz</td>
+                  <td>44.1 kHz</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="suite">Suite di benchmark automatizzata</h2>
+          <pre class="code" data-copy><code>npm run benchmark
+# scrive benchmarks/results.csv e benchmarks/benchmark-summary.json</code></pre>
+          <p>Otté misurazioni su un server reale in loopback (statistiche min/max/mean/p50/p95/p99/stdDev/jitter):</p>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Benchmark</th>
+                  <th class="num">Iterazioni</th>
+                  <th class="num">Media</th>
+                  <th class="num">p95</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Auth hostKey timing-safe</td>
+                  <td class="num">10.000</td>
+                  <td class="num">~0.87 µs</td>
+                  <td class="num">1.4 µs</td>
+                </tr>
+                <tr>
+                  <td>Opus SDP munging</td>
+                  <td class="num">10.000</td>
+                  <td class="num">~3.5 µs</td>
+                  <td class="num">5.2 µs</td>
+                </tr>
+                <tr>
+                  <td>HTTP /api/network</td>
+                  <td class="num">1.000</td>
+                  <td class="num">~3.6 ms</td>
+                  <td class="num">4.4 ms</td>
+                </tr>
+                <tr>
+                  <td>Generazione QR PNG</td>
+                  <td class="num">100</td>
+                  <td class="num">~12.7 ms</td>
+                  <td class="num">14.6 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>Relay signaling WebSocket (RTT)</strong></td>
+                  <td class="num">1.000</td>
+                  <td class="num"><strong>~0.08 ms</strong></td>
+                  <td class="num">0.13 ms</td>
+                </tr>
+                <tr>
+                  <td>AudioEngine ingest/read</td>
+                  <td class="num">10.000</td>
+                  <td class="num">~0.28 µs</td>
+                  <td class="num">0.6 µs</td>
+                </tr>
+                <tr>
+                  <td>DriftController observation</td>
+                  <td class="num">10.000</td>
+                  <td class="num">~0.18 µs</td>
+                  <td class="num">0.3 µs</td>
+                </tr>
+                <tr>
+                  <td>Validazione protocollo controllo</td>
+                  <td class="num">10.000</td>
+                  <td class="num">~0.33 µs</td>
+                  <td class="num">0.6 µs</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Rig hardware usati per i test RF</h3>
+          <ul>
+            <li>Host: Windows 11 Pro (build 22631), Wi-Fi 6 Intel AX210 160 MHz + Gigabit Ethernet.</li>
+            <li>Riceventi: iPhone 15 Pro (iOS 17.5 / Safari 17) e Google Pixel 8 (Android 14 / Chrome).</li>
+            <li>Periodo delle misurazioni: agosto 2026; Node 18+ (CI su 18/20/22).</li>
+          </ul>
+
+          <h2 class="anchor-h" id="ottimizzare">Come ottenere il massimo</h2>
+          <ol>
+            <li>PC host via <strong>Ethernet</strong> (libera l'aria del Wi-Fi per i telefoni).</li>
+            <li>Router in vista, banda <strong>5 GHz</strong>, canali poco affollati.</li>
+            <li>Profili: gaming → Low Latency; musica critica → Hi-Fi; tutto il resto → Adattivo.</li>
+            <li>Nei notebook: profilo alimentazione "Massime prestazioni" e risparmio energetico Wi-Fi disattivato.</li>
+          </ol>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Navigazione pagina">
+          <a class="prevnext-link" href="http-api.html"
+            ><span class="prevnext-dir">← Precedente</span><span class="prevnext-title">API HTTP</span></a
+          >
+          <a class="prevnext-link next" href="security.html"
+            ><span class="prevnext-dir">Prossima →</span><span class="prevnext-title">Sicurezza &amp; Privacy</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Supporta il progetto su Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../../assets/site.js"></script>
+  </body>
+</html>

@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playout Elastico & Clock Sync · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Buffer di riproduzione elastico AudioWorklet, concealment hold-and-fade e sincronizzazione di clock stile NTP."
+    />
+    <link rel="icon" type="image/png" href="../../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+  </head>
+  <body data-page="playout-sync">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../../assets/../index.html">
+        <img src="../../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Funzioni</a>
+        <a href="../index.html#how">Come funziona</a>
+        <a href="../index.html#performance">Prestazioni</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../../wiki/playout-sync.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          EN
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Inizia qui</div>
+          <a class="wiki-link" href="index.html">Benvenuto nella Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Compatibilità Browser</a>
+          <a class="wiki-link" href="installation.html">Installazione</a>
+          <a class="wiki-link" href="quick-start.html">Guida Rapida (60 secondi)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Guide pratiche</div>
+          <a class="wiki-link" href="host-guide.html">Guida Host — Trasmettere</a>
+          <a class="wiki-link" href="listener-guide.html">Guida Ascoltatore — Ricevere</a>
+          <a class="wiki-link" href="control-center.html">Control Center Web</a>
+          <a class="wiki-link" href="cli-menu.html">Menu CLI &amp; Script Windows</a>
+          <a class="wiki-link" href="native-wasapi.html">Helper WASAPI Nativo</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configurazione</div>
+          <a class="wiki-link" href="configuration.html">Variabili d'Ambiente &amp; Porte</a>
+          <a class="wiki-link" href="networking.html">Rete, IP &amp; Discovery mDNS</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Architettura tecnica</div>
+          <a class="wiki-link" href="architecture.html">Architettura del Sistema</a>
+          <a class="wiki-link" href="dsp-audio.html">Pipeline DSP &amp; Codec Opus</a>
+          <a class="wiki-link" href="anae.html">Motore Adattivo ANAE</a>
+          <a class="wiki-link" href="playout-sync.html">Playout Elastico &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Riferimenti</div>
+          <a class="wiki-link" href="signaling-protocol.html">Protocollo WebSocket</a>
+          <a class="wiki-link" href="http-api.html">API HTTP</a>
+          <a class="wiki-link" href="performance.html">Benchmark &amp; Latenza</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Sicurezza</div>
+          <a class="wiki-link" href="security.html">Modello di Sicurezza &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Assistenza</div>
+          <a class="wiki-link" href="troubleshooting.html">Risoluzione Problemi</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Sviluppo &amp; Contribuire</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Percorso">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Playout Elastico &amp; Clock Sync</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Playout Elastico &amp; Clock Sync</h1>
+
+          <p class="lead">
+            Il segreto dell'audio "senza crepe": un buffer AudioWorklet che si allunga quando serve, si accorcia quando
+            può, e un clock sincronizzato stile NTP.
+          </p>
+
+          <h2 class="anchor-h" id="problema">I tre nemici</h2>
+          <ul>
+            <li><strong>Jitter di rete:</strong> i pacchetti arrivano con spaziatura irregolare.</li>
+            <li><strong>Pacchetti persi:</strong> buchi nel flusso.</li>
+            <li>
+              <strong>Clock drift:</strong> il DAC del telefono e quello del PC differiscono di decine di ppm: senza
+              correzione il buffer si svuota o straripa col tempo.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="buffer">ElasticPlayoutBuffer — i parametri</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Parametro</th>
+                  <th class="num">Valore</th>
+                  <th>A cosa serve</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Capacità ring stereo</td>
+                  <td class="num">240 ms (11.520 frame × 2)</td>
+                  <td>Tetto fisico del buffer</td>
+                </tr>
+                <tr>
+                  <td>Target occupazione</td>
+                  <td class="num">80 ms</td>
+                  <td>Punto di equilibrio latenza/sicurezza</td>
+                </tr>
+                <tr>
+                  <td>Priming d'avvio</td>
+                  <td class="num">45 ms</td>
+                  <td>Suona solo dopo questo accumulo iniziale</td>
+                </tr>
+                <tr>
+                  <td>Fade-in dopo starvation</td>
+                  <td class="num">8 ms</td>
+                  <td>Rientro dolce, mai click</td>
+                </tr>
+                <tr>
+                  <td>Hold &amp; decay concealment</td>
+                  <td class="num">20 ms</td>
+                  <td>Sul buco: tiene l'ultimo campione e lo sfuma a zero</td>
+                </tr>
+                <tr>
+                  <td>Micro-rate correction</td>
+                  <td class="num">±400 ppm, gain 12 ppm/ms</td>
+                  <td>Accelera/rallenta impercettibilmente per drenare o riempire</td>
+                </tr>
+                <tr>
+                  <td>Drift esterno clampato</td>
+                  <td class="num">±150 ppm</td>
+                  <td>Il contributo del clock-sync non può dominare</td>
+                </tr>
+                <tr>
+                  <td>Catch-up</td>
+                  <td class="num">&gt; target + 120 ms</td>
+                  <td>Se si è accumulato troppo, salta l'eccesso (drop-oldest)</td>
+                </tr>
+                <tr>
+                  <td>Interpolazione</td>
+                  <td colspan="2">lineare tra campioni durante la correzione di rate</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            L'AudioWorklet gira a quantum 128 frame (~2.7 ms) e invia telemetria (~ogni 42 ms) con occupancy, underrun,
+            frame persi/tardivi. Il main thread gli passa periodicamente la correzione drift stimata dal clock-sync.
+          </p>
+
+          <h3>Concealment: perché niente click</h3>
+          <p>
+            Invece di ripetere campioni o inserire silenzio secco (entrambi udibili), il buffer tiene l'ultimo campione
+            valido con decadimento lineare su 20 ms; al ritorno dei dati risale con fade-in da 8 ms. Il risultato è una
+            micro-sfumatura al posto dello schiocco.
+          </p>
+
+          <h2 class="anchor-h" id="clock-sync">Clock sync stile NTP</h2>
+          <pre class="code"><code>Listener                    Host
+   │ ── probe {t0} ──────────▶ │
+   │ ◀── reply {t0,t1,t2} ──── │
+   t3 = ora locale listener
+
+RTT     = t3 − t0 − (t2 − t1)
+offset  = ((t1 − t0) + (t2 − t3)) / 2</code></pre>
+          <ul>
+            <li>Sonda ogni <strong>5 s</strong>; scarti: RTT negativo, RTT &gt; 500 ms, |offset| &gt; 10 s.</li>
+            <li>Offset e drift (ppm) smussati con EMA α = 0.2; drift accettato solo entro ±1000 ppm.</li>
+            <li>
+              Correzione applicata limitata a <strong>±100 ppm</strong>: playbackRate = 1 + ppm/10⁶ (best-effort sul
+              player, sempre efficace sul worklet).
+            </li>
+            <li>
+              Lo snapshot completo torna all'host (<code class="inline">clock.sync report</code>) e finisce nella UI
+              come "Sync ±x.x ms".
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="multi">Sync multi-dispositivo (sperimentale)</h2>
+          <p>
+            Esiste un controller che confronta gli offset dei vari listener di una stanza (target spread 10 ms,
+            tolleranza 40 ms, dispositivi muti ignorati dopo 15 s) e produce consigli di rate ±100 ppm per avvicinare i
+            gruppi. È la base per future sessioni sincronizzate tra stanze diverse.
+          </p>
+
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              Perché il volume del telefono usa curva quadratica? La percezione umana è logaritmica: v² rende naturale
+              la corsa centrale dello slider. Dettaglio, ma si sente.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Navigazione pagina">
+          <a class="prevnext-link" href="anae.html"
+            ><span class="prevnext-dir">← Precedente</span><span class="prevnext-title">Motore Adattivo ANAE</span></a
+          >
+          <a class="prevnext-link next" href="signaling-protocol.html"
+            ><span class="prevnext-dir">Prossima →</span><span class="prevnext-title">Protocollo WebSocket</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Supporta il progetto su Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../../assets/site.js"></script>
+  </body>
+</html>

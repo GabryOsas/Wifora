@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Installation · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="How to install Wifora on Windows: requirements, Git clone or ZIP, npm dependencies, first run, updates and clean uninstall."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="installation">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/installation.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Installation</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Installation</h1>
+
+          <p class="lead">
+            Three commands and you're live. No system services, no drivers: Wifora lives entirely inside one folder.
+          </p>
+
+          <h2 class="anchor-h" id="prerequisites">Prerequisites</h2>
+          <ul>
+            <li><strong>Host PC:</strong> Windows 10 or 11.</li>
+            <li><strong>Host browser:</strong> Google Chrome or Microsoft Edge (up to date).</li>
+            <li>
+              <strong>Node.js ≥ 18</strong>: get it at
+              <a class="txt" href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> (LTS). Verify with
+              <code class="inline">node -v</code>.
+            </li>
+            <li><strong>Git</strong> (optional, only for the clone method).</li>
+            <li><strong>Network:</strong> PC and devices on the same LAN (Wi-Fi or Ethernet).</li>
+          </ul>
+
+          <h2 class="anchor-h" id="method-a">Method A — Git clone (recommended)</h2>
+          <pre class="code" data-copy><code>git clone https://github.com/GabryOsas/Wifora.git
+cd Wifora
+npm install</code></pre>
+
+          <h2 class="anchor-h" id="method-b">Method B — ZIP archive</h2>
+          <ol>
+            <li>
+              Open the
+              <a class="txt" href="https://github.com/GabryOsas/Wifora/releases/latest" target="_blank" rel="noopener"
+                >Releases</a
+              >
+              page and download <code class="inline">Source code (zip)</code>.
+            </li>
+            <li>
+              Extract the folder wherever you like (e.g. <code class="inline">C:\Wifora</code>). Spaces in the path are
+              fine.
+            </li>
+            <li>Open PowerShell/CMD there and run <code class="inline">npm install</code>.</li>
+          </ol>
+
+          <h2 class="anchor-h" id="dependencies">What npm installs</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Package</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">ws</code></td>
+                  <td>WebSocket server for WebRTC signaling and the native audio relay.</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">qrcode</code></td>
+                  <td>Server-side QR PNG generation (<code class="inline">/qr</code> endpoint).</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">bonjour-service</code></td>
+                  <td>mDNS/Bonjour advertisement as <code class="inline">_wifora._tcp.local</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Three runtime dependencies, zero native Node binaries: a light, reliable install. ESLint and Prettier are
+            devDependencies only.
+          </p>
+
+          <h2 class="anchor-h" id="first-run">First run</h2>
+          <pre class="code" data-copy><code>npm start</code></pre>
+          <p>Alternatives:</p>
+          <ul>
+            <li>
+              <code class="inline">npm run menu</code> — interactive terminal menu (<a class="txt" href="cli-menu.html"
+                >CLI guide</a
+              >);
+            </li>
+            <li>
+              double-click <code class="inline">Avvia-Wifora.bat</code> — checks Node, runs
+              <code class="inline">npm install</code> on first use, opens the menu;
+            </li>
+            <li>
+              double-click <code class="inline">Controllo-Wifora.bat</code> — starts straight into the web console (<a
+                class="txt"
+                href="control-center.html"
+                >Control Center</a
+              >).
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="verify">Verify it works</h2>
+          <ol>
+            <li>
+              Open <code class="inline">http://localhost:3975</code> on the PC: you are redirected to the host page (on
+              a phone, the same address lands on the listening page).
+            </li>
+            <li>
+              The terminal prints <code class="inline">Wifora ready at http://localhost:3975/host.html</code> plus the
+              LAN URL for smartphones.
+            </li>
+            <li>
+              On first start Windows may ask firewall permission for Node.js: allow it on
+              <strong>private networks</strong>.
+            </li>
+          </ol>
+
+          <h2 class="anchor-h" id="update">Updating</h2>
+          <pre class="code" data-copy><code>git pull
+npm install   # only if package.json changed</code></pre>
+          <p>
+            ZIP method: download the new archive and replace the files (your local
+            <code class="inline">wifora.config.json</code> is not part of the repository).
+          </p>
+
+          <h2 class="anchor-h" id="uninstall">Clean uninstall</h2>
+          <ol>
+            <li>
+              Run <code class="inline">Termina-Wifora.bat</code> (or close the terminal with Ctrl+C): processes stop,
+              ports 3975/3976 are freed.
+            </li>
+            <li>Delete the project folder. Done.</li>
+          </ol>
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              Wifora creates no Windows services, scheduled tasks or registry entries. Everything lives in the folder;
+              user preferences (theme, language) are stored in your browser's localStorage.
+            </p>
+          </div>
+
+          <h2 class="anchor-h" id="native-helper">Optional: native WASAPI helper</h2>
+          <p>
+            For maximum capture robustness you can compile <code class="inline">wifora-audio.exe</code> from the bundled
+            C++ sources. It is not required: the browser path works on its own. See the
+            <a class="txt" href="native-wasapi.html">dedicated page</a>.
+          </p>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="compatibility.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Browser Compatibility</span></a
+          >
+          <a class="prevnext-link next" href="quick-start.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">Quick Start</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

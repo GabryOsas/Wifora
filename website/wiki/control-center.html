@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Web Control Center · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Wifora web console: start/stop the server, change port, live logs, QR pairing and network adapter overview."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="control-center">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/control-center.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Web Control Center</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Web Control Center</h1>
+
+          <p class="lead">
+            A browser console to manage the Wifora server without touching the terminal: start, stop, port changes, live
+            logs and pairing QR.
+          </p>
+
+          <h2 class="anchor-h" id="launch">How to launch it</h2>
+          <pre class="code" data-copy><code>npm run console
+# or
+node control-center.mjs --wifora-control --open
+# or double-click Controllo-Wifora.bat</code></pre>
+          <p>
+            It opens <code class="inline">http://localhost:3976</code>. The Control Center is a small separate daemon
+            that owns the streaming process.
+          </p>
+
+          <h2 class="anchor-h" id="interface">Interface sections</h2>
+          <h3>Server status</h3>
+          <ul>
+            <li>
+              Pill showing <span class="badge badge-good">Running</span>/<span class="badge badge-bad">Stopped</span>.
+            </li>
+            <li>
+              Three metrics: configured <strong>Port</strong>, <strong>Uptime</strong> ("Xh Ym"), total
+              <strong>Listeners</strong> with the device-name list.
+            </li>
+            <li>"Open Host Page" link whenever the server is running.</li>
+          </ul>
+          <h3>Server actions</h3>
+          <p>
+            <strong>Start</strong>, <strong>Stop</strong>, <strong>Restart</strong>. Starting while already active
+            returns "already-running". If the chosen port is busy, the daemon attempts a <em>takeover</em>: it closes
+            orphan Wifora processes and frees the port before starting.
+          </p>
+          <h3>Pair your phone</h3>
+          <p>
+            200×200 QR with the PC's listening URL (updated for the active network), plus a copyable URL field with
+            "copied" feedback.
+          </p>
+          <h3>Port change</h3>
+          <ul>
+            <li>
+              Number input valid in <strong>1024–65535</strong>; saving persists the value into
+              <code class="inline">wifora.config.json</code>.
+            </li>
+            <li>
+              If the server is running it restarts automatically on the new port (restart=false flag available via API).
+            </li>
+            <li>"Free Port &amp; Stop Processes" force-closes whoever occupies the port.</li>
+          </ul>
+          <h3>Network adapters</h3>
+          <p>
+            List of physical adapters with IPs and ready-made listening URLs; the first is marked as recommended for
+            phones. Virtual adapters (VPN, Docker, Hyper-V, Tailscale…) are filtered automatically.
+          </p>
+
+          <h2 class="anchor-h" id="api">Daemon API</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Endpoint</th>
+                  <th>Method</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">/api/status</code></td>
+                  <td>GET</td>
+                  <td>running, pid, uptime, port, listeners, rooms, LAN IPs, adapters</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/logs?since=N</code></td>
+                  <td>GET</td>
+                  <td>Incremental logs with cursor (400-line ring buffer)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/server/start</code></td>
+                  <td>POST</td>
+                  <td>Starts the streamer; 409 if already running; takeover when the port is busy</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/server/stop</code></td>
+                  <td>POST</td>
+                  <td>Graceful stop (IPC) + forced sweep; reports portFree</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/server/restart</code></td>
+                  <td>POST</td>
+                  <td>stop + start in one call</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/port</code></td>
+                  <td>POST</td>
+                  <td>{port} valid 1024–65535, saves config, optional restart</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/api/port/free</code></td>
+                  <td>POST</td>
+                  <td>Force-frees the given port</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">/qr?text=…</code></td>
+                  <td>GET</td>
+                  <td>QR PNG identical to the streamer's</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="security">Daemon security</h2>
+          <ul>
+            <li>Binds to <strong>127.0.0.1 only</strong>: no other network device can reach it.</li>
+            <li>Mutations (POST) verify the Origin header against the host (same-origin guard).</li>
+            <li>Bodies capped at 4 KB; API responses are always no-store.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="process">How it manages the streamer process</h2>
+          <ol>
+            <li>
+              Spawns <code class="inline">node server.mjs --wifora-managed</code> with a dedicated IPC channel and PORT
+              in its environment.
+            </li>
+            <li>Waits for readiness by polling <code class="inline">/api/stats</code> every 250 ms (6 s deadline).</li>
+            <li>
+              On stop: IPC message <code class="inline">wifora:shutdown</code> → 2.5 s grace → forced taskkill →
+              port-free verification.
+            </li>
+            <li>
+              The UI polls <code class="inline">/api/status</code> every 2 seconds; if the daemon is unreachable a
+              "Console unreachable" banner appears.
+            </li>
+          </ol>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="listener-guide.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Listener Guide</span></a
+          >
+          <a class="prevnext-link next" href="cli-menu.html"
+            ><span class="prevnext-dir">Next →</span
+            ><span class="prevnext-title">CLI Menu &amp; Windows Scripts</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

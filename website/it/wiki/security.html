@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sicurezza & Privacy · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Modello di sicurezza di Wifora: autenticazione constant-time, rate limiting, CSP, isolamento LAN, privacy by design."
+    />
+    <link rel="icon" type="image/png" href="../../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+  </head>
+  <body data-page="security">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../../assets/../index.html">
+        <img src="../../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Funzioni</a>
+        <a href="../index.html#how">Come funziona</a>
+        <a href="../index.html#performance">Prestazioni</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../../wiki/security.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          EN
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Inizia qui</div>
+          <a class="wiki-link" href="index.html">Benvenuto nella Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Compatibilità Browser</a>
+          <a class="wiki-link" href="installation.html">Installazione</a>
+          <a class="wiki-link" href="quick-start.html">Guida Rapida (60 secondi)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Guide pratiche</div>
+          <a class="wiki-link" href="host-guide.html">Guida Host — Trasmettere</a>
+          <a class="wiki-link" href="listener-guide.html">Guida Ascoltatore — Ricevere</a>
+          <a class="wiki-link" href="control-center.html">Control Center Web</a>
+          <a class="wiki-link" href="cli-menu.html">Menu CLI &amp; Script Windows</a>
+          <a class="wiki-link" href="native-wasapi.html">Helper WASAPI Nativo</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configurazione</div>
+          <a class="wiki-link" href="configuration.html">Variabili d'Ambiente &amp; Porte</a>
+          <a class="wiki-link" href="networking.html">Rete, IP &amp; Discovery mDNS</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Architettura tecnica</div>
+          <a class="wiki-link" href="architecture.html">Architettura del Sistema</a>
+          <a class="wiki-link" href="dsp-audio.html">Pipeline DSP &amp; Codec Opus</a>
+          <a class="wiki-link" href="anae.html">Motore Adattivo ANAE</a>
+          <a class="wiki-link" href="playout-sync.html">Playout Elastico &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Riferimenti</div>
+          <a class="wiki-link" href="signaling-protocol.html">Protocollo WebSocket</a>
+          <a class="wiki-link" href="http-api.html">API HTTP</a>
+          <a class="wiki-link" href="performance.html">Benchmark &amp; Latenza</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Sicurezza</div>
+          <a class="wiki-link" href="security.html">Modello di Sicurezza &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Assistenza</div>
+          <a class="wiki-link" href="troubleshooting.html">Risoluzione Problemi</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Sviluppo &amp; Contribuire</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Percorso">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Sicurezza &amp; Privacy</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Modello di Sicurezza &amp; Privacy</h1>
+
+          <p class="lead">
+            Wifora nasce per restare nella tua rete: ecco ogni controllo di sicurezza implementato — e i limiti rimasti,
+            dichiarati onestamente.
+          </p>
+
+          <h2 class="anchor-h" id="livelli">Tre livelli separati</h2>
+          <pre class="code"><code>MEDIA      WebRTC DTLS-SRTP obbligatorio, P2P diretto sulla LAN
+           iceServers: [] → nessun pacchetto verso STUN/TURN/cloud
+SEGNALAZIONE  HTTP/WebSocket locale (opzionale HTTPS/WSS)
+           Origin allow-list + rate limiting + payload cap
+AMMINISTRAZIONE  Control Center solo su 127.0.0.1, same-origin guard
+           /api/stats solo loopback</code></pre>
+
+          <h2 class="anchor-h" id="auth">Autenticazione delle stanze</h2>
+          <ul>
+            <li>
+              <strong>hostKey:</strong> 32 byte casuali (43 char base64url = 256 bit). Verifica con
+              <code class="inline">crypto.timingSafeEqual</code>: nessun timing attack può indovinarla.
+            </li>
+            <li>
+              <strong>listenerToken:</strong> 16 byte (128 bit) incorporato nel QR/link. Senza token valido l'ingresso è
+              negato anche conoscendo il codice stanza.
+            </li>
+            <li>
+              <strong>Codice stanza:</strong> ~40 bit di entropia (charset 32^8). Da solo non basta a entrare quando c'è
+              il token; e il brute-force viene strozzato dal rate limit.
+            </li>
+            <li>
+              <strong>Sostituzione autenticata:</strong> host rientra con la stessa chiave → prende il posto del socket
+              vecchio ("Host reconnected"); chi non ha la chiave riceve solo "Questa stanza è già in uso."
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="rate-limit">Rate limiting (per IP)</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Limite</th>
+                  <th class="num">Finestra</th>
+                  <th class="num">Max</th>
+                  <th>Azione</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Upgrade WebSocket</td>
+                  <td class="num">10 s</td>
+                  <td class="num">30</td>
+                  <td>socket distrutto</td>
+                </tr>
+                <tr>
+                  <td>Codici stanza inesistenti</td>
+                  <td class="num">30 s</td>
+                  <td class="num">8</td>
+                  <td>close 1008</td>
+                </tr>
+                <tr>
+                  <td>Auth fallite (key/token)</td>
+                  <td class="num">30 s</td>
+                  <td class="num">10</td>
+                  <td>close 1008</td>
+                </tr>
+                <tr>
+                  <td>Payload messaggio</td>
+                  <td colspan="2">24 KB</td>
+                  <td>close 1009</td>
+                </tr>
+                <tr>
+                  <td>Ascoltatori per stanza</td>
+                  <td colspan="2">default 5 (max 32)</td>
+                  <td>rifiuto con messaggio chiaro</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="http">HTTP hardening</h2>
+          <pre class="code"><code>Content-Security-Policy: default-src 'self'; connect-src 'self' ws: wss:;
+  img-src 'self' data:; media-src 'self' blob:; script-src 'self';
+  style-src 'self'; base-uri 'self'; form-action 'self'
+Cross-Origin-Resource-Policy: same-origin · Referrer-Policy: no-referrer
+X-Content-Type-Options: nosniff · X-Frame-Options: DENY
+Permissions-Policy: camera=(), microphone=(), geolocation=()</code></pre>
+          <ul>
+            <li>Nessuno script né stile inline: la CSP resta stretta e i test lo verificano.</li>
+            <li>
+              Path traversal bloccato due volte: filtro su <code class="inline">..</code>/<code class="inline"
+                >%2e%2e</code
+              >
+              e verifica finale che il path normalizzato stia dentro <code class="inline">public/</code>.
+            </li>
+            <li>
+              Origin WebSocket verificata contro localhost + IP LAN attivi sulla porta esatta: le pagine esterne
+              maliziose non possono aprire il signaling (CSWSH respinto).
+            </li>
+            <li>MIME whitelist: niente file arbitrari serviti dal disco.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="privacy">Privacy by design</h2>
+          <ul>
+            <li>
+              <strong>Zero telemetria, zero analytics, zero beacon.</strong> Nessuna chiamata fuori dalla LAN, nemmeno
+              per controllare aggiornamenti.
+            </li>
+            <li>I log non contengono mai hostKey, listenerToken, dump SDP o credenziali ICE.</li>
+            <li>Telemetria dei dispositivi solo in memoria, solo per la durata della sessione.</li>
+            <li>Dipendenze runtime minime (3) con audit settimanale in CI (npm audit --audit-level=high).</li>
+          </ul>
+
+          <h2 class="anchor-h" id="limiti">Limiti noti (trasparenza)</h2>
+          <ul>
+            <li>
+              In HTTP puro la segnalazione viaggia in chiaro <em>sulla tua LAN</em>: il media resta comunque cifrato
+              DTLS-SRTP. Per reti condivise usa la modalità TLS.
+            </li>
+            <li>
+              Chi ha fisicamente accesso alla rete e al link completo (con token) può ascoltare: è il modello d'uso
+              (come dare le chiavi di casa).
+            </li>
+            <li>
+              Non ci sono account né permessi granulari: la sicurezza si fonda su segreto-per-stanza + rete fidata.
+            </li>
+          </ul>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Navigazione pagina">
+          <a class="prevnext-link" href="performance.html"
+            ><span class="prevnext-dir">← Precedente</span
+            ><span class="prevnext-title">Benchmark &amp; Latenza</span></a
+          >
+          <a class="prevnext-link next" href="troubleshooting.html"
+            ><span class="prevnext-dir">Prossima →</span><span class="prevnext-title">Risoluzione Problemi</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Supporta il progetto su Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../../assets/site.js"></script>
+  </body>
+</html>

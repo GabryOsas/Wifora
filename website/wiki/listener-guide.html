@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Listener Guide · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="How to receive PC audio on iPhone, iPad and Android with Wifora: QR code, PWA install, Wake Lock, network HUD."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="listener-guide">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/listener-guide.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Listener Guide</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Listener Guide — Receiving Audio</h1>
+
+          <p class="lead">
+            How to join from iPhone, iPad, Android or a second PC — and how to get the most out of every control on the
+            listening page.
+          </p>
+
+          <h2 class="anchor-h" id="connecting">Three ways to connect</h2>
+          <ol>
+            <li><strong>QR code</strong> (recommended): scan with your phone. It already contains room and token.</li>
+            <li>
+              <strong>Direct link:</strong> open the URL shown by the host, in the form
+              <code class="inline">http://IP:3975/listen.html?room=CODE&amp;token=…</code>.
+            </li>
+            <li>
+              <strong>Manual entry:</strong> go to <code class="inline">http://PC-IP:3975/listen.html</code> and type
+              the 8-character code. If the room is token-protected you also need the token from the link (the code alone
+              suffices only when the host generated no token).
+            </li>
+          </ol>
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              The <strong>token</strong> stops anyone who merely knows the room code (8 characters) from listening
+              silently: without a valid token the join is refused with "Invalid or missing listener token." See
+              <a class="txt" href="security.html">Security</a>.
+            </p>
+          </div>
+
+          <h2 class="anchor-h" id="player">The playback screen</h2>
+          <ul>
+            <li>
+              <strong>Status pill</strong>: Connected / Waiting / Weak signal / Disconnected, refreshed every second
+              with telemetry.
+            </li>
+            <li>
+              <strong>Local volume</strong>: adjusts only your headphones. The curve is perceptual (v²) so mid-range
+              feels natural.
+            </li>
+            <li><strong>VU meter</strong>: instantaneous level of the received stream (dedicated FFT-64 analyser).</li>
+            <li>
+              <strong>Wake Lock</strong>: on-by-default toggle asking the system to keep the screen awake while
+              listening (where the API exists).
+            </li>
+            <li>
+              <strong>Screen lock / app switch:</strong> audio resumes automatically when you return; if the browser
+              blocks autoplay a "Tap to enable audio" box appears.
+            </li>
+          </ul>
+
+          <h3>Connection &amp; network details (HUD)</h3>
+          <p>The "Connection &amp; Network Details" accordion shows three live measures:</p>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Indicator</th>
+                  <th>How to read it</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Signal</strong></td>
+                  <td>
+                    "Great Wi-Fi" / "Good" / "Unstable": bad when RTT &gt; 100 ms or loss &gt; 3%, warn above RTT 70 ms
+                    or 1.2% loss (with 2-sample anti-flapping)
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Latency</strong></td>
+                  <td>Current RTT to the host in milliseconds</td>
+                </tr>
+                <tr>
+                  <td><strong>Loss</strong></td>
+                  <td>Packet-loss percentage detected by WebRTC</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            On the host panel your device row also shows Buffer (current jitter target), Sync (± estimated clock offset)
+            and the active ANAE tier bitrate.
+          </p>
+
+          <h2 class="anchor-h" id="media-session">Media controls</h2>
+          <p>
+            The lock screen and system quick controls show "Wifora — Live Audio" with artwork and integrated play/pause
+            (MediaSession API).
+          </p>
+
+          <h2 class="anchor-h" id="pwa">Install as an app (PWA)</h2>
+          <ul>
+            <li><strong>Android:</strong> Chrome offers the "Add to Home screen" banner, or menu → Install app.</li>
+            <li>
+              <strong>iOS:</strong> Safari → Share → "Add to Home Screen". The app opens full-screen with no browser
+              bar.
+            </li>
+          </ul>
+          <p>
+            The PWA pre-caches the shell (page, styles, logo) and works offline as an interface: of course audio only
+            flows while the host is broadcasting on your network.
+          </p>
+
+          <h2 class="anchor-h" id="reliability">Connection reliability</h2>
+          <ul>
+            <li>
+              <strong>Keep-alive:</strong> ping every 6 s; automatic reconnect with exponential backoff (500 ms → 5 s,
+              max 6 attempts).
+            </li>
+            <li>
+              <strong>Peer recovery:</strong> if after 8 s the media connection isn't back, the client voluntarily
+              recycles its socket (close 4010) for a clean restart.
+            </li>
+            <li>
+              <strong>Clean exit:</strong> the exit button notifies the host instantly (no timeout wait); even closing
+              the tab sends a reliable notification (sendBeacon).
+            </li>
+            <li>
+              <strong>Kick:</strong> if the host removes you, you see "You have been disconnected by the PC host." and
+              cannot rejoin that room.
+            </li>
+          </ul>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="host-guide.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Host Guide</span></a
+          >
+          <a class="prevnext-link next" href="control-center.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">Web Control Center</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

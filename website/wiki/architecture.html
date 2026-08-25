@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>System Architecture · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Inside Wifora: components, session lifecycle, room lifecycle, Windows process management and source module map."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="architecture">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/architecture.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>System Architecture</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>System Architecture</h1>
+
+          <p class="lead">
+            Wifora inside: components, the life of a session, room lifecycle and the source module map.
+          </p>
+
+          <h2 class="anchor-h" id="components">Components</h2>
+          <pre class="code"><code>[Windows PC — Host]
+  Browser (Chrome/Edge)          Optional WASAPI helper
+  ├─ getDisplayMedia loopback    wifora-audio.exe
+  │   └─ Web Audio DSP               └─ stdout Float32 PCM (WFR1)
+  ├─ Opus encoder + RTCPeerConnection        │
+  └─ WebSocket /signal                       ▼
+                              [Node.js Server :3975]
+                               ├─ Static HTTP + QR + API
+                               ├─ Signaling WebSocket (/signal)
+                               ├─ Native relay (/native-audio, localhost only)
+                               └─ Bonjour/mDNS _wifora._tcp.local
+                                          │
+              [Control Center daemon :3976, 127.0.0.1 only]
+                                          │
+        [Listeners: iPhone/iPad/Android/PC]
+         WebRTC P2P (DTLS-SRTP) ◀──── direct media from host
+         WebSocket /signal ◀───────── signaling only</code></pre>
+          <p>
+            Core principle: <strong>media never passes through the server</strong>. Node.js coordinates (who's here, who
+            joins with which credentials) while audio travels directly from PC to devices as encrypted peer-to-peer.
+          </p>
+
+          <h2 class="anchor-h" id="session">Life of a session</h2>
+          <ol>
+            <li>
+              The host presses Start: capture → DSP → encoder ready; it generates roomId (8 chars), hostKey (256-bit)
+              and listenerToken (128-bit).
+            </li>
+            <li>
+              The host registers on <code class="inline">/signal</code>; the server creates the room and confirms with
+              <code class="inline">registered</code>.
+            </li>
+            <li>
+              The phone opens the link/QR and registers as a listener with its token; the server validates and notifies
+              the host (<code class="inline">listener-joined</code>).
+            </li>
+            <li>
+              The host creates an RTCPeerConnection for that device: SDP offer (tuned Opus) → answer → ICE candidate
+              exchange.
+            </li>
+            <li>Media flows as direct DTLS-SRTP. The server keeps seeing only metadata.</li>
+            <li>
+              Every second the listener reports telemetry (<code class="inline">telemetry.report</code>) and syncs
+              clocks (<code class="inline">clock.sync</code> probe/reply/report).
+            </li>
+            <li>
+              ANAE merges host+listener measurements and, when needed, broadcasts a new audio policy
+              (bitrate/tier/FEC/stereo).
+            </li>
+            <li>
+              In the end: host stop (<code class="inline">room-ended</code> for all), voluntary listener leave, or kick
+              (<code class="inline">kicked</code>).
+            </li>
+          </ol>
+
+          <h2 class="anchor-h" id="rooms">Room lifecycle</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Server behavior</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Host closes cleanly (Stop)</td>
+                  <td>Room closed immediately; every listener receives <code class="inline">room-ended</code></td>
+                </tr>
+                <tr>
+                  <td>Host crashes/reloads</td>
+                  <td><strong>8 s</strong> grace: re-entry with the same hostKey restores everything</td>
+                </tr>
+                <tr>
+                  <td>Listener drops abnormally</td>
+                  <td>
+                    <strong>5 s</strong> grace before freeing the seat; reconnecting with the same sessionId cancels the
+                    timer
+                  </td>
+                </tr>
+                <tr>
+                  <td>Listener reconnects</td>
+                  <td>Silently replaces the old socket ("Replaced by new connection") without consuming capacity</td>
+                </tr>
+                <tr>
+                  <td>Host reconnects</td>
+                  <td>
+                    Replaces the old host socket ("Host reconnected") and immediately receives the existing listener
+                    list
+                  </td>
+                </tr>
+                <tr>
+                  <td>Empty rooms</td>
+                  <td>Automatic cleanup after <strong>60 s</strong></td>
+                </tr>
+                <tr>
+                  <td>Kicked listener</td>
+                  <td>sessionId blocked in that room; close 4000 after 80 ms</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="processes">Windows process architecture</h2>
+          <ul>
+            <li>
+              <strong>CLI menu ↔ Control daemon:</strong> the menu ensures the daemon (:3976) is alive; the daemon
+              spawns the streamer as a marked child (<code class="inline">--wifora-managed</code>) over IPC.
+            </li>
+            <li>
+              <strong>Port takeover:</strong> if the requested port is held by an orphan Wifora process, it gets closed
+              (marker → taskkill) before restart.
+            </li>
+            <li>
+              <strong>Reliable shutdown:</strong> graceful IPC → 2.5 s → forced taskkill → PowerShell sweep of marked
+              processes → port verification.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="modules">Source module map</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Path</th>
+                  <th>Responsibility</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">server.mjs</code></td>
+                  <td>Full server assembly (rooms + relay + http + signaling + TLS + discovery)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/server/http.mjs</code></td>
+                  <td>HTTP routes, static files, security headers, UA redirect</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/server/websocket.mjs</code></td>
+                  <td>Signaling: registrations, SDP/ICE routing, heartbeat, payload caps</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/server/rooms.mjs</code></td>
+                  <td>Room lifecycle and reconnection graces</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/server/rate-limiter.mjs</code></td>
+                  <td>Fixed-window per-IP rate limiters</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/server/security.mjs</code></td>
+                  <td>Security headers, origin allow-list, timing-safe comparisons</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/shared/protocol.mjs</code></td>
+                  <td>Control envelope v1 and message validation</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/audio/capture/wasapi.mjs</code></td>
+                  <td>Helper exe spawn, WFR1 frame decoder with resync</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/audio/capture/native-audio-relay.mjs</code></td>
+                  <td>Binary WS relay toward the host tab (localhost)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/audio/engine</code></td>
+                  <td>PCM ring buffer, MediaClock, DriftController</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/audio/profiles.mjs</code></td>
+                  <td>ANAE tiers and transmission profiles (single source of truth)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">src/transport/</code></td>
+                  <td>Transport abstraction: base stats, WebRTC peers, network-free RAOP prototype</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">public/*.js</code></td>
+                  <td>
+                    Client: policy engine, jitter controller, clock sync, playout worklet, device detector, i18n, logger
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              <strong>Note on the AirPlay prototype:</strong> a full RAOP state machine exists in tests
+              (ANNOUNCE/SETUP/RECORD…), deliberately without real networking. It's future exploration: today Wifora uses
+              WebRTC exclusively.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="networking.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Network &amp; mDNS</span></a
+          >
+          <a class="prevnext-link next" href="dsp-audio.html"
+            ><span class="prevnext-dir">Next →</span
+            ><span class="prevnext-title">DSP Pipeline &amp; Opus Codec</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

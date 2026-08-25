@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Troubleshooting · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Fixes for common Wifora issues: no audio, busy port, firewall, latency, dropouts, WASAPI helper and more."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="troubleshooting">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/troubleshooting.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Troubleshooting</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Troubleshooting</h1>
+
+          <p class="lead">
+            Symptom → likely cause → fix. If your issue isn't here, open a GitHub issue with DEBUG logs attached.
+          </p>
+
+          <h3>No sound on the phone</h3>
+          <ul>
+            <li>iOS showing "Tap to enable audio"? Tap it: that's the browser autoplay block.</li>
+            <li>
+              Did you tick <strong>"Share system audio"</strong> in the picker? Without it Wifora refuses to start
+              (explicit error).
+            </li>
+            <li>Volume: phone slider, in-app slider, Windows volume mixer.</li>
+            <li>
+              Audio playing through another device (HDMI monitor/Bluetooth)? Change the Windows output: the active
+              endpoint's mix is what gets streamed.
+            </li>
+          </ul>
+
+          <h3>"Nessuna trasmissione attiva per questo codice." (No active broadcast for this code)</h3>
+          <ul>
+            <li>
+              The broadcast was stopped or the host dropped beyond the 8 s grace: restart it from the PC to regenerate
+              QR/code.
+            </li>
+            <li>Wrong code: it's 8 uppercase characters, with no O/I to avoid 0/1 confusion.</li>
+          </ul>
+
+          <h3>"La stanza ha già raggiunto il limite di ascoltatori." (Room listener limit reached)</h3>
+          <p>
+            Limit hit (default 5). Kick a device from the host or raise the cap:
+            <code class="inline">set WIFORA_MAX_LISTENERS=8</code> and restart (max 32; beyond ~10 on 2.4 GHz it's the
+            Wi-Fi that suffers, not Wifora).
+          </p>
+
+          <h3>"Port already in use" / port 3975 busy</h3>
+          <ol>
+            <li>
+              Open the Control Center → <strong>Free Port</strong>, or run
+              <code class="inline">Termina-Wifora.bat</code>.
+            </li>
+            <li>Alternatively change port (CLI "Change Port", or <code class="inline">PORT=8080 npm start</code>).</li>
+          </ol>
+
+          <h3>The phone can't reach the PC</h3>
+          <ul>
+            <li>
+              Same Wi-Fi? Some routers split 2.4/5 GHz into separate "guest" SSIDs: put both devices on the same one.
+            </li>
+            <li><strong>AP isolation</strong> (guest/hotel networks): clients can't talk → use the PC's hotspot.</li>
+            <li>
+              Firewall: allow Node.js on private networks; test with
+              <code class="inline">Test-NetConnection PC-IP -Port 3975</code>.
+            </li>
+            <li>VPN active on the PC: can reroute traffic — try disabling it.</li>
+          </ul>
+
+          <h3>The QR doesn't load</h3>
+          <p>
+            Browser extensions blocking external images, or a filtered /qr endpoint. The room code + manual URL shown
+            under the QR always work.
+          </p>
+
+          <h3>Audio drifts out of sync over time</h3>
+          <ul>
+            <li>
+              Correct behavior under network stress: ANAE drops tiers and the jitter buffer grows to 35–50 ms to protect
+              you.
+            </li>
+            <li>Move to 5 GHz or closer to the router; on clean Wi-Fi you'll be back to 22 ms and ±1–2 ms sync.</li>
+            <li>Persistent huge drift? Restart the broadcast: clock-sync starts from zero.</li>
+          </ul>
+
+          <h3>Occasional clicks/pops</h3>
+          <p>
+            Real packet loss (see the loss % in the UI). FEC repairs single holes; beyond a few percent you need better
+            signal: 5 GHz, fewer walls, or the Eco profile.
+          </p>
+
+          <h3>Chrome doesn't show the "Share audio" checkbox</h3>
+          <ul>
+            <li>Update Chrome/Edge (a recent version is needed on Windows).</li>
+            <li>Select the <strong>Entire Screen</strong> tab: the option may be missing for single tabs/apps.</li>
+            <li>
+              Firefox/macOS/Linux: browsers don't support system-wide capture there (use the native WASAPI path on
+              Windows).
+            </li>
+          </ul>
+
+          <h3>iOS: no audio after screen lock</h3>
+          <p>
+            Returning to the foreground, Wifora resumes automatically (AudioContext resume + Wake Lock). On LAN HTTP
+            Wake Lock is unavailable (needs a secure context): the toggle stays off and iOS may sleep the screen —
+            install the PWA from the Home Screen for the best experience, or enable HTTPS.
+          </p>
+
+          <h3>I reloaded the host page: did I lose the room?</h3>
+          <p>
+            No: credentials live in sessionStorage (12 h) plus an 8 s server grace. You re-enter the same room with the
+            same code/QR. Only an explicit Stop closes everything.
+          </p>
+
+          <h3>"wifora-audio.exe not found" / WASAPI won't start</h3>
+          <ul>
+            <li>
+              Compile first: <code class="inline">build-wasapi.ps1</code> or CMake (<a
+                class="txt"
+                href="native-wasapi.html"
+                >guide</a
+              >).
+            </li>
+            <li>Custom path: <code class="inline">WIFORA_WASAPI_HELPER</code> variable.</li>
+            <li>Don't want to compile? Ignore it: the browser path works without.</li>
+          </ul>
+
+          <h3>Where are the logs?</h3>
+          <ul>
+            <li>The server terminal (level settable via <code class="inline">LOG_LEVEL=DEBUG</code>).</li>
+            <li>CLI menu → live dashboard (refreshed every 1.2 s).</li>
+            <li>Control Center → status/logs section (<code class="inline">/api/logs</code>).</li>
+          </ul>
+
+          <h3>Full reset</h3>
+          <pre class="code" data-copy><code>Termina-Wifora.bat          # stops processes, frees 3975+3976
+del wifora.config.json      # port back to default
+# host browser: clear sessionStorage (F12 → Application)</code></pre>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="security.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Security &amp; Privacy</span></a
+          >
+          <a class="prevnext-link next" href="faq.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">FAQ</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

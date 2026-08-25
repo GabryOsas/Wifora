@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Host Guide · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Complete guide to the Wifora broadcasting interface: profiles, DSP modes, local recording, device management and telemetry."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="host-guide">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/host-guide.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Host Guide</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Host Guide — Broadcasting Audio</h1>
+
+          <p class="lead">
+            Everything the broadcasting page (<code class="inline">host.html</code>) can do: from the QR code to local
+            recording, from audio profiles to kicking devices.
+          </p>
+
+          <h2 class="anchor-h" id="start">Starting the broadcast</h2>
+          <ol>
+            <li>Press <strong>Start Audio Broadcast</strong>.</li>
+            <li>In the browser picker choose <strong>Entire Screen</strong>.</li>
+            <li>Tick <strong>"Share system audio"</strong> and confirm.</li>
+          </ol>
+          <p>
+            Under the hood: capture is requested with tuned constraints (48 kHz, stereo, all browser "call" processing
+            disabled), video tracks are stopped instantly and audio enters the DSP chain described on the
+            <a class="txt" href="dsp-audio.html">DSP page</a>.
+          </p>
+          <p>
+            Closing the picker without sharing shows "Sharing cancelled by the user". Forgetting the audio track
+            triggers an immediate guided error.
+          </p>
+
+          <h3>Native WASAPI button (experimental)</h3>
+          <p>
+            <strong>Start with native WASAPI</strong> uses the locally compiled C++ helper to grab the system mix
+            straight from the Windows audio engine, bypassing the browser path. It must be compiled first: see
+            <a class="txt" href="native-wasapi.html">Native WASAPI Helper</a>.
+          </p>
+
+          <h2 class="anchor-h" id="dashboard">Session dashboard</h2>
+          <h3>Room code and QR</h3>
+          <ul>
+            <li>
+              <strong>Room code:</strong> 8 uppercase characters with no ambiguous letters (no O/0, I/1). Regenerated
+              for every new broadcast.
+            </li>
+            <li>
+              <strong>QR code:</strong> generated server-side (420 px PNG, error correction level M) containing the full
+              URL <code class="inline">http://IP:3975/listen.html?room=CODE&amp;token=…</code>.
+            </li>
+            <li>
+              <strong>LAN URL:</strong> copyable with a dedicated button — handy for sending it via chat to someone on
+              the same network.
+            </li>
+          </ul>
+
+          <h3>Status indicator</h3>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Meaning</th>
+                  <th>Internal logic</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-good">Connected</span></td>
+                  <td>All good</td>
+                  <td>WebSocket alive and no peer beyond degradation thresholds</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-warn">Waiting</span></td>
+                  <td>No listener yet</td>
+                  <td>Signaling active but zero connected peers</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="badge badge-warn" style="background: rgba(249, 115, 22, 0.12); color: #ea580c"
+                      >Weak signal</span
+                    >
+                  </td>
+                  <td>Network under stress</td>
+                  <td>At least one peer with loss &gt; 4% or RTT &gt; 120 ms</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-bad">Disconnected</span></td>
+                  <td>Signaling dropped</td>
+                  <td>WebSocket no longer open (auto-reconnect up to 6 attempts)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Reload-resistant session</h3>
+          <p>
+            Room credentials (roomId + hostKey + listenerToken) are kept in
+            <code class="inline">sessionStorage</code> for <strong>12 hours</strong>: reloading the page re-attaches the
+            host to the same room. If the socket dies abnormally the server keeps the room recoverable for
+            <strong>8 seconds</strong>; a valid reconnect <em>replaces</em> the previous host. A clean stop closes the
+            room for everyone immediately.
+          </p>
+
+          <h2 class="anchor-h" id="profiles">Transmission profiles</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Profile</th>
+                  <th class="num">Bitrate</th>
+                  <th>Behavior</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Adaptive (Smart Auto)</strong> — default</td>
+                  <td class="num">96–256 kbps</td>
+                  <td>
+                    ANAE switches tiers automatically based on network state (see
+                    <a class="txt" href="anae.html">ANAE</a>)
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Gaming &amp; Low Latency</strong></td>
+                  <td class="num">160 kbps</td>
+                  <td>Fixed, CBR, 10 ms framing: minimum constant latency</td>
+                </tr>
+                <tr>
+                  <td><strong>Studio Hi-Fi Master</strong></td>
+                  <td class="num">384 kbps</td>
+                  <td>Maximum fidelity, for critical music on excellent networks</td>
+                </tr>
+                <tr>
+                  <td><strong>Eco</strong></td>
+                  <td class="num">96 kbps</td>
+                  <td>Minimum Wi-Fi impact, for speech and long sessions</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="dsp">DSP modes</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th>Processing</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Clarity</strong> (default)</td>
+                  <td>20 Hz high-pass, −1 dBFS limiter (12:1): transparent rumble cleanup and anti-clipping</td>
+                </tr>
+                <tr>
+                  <td><strong>Pure</strong></td>
+                  <td>Full bypass: filters neutralized, bit-perfect from mixer to codec</td>
+                </tr>
+                <tr>
+                  <td><strong>Voice</strong></td>
+                  <td>80 Hz low-cut + 3.2 kHz presence +3.5 dB + dedicated limiter: ideal for podcasts/calls</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Changes apply with soft transitions (20 ms), no clicks. Full parameters in
+            <a class="txt" href="dsp-audio.html">DSP Pipeline</a>.
+          </p>
+
+          <h2 class="anchor-h" id="volume">Volume and VU meter</h2>
+          <ul>
+            <li>
+              The PC slider controls <em>pre-transmission gain</em>: it affects what everyone hears (unlike phone
+              volume, which is local).
+            </li>
+            <li>The VU bar shows the instantaneous level computed by the analyser (FFT 128) on the post-DSP signal.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="recording">Local recording</h2>
+          <p>
+            The record button saves what you are broadcasting to a file (pre-codec tap, so maximum quality): WebM/Opus
+            format (M4A fallback where needed), filename <code class="inline">wifora-CODE-timestamp.webm</code>, chunks
+            written every second. Recording runs entirely on your PC.
+          </p>
+
+          <h2 class="anchor-h" id="devices">Managing connected devices</h2>
+          <p>
+            Every listener appears with its detected name (e.g. "Mario's iPhone", "Galaxy S24", "Windows PC") plus a
+            live telemetry row:
+          </p>
+          <pre
+            class="code"
+          ><code>Ping 4 ms • Jitter 0.6 ms • Buffer 22 ms • Sync ±1.2 ms • 256 kbps • 0.0% loss</code></pre>
+          <ul>
+            <li>
+              If a device stops reporting telemetry for &gt; 3.5 s its row becomes "Signal Lost • Reconnecting…" (no
+              fake data).
+            </li>
+            <li>
+              The <strong>Kick</strong> button disconnects that device (close code 4000 "Kicked by host"); the phone
+              shows "You have been disconnected by the PC host."
+            </li>
+            <li>
+              A listener reconnecting with the same sessionId <em>resumes</em> their seat instead of taking a new one.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="limits">Room limits</h2>
+          <ul>
+            <li>
+              Default <strong>5 simultaneous listeners</strong>, configurable 1–32 via
+              <code class="inline">WIFORA_MAX_LISTENERS</code> (<a class="txt" href="configuration.html"
+                >configuration</a
+              >).
+            </li>
+            <li>Beyond the limit the join attempt gets "The room has reached its listener limit."</li>
+            <li>
+              Above ~8–10 concurrent streams it's the Wi-Fi's turn: on 2.4 GHz RF airtime becomes the bottleneck, not
+              Wifora.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="stop">Stopping the broadcast</h2>
+          <p>
+            <strong>Stop Broadcast</strong> closes the room: every listener receives the
+            <code class="inline">room-ended</code> event and a "Broadcast ended" toast. The room code dies with it: a
+            new broadcast means a new code.
+          </p>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="quick-start.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Quick Start</span></a
+          >
+          <a class="prevnext-link next" href="listener-guide.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">Listener Guide</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

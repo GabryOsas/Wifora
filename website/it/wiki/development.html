@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sviluppo & Contribuire · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Struttura del repository, test, lint, benchmark, CI, convenzioni di codice e come contribuire a Wifora."
+    />
+    <link rel="icon" type="image/png" href="../../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+  </head>
+  <body data-page="development">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../../assets/../index.html">
+        <img src="../../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Funzioni</a>
+        <a href="../index.html#how">Come funziona</a>
+        <a href="../index.html#performance">Prestazioni</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../../wiki/development.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          EN
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Inizia qui</div>
+          <a class="wiki-link" href="index.html">Benvenuto nella Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Compatibilità Browser</a>
+          <a class="wiki-link" href="installation.html">Installazione</a>
+          <a class="wiki-link" href="quick-start.html">Guida Rapida (60 secondi)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Guide pratiche</div>
+          <a class="wiki-link" href="host-guide.html">Guida Host — Trasmettere</a>
+          <a class="wiki-link" href="listener-guide.html">Guida Ascoltatore — Ricevere</a>
+          <a class="wiki-link" href="control-center.html">Control Center Web</a>
+          <a class="wiki-link" href="cli-menu.html">Menu CLI &amp; Script Windows</a>
+          <a class="wiki-link" href="native-wasapi.html">Helper WASAPI Nativo</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configurazione</div>
+          <a class="wiki-link" href="configuration.html">Variabili d'Ambiente &amp; Porte</a>
+          <a class="wiki-link" href="networking.html">Rete, IP &amp; Discovery mDNS</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Architettura tecnica</div>
+          <a class="wiki-link" href="architecture.html">Architettura del Sistema</a>
+          <a class="wiki-link" href="dsp-audio.html">Pipeline DSP &amp; Codec Opus</a>
+          <a class="wiki-link" href="anae.html">Motore Adattivo ANAE</a>
+          <a class="wiki-link" href="playout-sync.html">Playout Elastico &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Riferimenti</div>
+          <a class="wiki-link" href="signaling-protocol.html">Protocollo WebSocket</a>
+          <a class="wiki-link" href="http-api.html">API HTTP</a>
+          <a class="wiki-link" href="performance.html">Benchmark &amp; Latenza</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Sicurezza</div>
+          <a class="wiki-link" href="security.html">Modello di Sicurezza &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Assistenza</div>
+          <a class="wiki-link" href="troubleshooting.html">Risoluzione Problemi</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Sviluppo &amp; Contribuire</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Percorso">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Sviluppo &amp; Contribuire</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Sviluppo &amp; Contribuire</h1>
+
+          <p class="lead">
+            Struttura del repository, tooling, test e convenzioni: tutto ciò che serve per mettere le mani nel codice.
+          </p>
+
+          <h2 class="anchor-h" id="struttura">Struttura del repository</h2>
+          <pre class="code"><code>├─ server.mjs              # assemblaggio + avvio server
+├─ cli-menu.mjs            # menu interattivo terminale
+├─ control-center.mjs      # daemon console web (:3976)
+├─ logger.mjs              # logging strutturato a livelli
+├─ src/
+│  ├─ server/              # http, websocket, rooms, rate-limiter, security
+│  ├─ shared/protocol.mjs  # envelope controllo v1 + validazioni
+│  ├─ audio/               # capture WASAPI, relay nativo, engine, profiles
+│  └─ transport/           # base stats, WebRTC, prototipo RAOP (no rete)
+├─ public/                 # UI host/listener/control + PWA + worklet
+├─ native/wasapi/          # helper C++20 + CMake + script build
+├─ test/                   # 17 suite node:test (~56 test)
+├─ benchmarks/             # harness riproducibile + CSV/JSON risultati
+├─ docs/                   # architettura, performance, sicurezza, releasing
+└─ website/                # questo sito + wiki (GitHub Pages)</code></pre>
+
+          <h2 class="anchor-h" id="script">Script npm</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Comando</th>
+                  <th>Azione</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">npm start</code></td>
+                  <td>Avvia il server di streaming</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm run menu</code></td>
+                  <td>Menu CLI interattivo</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm run console</code></td>
+                  <td>Control Center web con apertura browser</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm test</code> / <code class="inline">test:watch</code></td>
+                  <td>Suite test node:test (watch incluso)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm run lint</code> / <code class="inline">lint:fix</code></td>
+                  <td>ESLint flat config</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm run format</code> / <code class="inline">format:check</code></td>
+                  <td>Prettier</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">npm run benchmark</code></td>
+                  <td>Harness benchmark → results.csv / summary.json</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="test">I test</h2>
+          <p>Runner nativo <code class="inline">node --test</code>, zero framework aggiuntivi. Copertura per area:</p>
+          <ul>
+            <li>
+              <strong>Unit/server:</strong> pattern credenziali, timing-safe, rate limiter, origin allow-list, header di
+              sicurezza.
+            </li>
+            <li><strong>HTTP:</strong> tutte le route, redirect UA, MIME, traversal 403, limiti QR.</li>
+            <li>
+              <strong>WebSocket:</strong> registrazioni host/listener con messaggi d'errore esatti, riconnessioni,
+              kick/stop-stream, SDP/ICE routing, protocollo v1 (version/payload/policy/clock-sync), close code
+              1003/1008/1009.
+            </li>
+            <li>
+              <strong>Audio:</strong> decoder WFR1 frammentato + resync, coda drop-oldest, ring
+              buffer/MediaClock/DriftController, playout elastico (priming, underrun, fade, correzione rate, overflow).
+            </li>
+            <li>
+              <strong>Adattività:</strong> tier, isteresi 2/5, health score, jitter controller, chaos test (burst
+              perdita, spike singoli, starvation).
+            </li>
+            <li>
+              <strong>Infra:</strong> mDNS publisher con Bonjour fake, transport base/WebRTC/RAOP handshake RTSP,
+              session registry.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="ci">CI e qualità</h2>
+          <ul>
+            <li><strong>Matrice:</strong> Ubuntu + Windows × Node 18.x / 20.x / 22.x → lint, format:check, test.</li>
+            <li>
+              <strong>Sicurezza:</strong> job dedicato con <code class="inline">npm audit --audit-level=high</code>.
+            </li>
+            <li><strong>Dependabot:</strong> npm settimanale (max 10 PR) + GitHub Actions (max 5).</li>
+            <li>
+              <strong>Stile:</strong> ESM (<code class="inline">.mjs</code>), Prettier senza semicolons/single
+              quote/printWidth 120; ESLint con regole no-undef/no-unused-vars.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="convenzioni">Convenzioni del progetto</h2>
+          <ul>
+            <li>Messaggi d'errore user-facing in italiano (coerenza con l'app); identificativi tecnici in inglese.</li>
+            <li>Ogni modulo crea il suo logger: <code class="inline">logger.child('Tag')</code>.</li>
+            <li>Il protocollo è versionato: campi nuovi → validazione esplicita + bump di versione dell'envelope.</li>
+            <li>Niente segreti nei log; niente dati sensibili in payload broadcast.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="contribuire">Flusso di contribuzione</h2>
+          <ol>
+            <li>Fork → branch descrittivo (<code class="inline">feat/…</code>, <code class="inline">fix/…</code>).</li>
+            <li>Prima della PR: <code class="inline">npm run lint && npm test && npm run format:check</code>.</li>
+            <li>
+              PR con descrizione chiara del problema/soluzione; se cambi il protocollo, aggiorna i test e la wiki.
+            </li>
+            <li>Aggiungi una voce sotto <code class="inline">[Unreleased]</code> nel CHANGELOG.</li>
+            <li>
+              Le release seguono SemVer: patch per fix, minor per funzioni, major per breaking — procedura completa in
+              <code class="inline">docs/RELEASING.md</code>.
+            </li>
+          </ol>
+
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              Idee benvenute: sync multi-stanza, equalizzatore per listener, statistiche storiche. Apri prima una
+              discussion/issue per design significativi.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Navigazione pagina">
+          <a class="prevnext-link" href="faq.html"
+            ><span class="prevnext-dir">← Precedente</span><span class="prevnext-title">FAQ</span></a
+          >
+          <span></span>
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Supporta il progetto su Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../../assets/site.js"></script>
+  </body>
+</html>

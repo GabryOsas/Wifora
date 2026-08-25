@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to the Wiki · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="The official Wifora wiki: installation, guides, architecture, protocol reference, security and troubleshooting."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="index">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/index.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><span>Wiki</span><span class="sep">/</span
+          ><span>Welcome</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Welcome to the Wifora Wiki</h1>
+
+          <p class="lead">
+            <strong>Wifora</strong> is an open source server that streams your Windows PC's system audio to any device
+            on the same local network — iPhone, iPad, Android or a second computer — directly in the browser, with no
+            app installs, no cloud, and a typical <strong>35–65 ms</strong> latency.
+          </p>
+          <p>
+            This documentation explains <strong>everything</strong> about the project: from the 60-second setup to the
+            deepest details of the network protocol, the ANAE adaptive engine, clock synchronization and the security
+            model. If anything is unclear, open an issue on GitHub.
+          </p>
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>Prefer Italian? Switch language anytime with the <strong>IT</strong> button in the top bar.</p>
+          </div>
+
+          <h2 class="anchor-h" id="map">Documentation map</h2>
+          <div class="wiki-cards">
+            <a class="wiki-nav-card" href="quick-start.html">
+              <h3>Quick Start</h3>
+              <p>Your first broadcast in under a minute, step by step.</p>
+            </a>
+            <a class="wiki-nav-card" href="host-guide.html">
+              <h3>Host Guide</h3>
+              <p>Every control of the broadcasting page: profiles, DSP, recording, devices.</p>
+            </a>
+            <a class="wiki-nav-card" href="listener-guide.html">
+              <h3>Listener Guide</h3>
+              <p>Receiving audio on iPhone, iPad and Android: QR code, PWA, Wake Lock.</p>
+            </a>
+            <a class="wiki-nav-card" href="architecture.html">
+              <h3>Architecture</h3>
+              <p>How it works inside: capture, DSP, codec, WebRTC, signaling, rooms.</p>
+            </a>
+            <a class="wiki-nav-card" href="configuration.html">
+              <h3>Configuration</h3>
+              <p>All environment variables, ports, the config file and HTTPS mode.</p>
+            </a>
+            <a class="wiki-nav-card" href="troubleshooting.html">
+              <h3>Troubleshooting</h3>
+              <p>Symptoms, causes and fixes for the most common problems.</p>
+            </a>
+          </div>
+
+          <h2 class="anchor-h" id="glossary">Essential glossary</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Term</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Host</strong></td>
+                  <td>The Windows PC transmitting system audio through its browser (Chrome/Edge).</td>
+                </tr>
+                <tr>
+                  <td><strong>Listener</strong></td>
+                  <td>The receiving device (phone, tablet or secondary computer).</td>
+                </tr>
+                <tr>
+                  <td><strong>Room code (roomId)</strong></td>
+                  <td>
+                    An 8-character uppercase identifier (e.g. <code class="inline">K7P2M9XA</code>) generated per
+                    broadcast. Ambiguous glyphs like O/0 and I/1 are excluded.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>hostKey</strong></td>
+                  <td>A 256-bit secret (43 base64url chars) that authenticates the broadcasting PC on the room.</td>
+                </tr>
+                <tr>
+                  <td><strong>listenerToken</strong></td>
+                  <td>
+                    An optional 128-bit token embedded in the QR/link that prevents anyone who only knows the room code
+                    from eavesdropping.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>ANAE</strong></td>
+                  <td>
+                    Adaptive Network Audio Engine: the motor that automatically adjusts bitrate and quality based on
+                    network state.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>DSP</strong></td>
+                  <td>
+                    Digital Signal Processing: the filter chain (high-pass, EQ, limiter) applied before transmission.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>WASAPI</strong></td>
+                  <td>
+                    Windows Audio Session API: used by the optional native helper to capture system audio at OS level.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>mDNS / Bonjour</strong></td>
+                  <td>
+                    Local service advertisement protocol: Wifora publishes itself as
+                    <code class="inline">_wifora._tcp.local</code>.
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>PWA</strong></td>
+                  <td>Progressive Web App: lets you "install" Wifora on your phone's home screen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="requirements">Requirements at a glance</h2>
+          <ul>
+            <li><strong>Host PC:</strong> Windows 10/11, Google Chrome or Microsoft Edge, Node.js ≥ 18.</li>
+            <li>
+              <strong>Receivers:</strong> any modern browser (Safari iOS 15+, Chrome Android 10+, desktop) — no app
+              needed.
+            </li>
+            <li>
+              <strong>Network:</strong> host and listeners on the same LAN. Wi-Fi 5 GHz (or Ethernet for the PC) is
+              recommended for best latency.
+            </li>
+          </ul>
+
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              Why is Chromium-on-Windows required to broadcast? Because it is the only browser exposing full
+              system-audio loopback capture without virtual audio drivers. Reception works on any modern browser. See
+              <a class="txt" href="compatibility.html">Browser Compatibility</a>.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Next page">
+          <span></span>
+          <a class="prevnext-link next" href="compatibility.html">
+            <span class="prevnext-dir">Next page</span>
+            <span class="prevnext-title">Browser Compatibility →</span>
+          </a>
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

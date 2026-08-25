@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebSocket Protocol · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Full reference of the Wifora WebSocket signaling protocol: messages, v1 envelope, close codes and rate limits."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="signaling-protocol">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/signaling-protocol.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>WebSocket Protocol</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>WebSocket Signaling Protocol</h1>
+
+          <p class="lead">
+            Complete reference of the messages exchanged on <code class="inline">ws(s)://host:3975/signal</code>. Useful
+            for developers and for debugging with LOG_LEVEL=DEBUG.
+          </p>
+
+          <h2 class="anchor-h" id="rules">Ground rules</h2>
+          <ul>
+            <li>JSON messages; beyond <strong>24,000 bytes</strong> → close 1009.</li>
+            <li>Malformed JSON → close <strong>1003</strong>.</li>
+            <li>Heartbeat: server ping every 10 s; silent clients are terminated.</li>
+            <li>The first expected client message is always <code class="inline">register</code>.</li>
+          </ul>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Identifier</th>
+                  <th>Pattern</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>roomId</td>
+                  <td><code class="inline">^[A-Z0-9]{8}$</code></td>
+                  <td>8 chars, ambiguity-free charset</td>
+                </tr>
+                <tr>
+                  <td>hostKey</td>
+                  <td><code class="inline">^[A-Za-z0-9_-]{43}$</code></td>
+                  <td>256-bit base64url, timing-safe compare</td>
+                </tr>
+                <tr>
+                  <td>listenerToken</td>
+                  <td><code class="inline">^[A-Za-z0-9_-]{22}$</code></td>
+                  <td>128-bit base64url, timing-safe compare</td>
+                </tr>
+                <tr>
+                  <td>deviceName</td>
+                  <td>Unicode-sanitized</td>
+                  <td>letters/digits/safe punctuation only, max 60 chars</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="client-server">Messages: client → server</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>type</th>
+                  <th>Sent by</th>
+                  <th>Main fields / effect</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">register</code></td>
+                  <td>both</td>
+                  <td>
+                    {role:"host", roomId, hostKey, listenerToken?} or {role:"listener", roomId, listenerToken?,
+                    deviceName, deviceType, sessionId?}
+                  </td>
+                </tr>
+                <tr>
+                  <td><code class="inline">offer / answer</code></td>
+                  <td>host / listener</td>
+                  <td>{target?, sdp:{sdp,…}} — routed to the right peer</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">candidate</code></td>
+                  <td>both</td>
+                  <td>{target?, candidate:{…}} — ICE relay</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">leave</code></td>
+                  <td>listener</td>
+                  <td>voluntary exit → host notified (voluntary:true)</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">stop-stream</code></td>
+                  <td>host</td>
+                  <td>closes the room: everyone receives room-ended</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">kick-listener</code></td>
+                  <td>host</td>
+                  <td>{target} → kicked + close 4000 after 80 ms; rejoin blocked</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">listener-disconnected</code></td>
+                  <td>host</td>
+                  <td>reports a WebRTC peer dead while signaling lives on</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">ping</code></td>
+                  <td>both</td>
+                  <td>application keep-alive → answered with pong</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Control envelope v1</h3>
+          <pre class="code"><code>{ "type": "telemetry.report", "version": 1, "sessionId": "ls_…",
+  "deviceId": "…", "timestamp": 1724570000000,
+  "payload": { "rttMs": 4.2, "jitterMs": 0.6, "lossPercent": 0 } }</code></pre>
+          <p>
+            Allowed types:
+            <code class="inline"
+              >session.start · session.stop · device.announce · audio.policy · telemetry.report · network.degraded ·
+              network.recovered · ice.restart · clock.sync · server.capabilities</code
+            >. The <code class="inline">audio.policy</code> event is host-only; version ≠ 1 or invalid payloads are
+            rejected with precise reasons (<code class="inline">unsupported-version</code>,
+            <code class="inline">invalid-policy</code>, …). Payload limits: ≤16 keys, scalar values, bitrate
+            6,000–512,000, ptime ∈ {10,20,40,60}, |offsetMs| ≤ 10,000, correctionPpm ≤ 200.
+          </p>
+
+          <h2 class="anchor-h" id="server-client">Messages: server → client</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>type</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code class="inline">registered</code></td>
+                  <td>registration ok {clientId, sessionId?, hostAvailable}</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">listener-joined / listener-left</code></td>
+                  <td>a device joins/leaves {clientId, sessionId, deviceName, deviceType, voluntary}</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">error</code></td>
+                  <td>operational error (Italian messages, e.g. "Nessuna trasmissione attiva per questo codice.")</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">kicked</code></td>
+                  <td>"Sei stato disconnesso dal PC host." + close 4000</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">room-ended</code></td>
+                  <td>the host stopped the broadcast</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">telemetry.report / clock.sync / audio.policy</code></td>
+                  <td>forwarded control events to the destination</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">server.capabilities</code></td>
+                  <td>{webrtc:true, controlProtocol:1, perClientPolicy:true}</td>
+                </tr>
+                <tr>
+                  <td><code class="inline">server-shutdown</code></td>
+                  <td>shutdown in progress, then close <strong>4001</strong> (do not reconnect)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 class="anchor-h" id="close-codes">Close codes &amp; rate limits</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th class="num">Code</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="num">1000</td>
+                  <td>
+                    normal closures: "Listener left", "Room ended", "Kicked by host", "Host reconnected", "Replaced by
+                    new connection"
+                  </td>
+                </tr>
+                <tr>
+                  <td class="num">1003</td>
+                  <td>invalid JSON</td>
+                </tr>
+                <tr>
+                  <td class="num">1008</td>
+                  <td>flood: too many wrong-room attempts (&gt;8/30s) or failed auths (&gt;10/30s)</td>
+                </tr>
+                <tr>
+                  <td class="num">1009</td>
+                  <td>message too large (&gt;24 KB)</td>
+                </tr>
+                <tr>
+                  <td class="num">4000</td>
+                  <td>kicked by the host (after 80 ms)</td>
+                </tr>
+                <tr>
+                  <td class="num">4001</td>
+                  <td>server shutting down — clients stop reconnecting</td>
+                </tr>
+                <tr>
+                  <td class="num">4010</td>
+                  <td>(client-side) voluntary socket recycle for peer recovery</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>WebSocket upgrade rate limit: max 30 connections / 10 s per IP (beyond: socket destroyed).</p>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="playout-sync.html"
+            ><span class="prevnext-dir">← Previous</span
+            ><span class="prevnext-title">Elastic Playout &amp; Clock Sync</span></a
+          >
+          <a class="prevnext-link next" href="http-api.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">HTTP API</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

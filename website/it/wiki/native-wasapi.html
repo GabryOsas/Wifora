@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Helper WASAPI Nativo · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Compilazione e funzionamento dell'helper wifora-audio.exe: WASAPI loopback, protocollo WFR1, relay WebSocket locale."
+    />
+    <link rel="icon" type="image/png" href="../../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../../assets/site.css" />
+  </head>
+  <body data-page="native-wasapi">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../../assets/../index.html">
+        <img src="../../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Funzioni</a>
+        <a href="../index.html#how">Come funziona</a>
+        <a href="../index.html#performance">Prestazioni</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../../wiki/native-wasapi.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          EN
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Inizia qui</div>
+          <a class="wiki-link" href="index.html">Benvenuto nella Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Compatibilità Browser</a>
+          <a class="wiki-link" href="installation.html">Installazione</a>
+          <a class="wiki-link" href="quick-start.html">Guida Rapida (60 secondi)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Guide pratiche</div>
+          <a class="wiki-link" href="host-guide.html">Guida Host — Trasmettere</a>
+          <a class="wiki-link" href="listener-guide.html">Guida Ascoltatore — Ricevere</a>
+          <a class="wiki-link" href="control-center.html">Control Center Web</a>
+          <a class="wiki-link" href="cli-menu.html">Menu CLI &amp; Script Windows</a>
+          <a class="wiki-link" href="native-wasapi.html">Helper WASAPI Nativo</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configurazione</div>
+          <a class="wiki-link" href="configuration.html">Variabili d'Ambiente &amp; Porte</a>
+          <a class="wiki-link" href="networking.html">Rete, IP &amp; Discovery mDNS</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Architettura tecnica</div>
+          <a class="wiki-link" href="architecture.html">Architettura del Sistema</a>
+          <a class="wiki-link" href="dsp-audio.html">Pipeline DSP &amp; Codec Opus</a>
+          <a class="wiki-link" href="anae.html">Motore Adattivo ANAE</a>
+          <a class="wiki-link" href="playout-sync.html">Playout Elastico &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Riferimenti</div>
+          <a class="wiki-link" href="signaling-protocol.html">Protocollo WebSocket</a>
+          <a class="wiki-link" href="http-api.html">API HTTP</a>
+          <a class="wiki-link" href="performance.html">Benchmark &amp; Latenza</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Sicurezza</div>
+          <a class="wiki-link" href="security.html">Modello di Sicurezza &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Assistenza</div>
+          <a class="wiki-link" href="troubleshooting.html">Risoluzione Problemi</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Sviluppo &amp; Contribuire</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Percorso">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Helper WASAPI Nativo</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Helper WASAPI Nativo — wifora-audio.exe</h1>
+
+          <p class="lead">
+            Un piccolo helper opzionale in C++20 che cattura l'audio di sistema con WASAPI loopback e lo consegna al
+            server senza passare dalla cattura del browser.
+          </p>
+
+          <h2 class="anchor-h" id="perche">Perché esiste</h2>
+          <ul>
+            <li>
+              Più robusto del percorso browser: aggira eventuali limitazioni di
+              <code class="inline">getDisplayMedia</code> e dipendenze dal driver grafico.
+            </li>
+            <li>
+              Usa <strong>MMCSS "Pro Audio"</strong> per ridurre starvation sotto carico CPU, e un loop event-driven con
+              callback.
+            </li>
+            <li>Nessun accesso alla rete: scrive il PCM sullo standard output, punto.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="build">Compilazione</h2>
+          <h3>Via script (consigliata)</h3>
+          <pre
+            class="code"
+            data-copy
+          ><code>powershell -ExecutionPolicy Bypass -File native\wasapi\build-wasapi.ps1</code></pre>
+          <p>
+            Lo script prova in ordine: CMake nel PATH (+ copia dell'exe accanto allo script) → compilazione diretta con
+            <code class="inline">cl.exe</code> MSVC → MinGW <code class="inline">g++</code> → ricerca ricorsiva di
+            VsDevCmd/CMake dentro Visual Studio. Se non trova alcun compilatore ti dice esplicitamente che resterai sul
+            percorso browser.
+          </p>
+          <h3>Via CMake manuale</h3>
+          <pre class="code" data-copy><code>cmake -S native/wasapi -B native/wasapi/build
+cmake --build native/wasapi/build --config Release
+# binario: native\wasapi\build\Release\wifora-audio.exe</code></pre>
+          <p>
+            Requisiti: Windows, toolchain C++20 (MSVC consigliato), librerie di sistema
+            <code class="inline">ole32</code>, <code class="inline">avrt</code>, <code class="inline">uuid</code>.
+          </p>
+
+          <h2 class="anchor-h" id="cli">Interfaccia a riga di comando</h2>
+          <pre class="code"><code>wifora-audio.exe --list-devices          # elenca gli endpoint attivi (ID + nome)
+wifora-audio.exe --stdout                # cattura l'endpoint di default verso stdout
+wifora-audio.exe --stdout --device ID    # cattura un endpoint specifico</code></pre>
+
+          <h2 class="anchor-h" id="protocollo">Protocollo binario "WFR1"</h2>
+          <p>
+            Ogni pacchetto su stdout = intestazione fissa di <strong>32 byte little-endian</strong> + PCM
+            <strong>Float32 interleaved</strong>:
+          </p>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th class="num">Offset</th>
+                  <th>Campo</th>
+                  <th>Tipo</th>
+                  <th>Valore tipico</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="num">0</td>
+                  <td>Magic</td>
+                  <td>ASCII[4]</td>
+                  <td><code class="inline">WFR1</code></td>
+                </tr>
+                <tr>
+                  <td class="num">4</td>
+                  <td>Versione</td>
+                  <td>UInt16</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td class="num">6</td>
+                  <td>Canali</td>
+                  <td>UInt16</td>
+                  <td>2 (stereo)</td>
+                </tr>
+                <tr>
+                  <td class="num">8</td>
+                  <td>Sample rate</td>
+                  <td>UInt32</td>
+                  <td>48000</td>
+                </tr>
+                <tr>
+                  <td class="num">12</td>
+                  <td>Sample per canale</td>
+                  <td>UInt32</td>
+                  <td>dimensione frame corrente</td>
+                </tr>
+                <tr>
+                  <td class="num">16</td>
+                  <td>Sequenza</td>
+                  <td>UInt32</td>
+                  <td>contatore progressivo</td>
+                </tr>
+                <tr>
+                  <td class="num">20</td>
+                  <td>Riservato</td>
+                  <td>UInt32</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td class="num">24</td>
+                  <td>Timestamp</td>
+                  <td>UInt64</td>
+                  <td>campioni dall'avvio</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Note implementative importanti: stdout è aperto in <strong>modalità binaria</strong> (il text mode di
+            Windows convertirebbe 0x0A in 0x0D 0x0A corrompendo il PCM); i campioni sono sanificati (NaN→0, clamp ±1);
+            input 16/24/32-bit int e float vengono normalizzati e <strong>risamplati linearmente a 48 kHz</strong> con
+            stato continuo tra pacchetti; il flag SILENT produce silenzio esplicito.
+          </p>
+
+          <h2 class="anchor-h" id="catena">La catena completa</h2>
+          <pre class="code"><code>[wifora-audio.exe] ──stdout WFR1──▶ [Server Node]
+   decoder con re-sincronizzazione sul magic
+   coda max 8 frame, drop-oldest sotto pressione
+        │
+        ▼ WebSocket ws://localhost:3975/native-audio?room=…&amp;key=…
+[frame Float32 grezzi (header già rimosso)] ──▶ [Pagina host]
+        │
+        ▼ AudioWorklet 'wifora-native-pcm'
+   buffer d'avvio ~2 pacchetti (~20 ms), tetto ~60 ms,
+   resampling lineare 48 kHz → sample rate del dispositivo,
+   underrun → silenzio intenzionale (niente crackle)
+        │
+        ▼ stessa DSP chain + WebRTC degli altri percorsi</code></pre>
+          <ul>
+            <li>
+              Il relay accetta <strong>solo il tab host</strong>: verifica origin + room + hostKey prima dell'upgrade.
+            </li>
+            <li>
+              Un solo client per stanza: una nuova connessione sostituisce la vecchia ("Replaced by a newer host
+              connection").
+            </li>
+            <li>
+              Backpressure: se <code class="inline">bufferedAmount</code> supera <strong>48 KiB</strong> il frame viene
+              scartato invece di accumulare latenza.
+            </li>
+            <li>I listener remoti ricevono comunque solo Opus via WebRTC: il PCM nativo non lascia mai il PC.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="attivazione">Come si usa</h2>
+          <ol>
+            <li>
+              Compila (vedi sopra). L'exe viene cercato automaticamente in: variabile
+              <code class="inline">WIFORA_WASAPI_HELPER</code> →
+              <code class="inline">native/wasapi/wifora-audio.exe</code> →
+              <code class="inline">native/wasapi/build/Release/wifora-audio.exe</code>.
+            </li>
+            <li>
+              Sulla pagina host premi <strong>"Avvia con WASAPI nativo (sperimentale)"</strong> dopo aver creato la
+              stanza.
+            </li>
+            <li>
+              Per indicare manualmente un percorso diverso:
+              <code class="inline">set WIFORA_WASAPI_HELPER=C:\percorso\wifora-audio.exe</code> prima di avviare il
+              server.
+            </li>
+          </ol>
+
+          <div class="callout callout-warn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <p>
+              Limitazioni: funziona solo su Windows e cattura l'endpoint di <em>rendering</em> (default o selezionato).
+              Non è un microfono: serve per l'audio di uscita del sistema.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Navigazione pagina">
+          <a class="prevnext-link" href="cli-menu.html"
+            ><span class="prevnext-dir">← Precedente</span
+            ><span class="prevnext-title">Menu CLI &amp; Script Windows</span></a
+          >
+          <a class="prevnext-link next" href="configuration.html"
+            ><span class="prevnext-dir">Prossima →</span><span class="prevnext-title">Configurazione</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Supporta il progetto su Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../../assets/site.js"></script>
+  </body>
+</html>

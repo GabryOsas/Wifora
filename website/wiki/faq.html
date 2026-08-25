@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="Frequently asked questions about Wifora: cost, internet, device count, privacy, AirPlay, recording, license."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="faq">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/faq.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>FAQ</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Frequently Asked Questions (FAQ)</h1>
+
+          <div style="display: flex; flex-direction: column; gap: 26px">
+            <div>
+              <h3 style="margin: 0 0 6px">Is Wifora free?</h3>
+              <p>
+                Completely. Open source under the MIT license: use it, study it, modify it, even in commercial products.
+                If it's useful, a coffee on Buy Me a Coffee is always appreciated.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Does it need an Internet connection?</h3>
+              <p>
+                No. Everything happens on your local network. The Internet is needed once, to download the project and
+                npm dependencies; afterwards it can be gone entirely.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Does it work away from home / over the Internet?</h3>
+              <p>
+                No by design: Wifora streams only on the LAN, with no tunnels or cloud, to guarantee minimum latency and
+                total privacy. It's not an online streaming service.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">How many devices can listen at once?</h3>
+              <p>
+                Default 5, configurable up to 32 (<code class="inline">WIFORA_MAX_LISTENERS</code>). In practice beyond
+                8–10 simultaneous streams the Wi-Fi access point is the limit, especially on 2.4 GHz.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Which phones are supported?</h3>
+              <p>
+                iPhone/iPad on iOS/iPadOS 15+, Android 10+ with Chrome, and any modern desktop as a secondary listener.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Does it consume mobile data?</h3>
+              <p>
+                No: traffic flows only between your PC and devices on the LAN, never to the Internet or through the
+                mobile network.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">What's the maximum audio quality?</h3>
+              <p>
+                Fullband Opus 48 kHz stereo: 256 kbps at the top adaptive tier, fixed 384 kbps with Hi-Fi. Same codec
+                family as WhatsApp/YouTube Music — here without artificial caps.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Why not AirPlay or Chromecast?</h3>
+              <p>
+                Those protocols impose 1–2 s buffered latency and/or closed ecosystems. Wifora wants near-perfect sync
+                on any device: WebRTC P2P is the most direct route. An RAOP/AirPlay prototype exists in the sources for
+                the future.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Can I record what I broadcast?</h3>
+              <p>
+                Yes: the record button on the host saves a WebM/M4A file of the session, straight from the pre-codec
+                signal.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Is my PC broadcasting even when nobody listens?</h3>
+              <p>
+                Audio is only captured and encoded after you press Start; with zero listeners there's no network
+                traffic. Stop ends everything.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">What data does Wifora collect?</h3>
+              <p>None. No analytics, no cloud, no update checks. Logs stay in your terminal and contain no secrets.</p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Could a neighbor listen to my room?</h3>
+              <p>
+                They'd have to be on your LAN and know the full URL+token (128 bits). From outside your network they
+                can't reach the server at all. With HTTPS enabled not even metadata is readable on the wire.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Does it work with Spotify, games, Zoom…?</h3>
+              <p>
+                Yes: what gets streamed is the system mix of the active Windows endpoint — whatever app is playing. The
+                "Voice" DSP mode enhances dialogue and calls.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Browser capture vs native WASAPI: any difference?</h3>
+              <p>
+                Listeners get the same Opus stream either way; the WASAPI path (optional helper) is often more robust
+                and independent of browser versions. See the
+                <a class="txt" href="native-wasapi.html">native helper page</a>.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Why 20 ms framing?</h3>
+              <p>
+                It's the sweet spot on Wi-Fi: packets big enough not to saturate RF airtime, small enough to keep
+                encoding latency under 25 ms. The gaming profile drops to 10 ms CBR.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Why no STUN/TURN?</h3>
+              <p>
+                STUN/TURN servers exist to traverse NAT toward the Internet: pointless and harmful on a LAN (extra
+                latency, lost privacy). With <code class="inline">iceServers: []</code> only local candidates are used.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Which languages are available?</h3>
+              <p>
+                The app interface ships in Italian and English (selector top-right, browser auto-detection). This
+                website exists in both languages too.
+              </p>
+            </div>
+
+            <div>
+              <h3 style="margin: 0 0 6px">Can I contribute or fork it?</h3>
+              <p>
+                Absolutely: MIT allows it explicitly. Start from the
+                <a class="txt" href="development.html">Development &amp; Contributing</a> page.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="troubleshooting.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Troubleshooting</span></a
+          >
+          <a class="prevnext-link next" href="development.html"
+            ><span class="prevnext-dir">Next →</span
+            ><span class="prevnext-title">Development &amp; Contributing</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

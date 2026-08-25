@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ANAE Adaptive Engine · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="The ANAE adaptive quality engine: tiers, RTT/jitter/packet-loss thresholds, anti-flapping hysteresis, health score."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="anae">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/anae.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>ANAE Engine</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>The ANAE Adaptive Engine</h1>
+
+          <p class="lead">
+            ANAE (Adaptive Network Audio Engine) measures real network state every second and slides quality across five
+            tiers — never "flapping" between levels.
+          </p>
+
+          <h2 class="anchor-h" id="tiers">The five tiers</h2>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Tier</th>
+                  <th>Name</th>
+                  <th class="num">Bitrate</th>
+                  <th class="num">Max RTT</th>
+                  <th class="num">Max loss</th>
+                  <th class="num">Max jitter</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>5</strong></td>
+                  <td>Studio Master</td>
+                  <td class="num">256 kbps</td>
+                  <td class="num">25 ms</td>
+                  <td class="num">0.2%</td>
+                  <td class="num">4 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>4</strong></td>
+                  <td>Studio High</td>
+                  <td class="num">224 kbps</td>
+                  <td class="num">50 ms</td>
+                  <td class="num">0.8%</td>
+                  <td class="num">8 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>3</strong></td>
+                  <td>
+                    Balanced Standard <span class="badge badge-neutral" style="margin-left: 6px">starting tier</span>
+                  </td>
+                  <td class="num">160 kbps</td>
+                  <td class="num">85 ms</td>
+                  <td class="num">1.8%</td>
+                  <td class="num">15 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>2</strong></td>
+                  <td>Anti-Lag Resilient</td>
+                  <td class="num">128 kbps</td>
+                  <td class="num">120 ms</td>
+                  <td class="num">4%</td>
+                  <td class="num">25 ms</td>
+                </tr>
+                <tr>
+                  <td><strong>1</strong></td>
+                  <td>Ultra-Resilient</td>
+                  <td class="num">96 kbps</td>
+                  <td class="num">∞</td>
+                  <td class="num">∞</td>
+                  <td class="num">∞</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>The active tier is the highest one whose limits are all satisfied. Startup is conservatively Tier 3.</p>
+
+          <h2 class="anchor-h" id="telemetry">Input measurements</h2>
+          <ul>
+            <li>
+              <strong>Host side (1 Hz):</strong> audio <code class="inline">remote-inbound-rtp</code> → RTT, jitter,
+              lost packets; candidate-pair fallback; activity detected via packet timestamps.
+            </li>
+            <li>
+              <strong>Listener side (1 Hz):</strong> report with RTT, jitter, loss, playout delay, audio state, page
+              visibility, jitter target and buffer mode.
+            </li>
+            <li>
+              <strong>Merging:</strong> per metric the worst of host/listener wins; listener reports count only if
+              fresher than <strong>4 s</strong>.
+            </li>
+            <li>
+              <strong>EMA smoothing:</strong> weight 0.3 for RTT/jitter, 0.4 for loss — a single spike moves nothing.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="hysteresis">Anti-flapping hysteresis</h2>
+          <ul>
+            <li>
+              <strong>Downgrade:</strong> requires <strong>2 consecutive samples</strong> pointing to the same lower
+              tier…
+            </li>
+            <li>
+              …<strong>unless</strong> things are severe: instant loss ≥ 10%, RTT ≥ 200 ms or health score &lt; 40 →
+              immediate downgrade.
+            </li>
+            <li>
+              <strong>Upgrade:</strong> requires <strong>5 consecutive good samples</strong> and climbs
+              <em>one tier at a time</em>.
+            </li>
+            <li>Any counter-sample resets the opposing counter: no oscillation.</li>
+          </ul>
+
+          <h3>Health score</h3>
+          <pre class="code"><code>penalty = loss% × 5.0 + jitterMs × 0.8 + rttMs × 0.2
+        + lateFrames × 10 + underruns × 15
+score = clamp(100 − penalty, 0, 100)</code></pre>
+          <p>The weights mirror perceived impact: underruns and late frames hurt more than isolated packet loss.</p>
+
+          <h2 class="anchor-h" id="jitter">The adaptive jitter buffer</h2>
+          <p>
+            In parallel to bitrate, the WebRTC jitter target (<code class="inline">jitterBufferTarget</code>) moves
+            across four modes:
+          </p>
+          <div class="table-wrap">
+            <table class="wt">
+              <thead>
+                <tr>
+                  <th>Mode</th>
+                  <th class="num">Target</th>
+                  <th>When it activates</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ultraLow</td>
+                  <td class="num">22 ms</td>
+                  <td>Clean network (default)</td>
+                </tr>
+                <tr>
+                  <td>balanced</td>
+                  <td class="num">35 ms</td>
+                  <td>jitter &gt; 7 ms, loss &gt; 0.7%, RTT &gt; 60 ms, low buffer or drift ≥ 50 ppm</td>
+                </tr>
+                <tr>
+                  <td>stable</td>
+                  <td class="num">50 ms</td>
+                  <td>jitter &gt; 15 ms, loss &gt; 2%, RTT &gt; 110 ms or drift ≥ 100 ppm</td>
+                </tr>
+                <tr>
+                  <td>recovery</td>
+                  <td class="num">65 ms</td>
+                  <td>Underrun, late frames, jitter &gt; 35 ms, loss ≥ 4% or RTT ≥ 220 ms (immediate)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Leaving recovery/balanced again requires the 5-good-samples cycle; underruns jump straight to recovery
+            because an audible gap is worse than 40 extra milliseconds.
+          </p>
+
+          <h2 class="anchor-h" id="applying">How policy is applied</h2>
+          <ol>
+            <li>
+              The host broadcasts the <code class="inline">audio.policy</code> event: {tier, bitrate, fec, stereo,
+              ptime, cbr}.
+            </li>
+            <li>
+              The listener updates <code class="inline">jitterBufferTarget</code> and feeds the drift correction to the
+              playout worklet.
+            </li>
+            <li>
+              The host renegotiates bitrate/FEC/stereo on the sender (the SDP already advertises the profile ceilings).
+            </li>
+          </ol>
+          <div class="callout callout-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <p>
+              Choosing a manual profile (Low Latency / Hi-Fi / Eco) disables adaptivity: the tier stays fixed. The
+              Adaptive profile is recommended.
+            </p>
+          </div>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="dsp-audio.html"
+            ><span class="prevnext-dir">← Previous</span
+            ><span class="prevnext-title">DSP Pipeline &amp; Opus Codec</span></a
+          >
+          <a class="prevnext-link next" href="playout-sync.html"
+            ><span class="prevnext-dir">Next →</span
+            ><span class="prevnext-title">Elastic Playout &amp; Clock Sync</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>

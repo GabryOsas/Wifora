@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Network, IPs & mDNS Discovery · Wifora Wiki</title>
+    <meta
+      name="description"
+      content="How Wifora picks LAN IPs, generates QR codes, advertises Bonjour/mDNS, plus firewall and edge cases."
+    />
+    <link rel="icon" type="image/png" href="../assets/wifora-logo.png" />
+    <meta name="theme-color" content="#0f1115" />
+    <link rel="stylesheet" href="../assets/site.css" />
+  </head>
+  <body data-page="networking">
+    <header class="site-topbar">
+      <button id="sidebarOpenBtn" class="icon-btn nav-toggle" type="button" aria-label="Open wiki menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <a class="brand" href="../assets/../index.html">
+        <img src="../assets/wifora-logo.png" alt="Wifora logo" width="30" height="30" />
+        <span>Wifora</span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how">How it works</a>
+        <a href="../index.html#performance">Performance</a>
+        <a href="../index.html#download">Download</a>
+        <a href="index.html" style="color: var(--text-main); font-weight: 600">Wiki</a>
+      </nav>
+      <div class="topbar-actions">
+        <a
+          class="icon-btn icon-btn--lang"
+          href="../it/wiki/networking.html"
+          aria-label="Cambia lingua / Switch language"
+          title="Italiano / English"
+        >
+          IT
+        </a>
+        <a
+          class="icon-btn"
+          href="https://github.com/GabryOsas/Wifora"
+          target="_blank"
+          rel="noopener"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Dark/light theme">
+          <svg
+            id="sunIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            hidden
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            id="moonIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <div class="wiki-shell">
+      <aside class="wiki-sidebar" id="wikiSidebar" aria-label="Wiki navigation">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 6px">
+          <button id="sidebarCloseBtn" class="icon-btn nav-toggle" type="button" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Start here</div>
+          <a class="wiki-link" href="index.html">Welcome to the Wiki</a>
+          <a class="wiki-link" href="compatibility.html">Browser Compatibility</a>
+          <a class="wiki-link" href="installation.html">Installation</a>
+          <a class="wiki-link" href="quick-start.html">Quick Start (60 seconds)</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Practical guides</div>
+          <a class="wiki-link" href="host-guide.html">Host Guide — Broadcasting</a>
+          <a class="wiki-link" href="listener-guide.html">Listener Guide — Receiving</a>
+          <a class="wiki-link" href="control-center.html">Web Control Center</a>
+          <a class="wiki-link" href="cli-menu.html">CLI Menu &amp; Windows Scripts</a>
+          <a class="wiki-link" href="native-wasapi.html">Native WASAPI Helper</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Configuration</div>
+          <a class="wiki-link" href="configuration.html">Environment Variables &amp; Ports</a>
+          <a class="wiki-link" href="networking.html">Network, IPs &amp; mDNS Discovery</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Technical architecture</div>
+          <a class="wiki-link" href="architecture.html">System Architecture</a>
+          <a class="wiki-link" href="dsp-audio.html">DSP Pipeline &amp; Opus Codec</a>
+          <a class="wiki-link" href="anae.html">ANAE Adaptive Engine</a>
+          <a class="wiki-link" href="playout-sync.html">Elastic Playout &amp; Clock Sync</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Reference</div>
+          <a class="wiki-link" href="signaling-protocol.html">WebSocket Protocol</a>
+          <a class="wiki-link" href="http-api.html">HTTP API</a>
+          <a class="wiki-link" href="performance.html">Benchmarks &amp; Latency</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Security</div>
+          <a class="wiki-link" href="security.html">Security Model &amp; Privacy</a>
+        </div>
+        <div class="wiki-cat">
+          <div class="wiki-cat-title">Help</div>
+          <a class="wiki-link" href="troubleshooting.html">Troubleshooting</a>
+          <a class="wiki-link" href="faq.html">FAQ</a>
+          <a class="wiki-link" href="development.html">Development &amp; Contributing</a>
+        </div>
+      </aside>
+
+      <main class="wiki-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../index.html">Wifora</a><span class="sep">/</span><a href="index.html">Wiki</a
+          ><span class="sep">/</span><span>Network &amp; mDNS</span>
+        </nav>
+
+        <article class="wiki-article">
+          <h1>Network, IPs &amp; mDNS Discovery</h1>
+
+          <p class="lead">
+            How Wifora finds your IPs, builds the QR, advertises itself on the network — and what to do when the network
+            misbehaves.
+          </p>
+
+          <h2 class="anchor-h" id="addresses">LAN address selection</h2>
+          <p>
+            At startup (and on every <code class="inline">/api/network</code> request) the server enumerates IPv4
+            addresses and filters them:
+          </p>
+          <ul>
+            <li>discarded: loopback, internal, link-local 169.254.x.x;</li>
+            <li>
+              virtual adapters filtered by name: Cloudflare WARP, VPN, tunnel, TAP/Wintun, Tailscale, ZeroTier, Docker,
+              Hyper-V, VMware, VirtualBox;
+            </li>
+            <li>private ranges first (192.168.x.x, 10.x.x.x, 172.16–31.x.x).</li>
+          </ul>
+          <p>
+            The first address in the list is the one used in the QR and displayed URLs; the others remain valid ways to
+            reach the same server.
+          </p>
+
+          <h2 class="anchor-h" id="qr">QR code and listening URL</h2>
+          <ul>
+            <li>
+              The QR is generated server-side (<code class="inline">GET /qr?text=…</code>): 420 px PNG, margin 1, error
+              correction M.
+            </li>
+            <li>
+              Its content is the full URL:
+              <code class="inline">http://192.168.1.50:3975/listen.html?room=K7P2M9XA&amp;token=AbC…</code>
+            </li>
+            <li>
+              Multiple NICs? The host page shows a copyable current URL; the Control Center lists every adapter with
+              ready links.
+            </li>
+          </ul>
+
+          <h2 class="anchor-h" id="mdns">Bonjour/mDNS announcement</h2>
+          <p>After the port opens, Wifora publishes the service:</p>
+          <pre class="code"><code>_wifora._tcp.local
+name: "Wifora (HOSTNAME:3975)"
+TXT:  version=1 · path=/listen.html · transport=http|https · capabilities=webrtc,opus,qr</code></pre>
+          <ul>
+            <li>The name includes port and hostname to avoid collisions if you run two instances on one PC.</li>
+            <li>
+              <strong>Why the phone doesn't "see" the PC automatically:</strong> browsers (Safari included) don't let
+              JavaScript enumerate local mDNS services. The QR/link therefore remains the official path; mDNS exists as
+              a standard announcement for tools and future integrations.
+            </li>
+            <li>In test runtime (<code class="inline">--test</code>) the announcement is disabled.</li>
+          </ul>
+
+          <h2 class="anchor-h" id="firewall">Windows Firewall</h2>
+          <ol>
+            <li>On first run Windows asks "Allow access" for Node.js: tick <strong>private networks</strong>.</li>
+            <li>Denied by mistake? Control Panel → Firewall → Allowed apps → re-enable Node.js (private).</li>
+            <li>
+              Quick test from another device:
+              <code class="inline">Test-NetConnection 192.168.1.50 -Port 3975</code> must return TcpTestSucceeded: True.
+            </li>
+          </ol>
+
+          <h2 class="anchor-h" id="edge-cases">Common edge cases</h2>
+          <ul>
+            <li>
+              <strong>VPN active:</strong> the adapter is filtered from the list, but system routing may still send
+              traffic into the VPN → if the phone can't reach the PC, disable the VPN temporarily.
+            </li>
+            <li><strong>PC hotspot:</strong> works great (private subnet); connect the phone to the PC's hotspot.</li>
+            <li>
+              <strong>Guest/hotel networks with "AP isolation":</strong> clients can't talk to each other → Wifora
+              cannot work there by design (it's a trusted local-network tool, not an internet service).
+            </li>
+            <li>
+              <strong>Dual NIC (Ethernet + Wi-Fi):</strong> the QR uses the first private IP found; if the phone is on
+              the other network, manually use the right IP from the Control Center list.
+            </li>
+          </ul>
+        </article>
+
+        <nav class="wiki-prevnext" aria-label="Page navigation">
+          <a class="prevnext-link" href="configuration.html"
+            ><span class="prevnext-dir">← Previous</span><span class="prevnext-title">Configuration</span></a
+          >
+          <a class="prevnext-link next" href="architecture.html"
+            ><span class="prevnext-dir">Next →</span><span class="prevnext-title">System Architecture</span></a
+          >
+        </nav>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="landing-wrap">
+        <div class="footer-legal" style="margin-top: 0; border-top: none; padding-top: 0">
+          <span>© <span id="yearNow">2026</span> GabryOsas · MIT License</span>
+          <span
+            ><a
+              href="https://buymeacoffee.com/gabryosas"
+              target="_blank"
+              rel="noopener"
+              style="color: var(--accent-primary); font-weight: 600"
+              >Support the project on Buy Me a Coffee</a
+            ></span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="../assets/site.js"></script>
+  </body>
+</html>
