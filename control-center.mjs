@@ -332,8 +332,7 @@ export function createControlCenter(options = {}) {
 }
 
 // Standalone execution
-const isDirectExecution =
-  process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
+const isDirectExecution = process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
 
 if (isDirectExecution) {
   const config = await loadRuntimeConfig()

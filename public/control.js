@@ -91,9 +91,7 @@ function renderStatus(status) {
   // Connected device names (from the managed server's loopback stats)
   const deviceNames = (status.rooms || []).flatMap((room) => room.listenerNames || [])
   els.deviceList.hidden = deviceNames.length === 0
-  els.deviceList.innerHTML = deviceNames
-    .map((name) => `<li>🎧 ${escapeHtml(name)}</li>`)
-    .join('')
+  els.deviceList.innerHTML = deviceNames.map((name) => `<li>🎧 ${escapeHtml(name)}</li>`).join('')
 
   // Phone link + QR from the first recommended LAN address.
   // lanAddresses is a plain array of IP strings; adapters carries the names.
@@ -127,7 +125,10 @@ function renderNetwork(adapters, port) {
 }
 
 function escapeHtml(text) {
-  return String(text).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch])
+  return String(text).replace(
+    /[&<>"']/g,
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]
+  )
 }
 
 async function refresh() {
@@ -167,9 +168,7 @@ async function withBusy(action, startingMessage, doneMessageKey) {
   }
 }
 
-els.startBtn.addEventListener('click', () =>
-  withBusy(() => post('/api/server/start'), t('controlServerStarting'))
-)
+els.startBtn.addEventListener('click', () => withBusy(() => post('/api/server/start'), t('controlServerStarting')))
 els.stopBtn.addEventListener('click', () =>
   withBusy(() => post('/api/server/stop'), t('controlServerStopping'), 'controlServerStopped')
 )

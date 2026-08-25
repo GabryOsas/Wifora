@@ -35,7 +35,7 @@ export function killMarkedProcesses(markers = ['wifora-managed']) {
     if (!isWindows) return resolve(false)
     const alternation = markers.join('|')
     const cmd =
-      "Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | " +
+      'Get-CimInstance Win32_Process -Filter "Name=\'node.exe\'" | ' +
       `Where-Object { $_.CommandLine -match '--(${alternation})' } | ` +
       'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }'
     const proc = spawn('powershell', ['-NoProfile', '-Command', cmd], { stdio: 'ignore', windowsHide: true })

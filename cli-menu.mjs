@@ -179,10 +179,10 @@ async function showMenu() {
       })
 
       console.log(`\n${c.dim}───────────────────────────────────────────────────${c.reset}`)
-      const status = serverRunning
-        ? `${c.brightGreen}● RUNNING on port ${currentPort}${c.dim}`
-        : `${c.dim}○ STOPPED`
-      console.log(`${c.dim}Server status: ${status} | Port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`)
+      const status = serverRunning ? `${c.brightGreen}● RUNNING on port ${currentPort}${c.dim}` : `${c.dim}○ STOPPED`
+      console.log(
+        `${c.dim}Server status: ${status} | Port: ${c.brightCyan}${currentPort}${c.dim} | Press [Q] to quit${c.reset}`
+      )
     }
 
     render()
@@ -509,7 +509,9 @@ async function handleOpenConsole() {
     return
   }
 
-  console.log(`${c.brightGreen}✔ Opening ${c.bold}http://localhost:${CONTROL_PORT}${c.brightGreen} in your browser...${c.reset}`)
+  console.log(
+    `${c.brightGreen}✔ Opening ${c.bold}http://localhost:${CONTROL_PORT}${c.brightGreen} in your browser...${c.reset}`
+  )
   openBrowser(`http://localhost:${CONTROL_PORT}`)
   await new Promise((r) => setTimeout(r, 1200))
 }
