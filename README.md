@@ -213,6 +213,7 @@ npm run benchmark
 
 ## 📖 Deep-Dive Documentation
 
+- [Official Website & Full Wiki](https://gabryosas.github.io/Wifora/) — Guides, architecture, protocol reference, security model, troubleshooting. English & Italian (source in [`website/`](website/)).
 - [Architecture & DSP Pipeline](docs/architecture.md) — Detailed DSP node graph, ANAE state machine, and Opus SDP negotiation.
 - [Performance & Latency Benchmarks](docs/performance.md) — Glass-to-ear latency breakdown and Wi-Fi spectrum benchmarks.
 - [Security Model & Privacy](docs/security.md) — Constant-time authentication, CSP headers, and network isolation.
